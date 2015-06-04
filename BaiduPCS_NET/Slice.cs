@@ -30,6 +30,11 @@ namespace BaiduPCS_NET
         public string md5 { get; set; }
 
         /// <summary>
+        /// 分片的状态
+        /// </summary>
+        public SliceStatus status { get; set; }
+
+        /// <summary>
         /// 拥有该切片的角色
         /// </summary>
         public SliceOwner owner { get; set; }

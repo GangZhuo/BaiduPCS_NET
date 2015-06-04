@@ -48,6 +48,11 @@ namespace BaiduPCS_NET
         public event EventHandler<ProgressChangeArgs> ProgressChange;
 
         /// <summary>
+        /// 上传分片出错时触发。
+        /// </summary>
+        public event EventHandler<ErrorArgs> Error;
+
+        /// <summary>
         /// 是否允许快速上传
         /// </summary>
         public bool RapidUploadEnabled { get; set; }
@@ -108,13 +113,11 @@ namespace BaiduPCS_NET
             {
                 #region 分片上传，可断点续传
 
+                // 分片文件的存储路径需要文件的 MD5 值来产生，目的是防止上传中断期间，文件被修改。
                 if (string.IsNullOrEmpty(filemd5)) // 计算文件的 MD5 值
                 {
                     if (!pcs.md5_file(localPath, out filemd5))
-                    {
-                        //未能计算文件的 MD5 值，返回空对象
-                        return new PcsFileInfo();
-                    }
+                        return new PcsFileInfo(); //未能计算文件的 MD5 值，返回空对象
                 }
 
                 SliceOwner owner = new SliceOwner()
@@ -125,104 +128,45 @@ namespace BaiduPCS_NET
                     filename = localPath
                 };
 
-                List<Slice> slicelist = new List<Slice>();
+                List<Slice> slicelist;
 
+                //分片文件的存储路径
                 string slice_filename = MD5.Encrypt(localPath.ToLower()) + "-" + filemd5 + ".slice";
                 if (!string.IsNullOrEmpty(slice_dir))
                     slice_filename = Path.Combine(slice_dir, slice_filename);
 
-                // 分片文件存在，则从该文件中还原分片信息
                 if (File.Exists(slice_filename))
                 {
-                    #region 还原分片数据
-
-                    slicelist = RestoreSliceList(slice_filename);
-
-                    foreach (Slice slice in slicelist)
-                    {
-                        slice.owner = owner;
-                        if (!string.IsNullOrEmpty(slice.md5))
-                        {
-                            owner.finished += slice.finished;
-                        }
-                    }
-
-                    #endregion
+                    // 分片文件存在，则从该文件中还原分片信息
+                    slicelist = RestoreSliceList(slice_filename, owner);
                 }
                 else
                 {
-                    #region 开始分片
-
-                    long slice_count = 0; //分片数量
-
-                    // 先按照最小分片计算分片数量
-                    long slice_size = MIN_UPLOAD_SLICE_SIZE;
-                    slice_count = (int)(filesize / slice_size);
-                    if ((filesize % slice_size) != 0)
-                        slice_count++;
-
-                    //分片数量超过最大允许分片数量，因此使用允许的最大分片数量来重新计算每分片的大小
-                    if (slice_count > MAX_UPLOAD_SLICE_COUNT)
-                    {
-                        slice_count = MAX_UPLOAD_SLICE_COUNT;
-                        slice_size = filesize / slice_count;
-                        if ((filesize % slice_count) != 0)
-                            slice_size++;
-                        slice_count = (int)(filesize / slice_size);
-                        if ((filesize % slice_size) != 0) slice_count++;
-                    }
-
-                    long offset = 0;
-                    for (int i = 0; i < slice_count; i++)
-                    {
-                        Slice ts = new Slice()
-                        {
-                            index = i,
-                            offset = offset,
-                            size = slice_size,
-                            finished = 0,
-                            owner = owner
-                        };
-                        if (ts.offset + ts.size > filesize) ts.size = filesize - ts.offset;
-                        offset += slice_size;
-                        slicelist.Add(ts);
-                    }
-
-                    #endregion
-
+                    // 新建分片
+                    slicelist = CreateSliceList(owner);
+                    //保存一次分片数据
                     SaveSliceList(slice_filename, slicelist);
                 }
 
-                #region 循环上传每一个分片
-
-                foreach (Slice slice in slicelist)
+                // 循环上传每一个分片
+                for (int i = 0; i < slicelist.Count; i++)
                 {
-                    if (!string.IsNullOrEmpty(slice.md5)) // 跳过上传成功的分片
+                    Slice slice = slicelist[i];
+                    // 该分片已经上传成功，且得到了其 MD5 值
+                    if (slice.status == SliceStatus.Successed)
                         continue;
-                    while (true)
-                    {
-                        fi = pcs.upload_slicefile(new OnReadSliceFunction(OnReadSlice), slice, (uint)slice.size);
-
-                        if (string.IsNullOrEmpty(fi.md5))
-                        {
-                            if (owner.cancelled) //因为用户取消上传导致的失败，则跳过。
-                                break;
-                            //上传失败，重新上传
-                            owner.finished -= slice.finished;
-                            slice.finished = 0;
-                        }
-                        else
-                        {
-                            slice.md5 = fi.md5;
-                            SaveSliceList(slice_filename, slicelist);
-                            break;
-                        }
-                    }
-                    if (owner.cancelled) //用户取消上传，则停止上传。
+                    else if (slice.status != SliceStatus.Pending) //上传失败，或正在上传，或正在重试，或用户取消上传
+                        slice.status = SliceStatus.Retrying;
+                    //当前分片上传失败，且原因不是因为用户取消上传，则重试上传分片。
+                    while (!UploadSlice(slice) && slice.status != SliceStatus.Cancelled && !owner.cancelled) ;
+                    if (slice.status == SliceStatus.Cancelled)
+                        owner.cancelled = true;
+                    if (owner.cancelled) //用户取消上传，则终止上传。
                         break;
+                    //上传成功，保存分片数据
+                    if (slice.status == SliceStatus.Successed)
+                        SaveSliceList(slice_filename, slicelist);
                 }
-
-                #endregion
 
                 bool suc = !owner.cancelled;
                 List<string> md5list = new List<string>();
@@ -234,7 +178,7 @@ namespace BaiduPCS_NET
                     //检查是否所有分片都上传成功
                     foreach (Slice slice in slicelist)
                     {
-                        if (string.IsNullOrEmpty(slice.md5))
+                        if (slice.status != SliceStatus.Successed)
                         {
                             suc = false;
                             break;
@@ -271,25 +215,121 @@ namespace BaiduPCS_NET
 
         }
 
-        protected List<Slice> RestoreSliceList(string filename)
+        protected bool UploadSlice(Slice slice)
+        {
+            SliceOwner owner = slice.owner;
+            PcsFileInfo fi;
+            try
+            {
+                fi = pcs.upload_slicefile(new OnReadSliceFunction(OnReadSlice), slice, (uint)slice.size);
+            }
+            catch (Exception ex)
+            {
+                slice.status = SliceStatus.Failed;
+                owner.finished -= slice.finished;
+                slice.finished = 0;
+                if (Error != null)
+                {
+                    ErrorArgs arg = new ErrorArgs(null, null, slice, ex);
+                    Error(this, arg);
+                    if(arg.cancelled)
+                    {
+                        slice.status = SliceStatus.Cancelled;
+                        slice.owner.cancelled = true;
+                    }
+                }
+                return false;
+            }
+            if (string.IsNullOrEmpty(fi.md5))
+            {
+                //上传失败，重置其已经上传的数量和整个文件的已经上传数量
+                if (slice.status != SliceStatus.Cancelled)
+                    slice.status = SliceStatus.Failed;
+                owner.finished -= slice.finished;
+                slice.finished = 0;
+                return false;
+            }
+            slice.md5 = fi.md5;
+            slice.status = SliceStatus.Successed;
+            return true;
+        }
+
+        /// <summary>
+        /// 创建分片
+        /// </summary>
+        /// <param name="owner">拥有这些分片的 SliceOwner 对象</param>
+        /// <returns>返回分片列表</returns>
+        protected List<Slice> CreateSliceList(SliceOwner owner)
+        {
+            List<Slice> slicelist = new List<Slice>();
+            
+            #region 开始分片
+
+            long filesize = owner.size;
+            long slice_count = 0; //分片数量
+
+            // 先按照最小分片计算分片数量
+            long slice_size = MIN_UPLOAD_SLICE_SIZE;
+            slice_count = (int)(filesize / slice_size);
+            if ((filesize % slice_size) != 0)
+                slice_count++;
+
+            //分片数量超过最大允许分片数量，因此使用允许的最大分片数量来重新计算每分片的大小
+            if (slice_count > MAX_UPLOAD_SLICE_COUNT)
+            {
+                slice_count = MAX_UPLOAD_SLICE_COUNT;
+                slice_size = filesize / slice_count;
+                if ((filesize % slice_count) != 0)
+                    slice_size++;
+                slice_count = (int)(filesize / slice_size);
+                if ((filesize % slice_size) != 0) slice_count++;
+            }
+
+            long offset = 0;
+            for (int i = 0; i < slice_count; i++)
+            {
+                Slice ts = new Slice()
+                {
+                    index = i,
+                    offset = offset,
+                    size = slice_size,
+                    finished = 0,
+                    status = SliceStatus.Pending,
+                    owner = owner
+                };
+                if (ts.offset + ts.size > filesize) ts.size = filesize - ts.offset;
+                offset += slice_size;
+                slicelist.Add(ts);
+            }
+
+            #endregion
+
+            return slicelist;
+        }
+
+        /// <summary>
+        /// 从分片文件中还原分片信息
+        /// </summary>
+        /// <param name="slice_filename">上次上传时，存储的分片文件</param>
+        /// <param name="owner">拥有这些分片的 SliceOwner 对象</param>
+        /// <returns>返回分片列表</returns>
+        protected List<Slice> RestoreSliceList(string slice_filename, SliceOwner owner)
         {
             List<Slice> list = new List<Slice>();
             Slice slice;
-            byte[] bs = new byte[32];
-            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream fs = new FileStream(slice_filename, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (BinaryReader br = new BinaryReader(fs))
                 {
                     while (br.BaseStream.Position < br.BaseStream.Length)
                     {
-                        slice = new Slice();
-                        slice.index = br.ReadInt32();
-                        slice.offset = br.ReadInt64();
-                        slice.size = br.ReadInt64();
-                        slice.finished = br.ReadInt64();
-                        bs = br.ReadBytes(32);
-                        slice.md5 = Encoding.ASCII.GetString(bs).Trim('\0').Trim();
+                        slice = ReadSlice(br);
                         list.Add(slice);
+                        slice.owner = owner;
+                        if (slice.status == SliceStatus.Successed)
+                            owner.finished += slice.finished;
+                        else
+                            slice.status = SliceStatus.Pending; // 重置状态为 Pending
                     }
                 }
             }
@@ -310,6 +350,20 @@ namespace BaiduPCS_NET
             }
         }
 
+        protected Slice ReadSlice(BinaryReader br)
+        {
+            byte[] bs;
+            Slice slice = new Slice();
+            slice.index = br.ReadInt32();
+            slice.offset = br.ReadInt64();
+            slice.size = br.ReadInt64();
+            slice.finished = br.ReadInt64();
+            slice.status = (SliceStatus)br.ReadInt32();
+            bs = br.ReadBytes(32);
+            slice.md5 = Encoding.ASCII.GetString(bs).Trim('\0').Trim();
+            return slice;
+        }
+
         protected void WriteSlice(BinaryWriter br, Slice slice)
         {
             byte[] bs = new byte[32];
@@ -317,6 +371,7 @@ namespace BaiduPCS_NET
             br.Write(slice.offset);
             br.Write(slice.size);
             br.Write(slice.finished);
+            br.Write((int)slice.status);
             if (!string.IsNullOrEmpty(slice.md5))
             {
                 for (int i = 0; i < 32; i++)
@@ -360,6 +415,7 @@ namespace BaiduPCS_NET
 
                     if(args.cancelled)
                     {
+                        slice.status = SliceStatus.Cancelled;
                         slice.owner.cancelled = true;
                         return NativeConst.CURL_READFUNC_ABORT;
                     }
@@ -371,6 +427,7 @@ namespace BaiduPCS_NET
 
             }
             buf = null;
+            slice.status = SliceStatus.Cancelled;
             slice.owner.cancelled = true;
             return NativeConst.CURL_READFUNC_ABORT;
         }
