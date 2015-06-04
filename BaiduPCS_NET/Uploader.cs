@@ -63,6 +63,11 @@ namespace BaiduPCS_NET
         /// </summary>
         public bool SliceUploadEnabled { get; set; }
 
+        /// <summary>
+        /// 是否启用进度条
+        /// </summary>
+        public bool ProgressEnabled { get; set; }
+
         #endregion
 
         #region 构造和析构函数
@@ -204,11 +209,17 @@ namespace BaiduPCS_NET
 
             #region 直接上传
 
-            pcs.Progress += new OnHttpProgressFunction(onProgress);
-            pcs.ProgressEnabled = true;
+            if(pcs.ProgressEnabled)
+            {
+                pcs.Progress += new OnHttpProgressFunction(onProgress);
+                pcs.ProgressEnabled = true;
+            }
             fi = pcs.upload(remotePath, localPath, overwrite);
-            pcs.ProgressEnabled = false;
-            pcs.Progress -= new OnHttpProgressFunction(onProgress);
+            if(pcs.ProgressEnabled)
+            {
+                pcs.ProgressEnabled = false;
+                pcs.Progress -= new OnHttpProgressFunction(onProgress);
+            }
             return fi;
 
             #endregion
@@ -408,7 +419,7 @@ namespace BaiduPCS_NET
                 slice.finished += buf.Length;
                 slice.owner.finished += buf.Length;
 
-                if (ProgressChange != null && slice.owner.size > 0)
+                if (ProgressEnabled && ProgressChange != null && slice.owner.size > 0)
                 {
                     ProgressChangeArgs args = new ProgressChangeArgs(slice.owner.finished, slice.owner.size);
                     ProgressChange(this, args);

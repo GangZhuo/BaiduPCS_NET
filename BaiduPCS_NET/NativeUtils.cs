@@ -173,8 +173,10 @@ namespace BaiduPCS_NET
             int len = NativeMethods.str_len(p);
             byte[] bytes = new byte[len];
             Marshal.Copy(p, bytes, 0, len);
-            string s = Encoding.UTF8.GetString(bytes);
-            return s;
+            if (bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+                return Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
+            else
+                return Encoding.UTF8.GetString(bytes);
         }
 
         /// <summary>
