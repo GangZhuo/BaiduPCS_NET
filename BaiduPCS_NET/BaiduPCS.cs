@@ -10,23 +10,75 @@ namespace BaiduPCS_NET
     {
         public const string USAGE = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36";
 
+        /// <summary>
+        /// 获取在本地代码中的句柄
+        /// </summary>
         public IntPtr Handle { get; private set; }
 
+        /// <summary>
+        /// 获取使用的 COOKIE 文件
+        /// </summary>
         public string CookieFileName { get; private set; }
 
         /// <summary>
         /// 当需要输入验证码时触发。
         /// </summary>
-        public event OnGetCaptchaFunction OnGetCaptcha;
+        public event OnGetCaptchaFunction GetCaptcha
+        {
+            add
+            {
+                if (_OnGetCaptcha == null)
+                {
+                    IntPtr v = Marshal.GetFunctionPointerForDelegate(_onGetCaptcha);
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_CAPTCHA_FUNCTION, v);
+                }
+                _OnGetCaptcha += value;
+            }
+            remove
+            {
+                _OnGetCaptcha -= value;
+                if (_OnGetCaptcha == null)
+                {
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_CAPTCHA_FUNCTION, IntPtr.Zero);
+                }
+            }
+        }
+        /// <summary>
+        /// 触发 OnGetCaptcha 方法时，传入该回调的 userdata
+        /// </summary>
+        public object GetCaptchaUserData { get; set; }
+        private OnGetCaptchaFunction _OnGetCaptcha;
         private NativePcsGetCaptchaFunction _onGetCaptcha;
-        private object _onGetCaptchaData;
 
         /// <summary>
         /// 当从网络获取到数据后触发该回调。
         /// </summary>
-        public event OnHttpWriteFunction OnHttpWrite;
+        public event OnHttpWriteFunction Write
+        {
+            add
+            {
+                if (_OnHttpWrite == null)
+                {
+                    IntPtr v = Marshal.GetFunctionPointerForDelegate(_onHttpWrite);
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION, v);
+                }
+                _OnHttpWrite += value;
+            }
+            remove
+            {
+                _OnHttpWrite -= value;
+                if (_OnHttpWrite == null)
+                {
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION, IntPtr.Zero);
+                }
+            }
+        }
+        /// <summary>
+        /// 触发 OnHttpWrite 方法时，传入该回调的 userdata
+        /// </summary>
+        public object WriteUserData { get; set; }
+        private OnHttpWriteFunction _OnHttpWrite;
         private NativePcsHttpWriteFunction _onHttpWrite;
-        private object _onHttpWriteData;
 
         /// <summary>
         /// 当从网络获取到全部数据后触发该回调。
@@ -34,19 +86,95 @@ namespace BaiduPCS_NET
         /// 而 OnHttpWriteFunction 是每获取到一节数据后便触发。
         /// 每个HTTP请求，OnHttpResponse 只会触发一次，而 OnHttpWriteFunction 可能触发多次。
         /// </summary>
-        public event OnHttpResponseFunction OnHttpResponse;
+        public event OnHttpResponseFunction Response
+        {
+            add
+            {
+                if (_OnHttpResponse == null)
+                {
+                    IntPtr v = Marshal.GetFunctionPointerForDelegate(_onHttpResponse);
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_HTTP_RESPONSE_FUNCTION, v);
+                }
+                _OnHttpResponse += value;
+            }
+            remove
+            {
+                _OnHttpResponse -= value;
+                if(_OnHttpResponse == null)
+                {
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_HTTP_RESPONSE_FUNCTION, IntPtr.Zero);
+                }
+            }
+        }
+        /// <summary>
+        /// 触发 OnHttpResponse 方法时，传入该回调的 userdata
+        /// </summary>
+        public object ResponseUserData { get; set; }
+        private OnHttpResponseFunction _OnHttpResponse;
         private NativePcsHttpResponseFunction _onHttpResponse;
-        private object _onHttpResponseData;
 
         /// <summary>
         /// 当上传或下载一节数据到网络中时，触发该回调。利用该回调可实现上传时的进度条。
-        /// 注意：只有设定 PCS_OPTION_PROGRESS 的值为 true 后才会启用进度条。
+        /// 注意：
+        ///     只有设定 PCS_OPTION_PROGRESS 的值为 true 后才会启用进度条。
         /// </summary>
-        public event OnHttpProgressFunction OnHttpProgress;
+        public event OnHttpProgressFunction Progress
+        {
+            add
+            {
+                if (_OnHttpProgress == null)
+                {
+                    IntPtr v = Marshal.GetFunctionPointerForDelegate(_onHttpProgress);
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_PROGRESS_FUNCTION, v);
+                }
+                _OnHttpProgress += value;
+            }
+            remove
+            {
+                _OnHttpProgress -= value;
+                if(_OnHttpProgress == null)
+                {
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_PROGRESS_FUNCTION, IntPtr.Zero);
+                }
+            }
+        }
+        /// <summary>
+        /// 触发 OnHttpProgress 方法时，传入该回调的 userdata
+        /// </summary>
+        public object ProgressUserData { get; set; }
+        private OnHttpProgressFunction _OnHttpProgress;
         private NativePcsHttpProgressFunction _onHttpProgress;
-        private object _onHttpProgressData;
 
-        public NativePcsReadSliceFunction _onReadSlice;
+        private NativePcsReadSliceFunction _onReadSlice;
+
+        /// <summary>
+        /// 设置或获取是否启用进度跟踪。
+        /// 启用后才会触发 Progress 事件，否则不会触发 Progress 该事件。
+        /// </summary>
+        public bool ProgressEnabled
+        {
+            get { return _ProgressEnabled; }
+            set
+            {
+                _ProgressEnabled = value;
+                setOption(PcsOption.PCS_OPTION_PROGRESS, _ProgressEnabled);
+            }
+        }
+        private bool _ProgressEnabled;
+
+        /// <summary>
+        /// 设置或获取 User-Agent
+        /// </summary>
+        public string UserAgent
+        {
+            get { return _UserAgent; }
+            set
+            {
+                _UserAgent = value;
+                setOption(PcsOption.PCS_OPTION_USAGE, value);
+            }
+        }
+        private string _UserAgent;
 
         private BaiduPCS(IntPtr handle, string cookieFileName)
         {
@@ -82,12 +210,12 @@ namespace BaiduPCS_NET
 
         private byte onGetCaptcha(IntPtr ptr, uint size, IntPtr captcha, uint captchaSize, IntPtr state)
         {
-            if (this.OnGetCaptcha != null)
+            if (this._OnGetCaptcha != null)
             {
                 byte[] imgBytes = new byte[size];
                 Marshal.Copy(ptr, imgBytes, 0, (int)size);
                 string captchaStr;
-                if (this.OnGetCaptcha(this, imgBytes, out captchaStr, this._onGetCaptchaData))
+                if (this._OnGetCaptcha(this, imgBytes, out captchaStr, this.GetCaptchaUserData))
                 {
                     byte[] captchaBytes = Encoding.ASCII.GetBytes(captchaStr);
                     Marshal.Copy(captchaBytes, 0, captcha, captchaBytes.Length < captchaSize ? captchaBytes.Length : (int)captchaSize);
@@ -100,11 +228,11 @@ namespace BaiduPCS_NET
 
         private uint onHttpWrite(IntPtr ptr, uint size, uint contentlength, IntPtr userdata)
         {
-            if (this.OnHttpWrite != null)
+            if (this._OnHttpWrite != null)
             {
                 byte[] data = new byte[size];
                 Marshal.Copy(ptr, data, 0, (int)size);
-                uint sz = this.OnHttpWrite(this, data, contentlength, this._onHttpWriteData);
+                uint sz = this._OnHttpWrite(this, data, contentlength, this.WriteUserData);
                 return sz;
             }
             return 0;
@@ -112,19 +240,19 @@ namespace BaiduPCS_NET
 
         private void onHttpResponse(IntPtr ptr, uint size, IntPtr state)
         {
-            if (this.OnHttpResponse != null)
+            if (this._OnHttpResponse != null)
             {
                 byte[] data = new byte[size];
                 Marshal.Copy(ptr, data, 0, (int)size);
-                this.OnHttpResponse(this, data, this._onHttpResponseData);
+                this._OnHttpResponse(this, data, this.ResponseUserData);
             }
         }
 
         private int onHttpProgress(IntPtr clientp, double dltotal, double dlnow, double ultotal, double ulnow)
         {
-            if (this.OnHttpProgress != null)
+            if (this._OnHttpProgress != null)
             {
-                return this.OnHttpProgress(this, dltotal, dlnow, ultotal, ulnow, this._onHttpProgressData);
+                return this._OnHttpProgress(this, dltotal, dlnow, ultotal, ulnow, this.ProgressUserData);
             }
             return 0;
         }
@@ -152,10 +280,26 @@ namespace BaiduPCS_NET
 
         #region Public Methods
 
+        /// <summary>
+        /// 释放掉资源
+        /// </summary>
         public void Dispose()
         {
             Disposing(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 克隆一份新的 BaiduPCS 对象，
+        /// 因此新的对象使用和本对象相同的登录身份。
+        /// 注意：注册的事件并不会克隆到新对象中，你需要再次使用 setOption() 函数来设置事件。
+        /// </summary>
+        /// <returns>返回新对象</returns>
+        public BaiduPCS clone()
+        {
+            BaiduPCS pcs = pcs_create(CookieFileName);
+            pcs.cloneUserInfo(pcs);
+            return pcs;
         }
 
         /// <summary>
@@ -233,8 +377,8 @@ namespace BaiduPCS_NET
         /// <returns>成功后返回PCS_OK，失败则返回错误编号</returns>
         public PcsRes login(string username, string password)
         {
-            this.setOption(PcsOption.PCS_OPTION_USERNAME, username);
-            this.setOption(PcsOption.PCS_OPTION_PASSWORD, password);
+            setOption(PcsOption.PCS_OPTION_USERNAME, username);
+            setOption(PcsOption.PCS_OPTION_PASSWORD, password);
             return login();
         }
 
@@ -631,13 +775,13 @@ namespace BaiduPCS_NET
                         {
                             r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                         }
-                        pcs.OnGetCaptcha = (OnGetCaptchaFunction)value;
+                        pcs._OnGetCaptcha = (OnGetCaptchaFunction)value;
                     }
                     break;
 
                 /* Pcs本身不使用该值，仅原样传递到PcsGetCaptcha函数中 */
                 case PcsOption.PCS_OPTION_CAPTCHA_FUNCTION_DATA:
-                    pcs._onGetCaptchaData = value;
+                    pcs.GetCaptchaUserData = value;
                     NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                     break;
 
@@ -653,13 +797,13 @@ namespace BaiduPCS_NET
                         {
                             r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                         }
-                        pcs.OnHttpWrite = (OnHttpWriteFunction)value;
+                        pcs._OnHttpWrite = (OnHttpWriteFunction)value;
                     }
                     break;
 
                 /* Pcs本身不使用该值，仅原样传递到PcsHttpWriteFunction函数中 */
                 case PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION_DATA:
-                    pcs._onHttpWriteData = value;
+                    pcs.WriteUserData = value;
                     NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                     break;
 
@@ -675,13 +819,13 @@ namespace BaiduPCS_NET
                         {
                             r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                         }
-                        pcs.OnHttpResponse = (OnHttpResponseFunction)value;
+                        pcs._OnHttpResponse = (OnHttpResponseFunction)value;
                     }
                     break;
 
                 /* Pcs本身不使用该值，仅原样传递到PcsHttpResponseFunction函数中 */
                 case PcsOption.PCS_OPTION_HTTP_RESPONSE_FUNCTION_DATE:
-                    pcs._onHttpResponseData = value;
+                    pcs.ResponseUserData = value;
                     NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                     break;
 
@@ -697,19 +841,20 @@ namespace BaiduPCS_NET
                         {
                             r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                         }
-                        pcs.OnHttpProgress = (OnHttpProgressFunction)value;
+                        pcs._OnHttpProgress = (OnHttpProgressFunction)value;
                     }
                     break;
 
                 /* Pcs本身不使用该值，仅原样传递到PcsHttpProgressCallback函数中 */
                 case PcsOption.PCS_OPTION_PROGRESS_FUNCTION_DATE:
-                    pcs._onHttpProgressData = value;
+                    pcs.ProgressUserData = value;
                     NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                     break;
 
                 /* 设置是否启用下载或上传进度，值为PcsBool类型 */
                 case PcsOption.PCS_OPTION_PROGRESS:
                     {
+                        pcs._ProgressEnabled = (bool)value;
                         IntPtr v = ((bool)value) ? IntPtr.Add(IntPtr.Zero, 1) : IntPtr.Zero;
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                     }
@@ -721,6 +866,7 @@ namespace BaiduPCS_NET
                         IntPtr v = NativeUtils.str_ptr((string)value);
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                         NativeUtils.free_str_ptr(v);
+                        pcs._UserAgent = (string)value;
                     }
                     break;
 
@@ -1333,6 +1479,7 @@ namespace BaiduPCS_NET
         private static Hashtable _ReadSliceStateCache = Hashtable.Synchronized(new Hashtable());
 
         #endregion
+
 
 
     }

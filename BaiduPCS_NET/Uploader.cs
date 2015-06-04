@@ -260,10 +260,11 @@ namespace BaiduPCS_NET
 
             #region 直接上传
 
-            pcs.setOption(PcsOption.PCS_OPTION_PROGRESS_FUNCTION, new OnHttpProgressFunction(onProgress));
-            pcs.setOption(PcsOption.PCS_OPTION_PROGRESS, true);
+            pcs.Progress += new OnHttpProgressFunction(onProgress);
+            pcs.ProgressEnabled = true;
             fi = pcs.upload(remotePath, localPath, overwrite);
-            pcs.setOption(PcsOption.PCS_OPTION_PROGRESS, false);
+            pcs.ProgressEnabled = false;
+            pcs.Progress -= new OnHttpProgressFunction(onProgress);
             return fi;
 
             #endregion

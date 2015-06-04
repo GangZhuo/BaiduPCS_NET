@@ -24,8 +24,7 @@ namespace Sample
 
         private void frmLogin_Load(object sender, EventArgs e)
         {
-            pcs.setOption(PcsOption.PCS_OPTION_CAPTCHA_FUNCTION, new OnGetCaptchaFunction(OnGetCaptcha));
-            
+            pcs.GetCaptcha += new OnGetCaptchaFunction(OnGetCaptcha);            
         }
 
         private void btnOk_Click(object sender, EventArgs e)

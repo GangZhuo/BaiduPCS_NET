@@ -76,8 +76,8 @@ namespace Sample
                 Text = pcs.getUID() + "'s Disk " + HumanReadableSize(used) + "/" + HumanReadableSize(quota);
                 BindDirectoryTree();
             }
-            pcs.setOption(PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION, new OnHttpWriteFunction(onWrite));
-            pcs.setOption(PcsOption.PCS_OPTION_PROGRESS, false);
+            pcs.Write += new OnHttpWriteFunction(onWrite);
+            pcs.ProgressEnabled = false;
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -306,7 +306,7 @@ namespace Sample
                 new System.Threading.Thread(new System.Threading.ThreadStart(delegate()
                 {
                     FileStream fs = new FileStream(localfile, FileMode.Create);
-                    pcs.setOption(PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION_DATA, fs);
+                    pcs.WriteUserData = fs;
                     PcsRes rc = pcs.download(selected.path, 0, 0);
                     fs.Close();
                     if (rc == PcsRes.PCS_OK)
@@ -339,7 +339,7 @@ namespace Sample
                 new System.Threading.Thread(new System.Threading.ThreadStart(delegate()
                 {
                     FileStream fs = new FileStream(localfile, FileMode.Create);
-                    pcs.setOption(PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION_DATA, fs);
+                    pcs.WriteUserData = fs;
                     PcsRes rc = pcs.download(selected.path, 0, filesize > 10 ? filesize - 10 : 0); // 仅下载最后10字节
                     fs.Close();
                     if (rc == PcsRes.PCS_OK)
