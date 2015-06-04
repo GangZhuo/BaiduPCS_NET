@@ -77,7 +77,6 @@ namespace Sample
                 BindDirectoryTree();
             }
             pcs.setOption(PcsOption.PCS_OPTION_DOWNLOAD_WRITE_FUNCTION, new OnHttpWriteFunction(onWrite));
-            pcs.setOption(PcsOption.PCS_OPTION_PROGRESS_FUNCTION, new OnHttpProgressFunction(onUpload));
             pcs.setOption(PcsOption.PCS_OPTION_PROGRESS, false);
         }
 
@@ -230,32 +229,25 @@ namespace Sample
             {
                 string localPath = this.openFileDialog1.FileName;
                 string remotePath = System.IO.Path.Combine(selected.path, System.IO.Path.GetFileName(localPath)).Replace("\\", "/");
-                string filemd5, slicemd5;
+                
+                Uploader uploader = new Uploader(pcs, "");
+                uploader.SliceUploadEnabled = false;
+                uploader.ProgressChange += uploader_ProgressChange;
+
                 frmPrg = new frmProgress();
                 frmPrg.Label1 = "Upload " + localPath;
                 frmPrg.Value = 0;
                 frmPrg.Label2 = "0%";
                 new System.Threading.Thread(new System.Threading.ThreadStart(delegate()
                 {
-                    PcsFileInfo fi = pcs.rapid_upload(remotePath, localPath, out filemd5, out slicemd5, false);
+                    PcsFileInfo fi = uploader.UploadFile(localPath, remotePath);
                     if (fi.IsEmpty)
                     {
-                        pcs.setOption(PcsOption.PCS_OPTION_PROGRESS, true);
-                        fi = pcs.upload(remotePath, localPath, false);
-                        pcs.setOption(PcsOption.PCS_OPTION_PROGRESS, false);
-                        if (fi.IsEmpty)
-                        {
-                            MessageBox.Show("Failed to upload " + localPath + " : " + pcs.getError());
-                        }
-                        else
-                        {
-                            MessageBox.Show("Upload Success");
-                            BindDirectoryTree(selectedNode, selected.path, selectedNode.Level + 1);
-                        }
+                        MessageBox.Show("Failed to upload " + localPath + " : " + pcs.getError());
                     }
                     else
                     {
-                        MessageBox.Show("Rapid Upload Success");
+                        MessageBox.Show("Upload Success");
                         BindDirectoryTree(selectedNode, selected.path, selectedNode.Level + 1);
                     }
                     frmPrg.CloseEx();
@@ -263,59 +255,6 @@ namespace Sample
                 })).Start();
                 frmPrg.ShowDialog();
             }
-        }
-
-        class UploadFileInfo
-        {
-
-            /// <summary>
-            /// 整个文件已经上传的长度
-            /// </summary>
-            public long total_uploaded_size { get; set; }
-
-            /// <summary>
-            /// 文件的长度
-            /// </summary>
-            public long filesize { get; set; }
-
-            /// <summary>
-            /// 待上传的文件路径
-            /// </summary>
-            public string filename { get; set; }
-
-            /// <summary>
-            /// 是否由用户取消
-            /// </summary>
-            public bool cancelled_by_user { get; set; }
-
-        }
-
-        class Slice
-        {
-            /// <summary>
-            /// 分片在文件中位置
-            /// </summary>
-            public long offset { get; set; }
-
-            /// <summary>
-            /// 分片长度
-            /// </summary>
-            public long size { get; set; }
-
-            /// <summary>
-            /// 已经上传的长度
-            /// </summary>
-            public long uploaded_size { get; set; }
-
-            /// <summary>
-            /// 上传成功后的文件
-            /// </summary>
-            public PcsFileInfo file { get; set; }
-
-            /// <summary>
-            /// 待上传的文件信息
-            /// </summary>
-            public UploadFileInfo local_file { get; set; }
         }
 
         private void btnUploadSlice_Click(object sender, EventArgs e)
@@ -326,143 +265,24 @@ namespace Sample
             {
                 string localPath = this.openFileDialog1.FileName;
                 string remotePath = System.IO.Path.Combine(selected.path, System.IO.Path.GetFileName(localPath)).Replace("\\", "/");
-                string filemd5, slicemd5;
+
+                Uploader uploader = new Uploader(pcs, "");
+                uploader.ProgressChange += uploader_ProgressChange;
+
                 frmPrg = new frmProgress();
                 frmPrg.Label1 = "Upload " + localPath;
                 frmPrg.Value = 0;
                 frmPrg.Label2 = "0%";
                 new System.Threading.Thread(new System.Threading.ThreadStart(delegate()
                 {
-                    PcsFileInfo fi = pcs.rapid_upload(remotePath, localPath, out filemd5, out slicemd5, false);
+                    PcsFileInfo fi = uploader.UploadFile(localPath, remotePath);
                     if (fi.IsEmpty)
                     {
-                        long filesize = new FileInfo(localPath).Length;
-                        UploadFileInfo ufi = new UploadFileInfo()
-                        {
-                            total_uploaded_size = 0,
-                            filesize = filesize,
-                            cancelled_by_user = false,
-                            filename = localPath
-                        };
-
-                        if(filesize <= MIN_UPLOAD_SLICE_SIZE) 
-                        {
-                            MessageBox.Show("文件过小，不允许分片上传，大于" + HumanReadableSize((long)MIN_UPLOAD_SLICE_SIZE) + "的文件才需要分片上传");
-                            return;
-                        }
-
-                        List<Slice> slicelist = new List<Slice>();
-
-                        #region 开始分片
-
-                        //假设启动的下载线程为 10 个，那么需要把文件分为 10 片。
-                        long slice_count = 10;
-
-                        //基于 “需要把文件分为10片” 来计算每个分片的大小
-			            long slice_size = filesize / slice_count;
-			            if ((filesize % slice_count) != 0)
-				            slice_size++;
-
-                        // 验证分片大小是否在允许的分片大小范围中，如果不在范围中，则重设分片大小。
-			            if (slice_size <= MIN_UPLOAD_SLICE_SIZE)
-				            slice_size = MIN_UPLOAD_SLICE_SIZE;
-			            if (slice_size > MAX_UPLOAD_SLICE_SIZE)
-				            slice_size = MAX_UPLOAD_SLICE_SIZE;
-
-                        //基于新的分片大小计算分片数量
-			            slice_count = (int)(filesize / slice_size);
-			            if ((filesize % slice_size) != 0)
-                            slice_count++;
-
-                        //分片数量超过最大允许分片数量，因此使用允许的最大分片数量来重新计算每分片的大小
-			            if (slice_count > MAX_UPLOAD_SLICE_COUNT) {
-				            slice_count = MAX_UPLOAD_SLICE_COUNT;
-				            slice_size = filesize / slice_count;
-				            if ((filesize % slice_count) != 0)
-					            slice_size++;
-				            slice_count = (int)(filesize / slice_size);
-				            if ((filesize % slice_size) != 0) slice_count++;
-			            }
-                        long offset = 0;
-			            for (int i = 0; i < slice_count; i++) {
-                            Slice ts = new Slice()
-                            {
-                                offset = offset,
-                                size = slice_size,
-                                uploaded_size = 0,
-                                local_file = ufi
-                            };
-                            if (ts.offset + ts.size > filesize) ts.size = filesize - ts.offset;
-                            offset += slice_size;
-                            slicelist.Add(ts);
-			            }
-
-                        //TODO: 保存分片数据，因此上传中断后，可以还原分片记录，这样的话，已经上传好了的分片不需要再次上传。
-
-                        #endregion
-
-                        #region 循环下载每一个分片
-
-                        foreach(Slice slice in slicelist)
-                        {
-                            while(true)
-                            {
-                                slice.file = pcs.upload_slicefile(new OnReadSliceFunction(OnReadSlice), slice, (uint)slice.size);
-
-                                if (string.IsNullOrEmpty(slice.file.md5))
-                                {
-                                    if (ufi.cancelled_by_user) //因为用户取消上传导致的失败，则跳过。
-                                        break;
-                                    //上传失败，重新上传
-                                    ufi.total_uploaded_size -= slice.uploaded_size;
-                                    slice.uploaded_size = 0;
-                                }
-                                else
-                                {
-                                    //TODO: 保存分片数据，因此上传中断后，可以还原分片记录，这样的话，已经上传好了的分片不需要再次上传。
-                                    break;
-                                }
-                            }
-                            if (ufi.cancelled_by_user) //用户取消上传，则停止上传。
-                                break;
-                        }
-
-                        #endregion
-
-                        bool suc = !ufi.cancelled_by_user;
-                        List<string> md5list = new List<string>();
-                        if (suc)
-                        {
-                            //检查是否所有分片都上传成功
-                            foreach (Slice slice in slicelist)
-                            {
-                                if (string.IsNullOrEmpty(slice.file.md5))
-                                {
-                                    suc = false;
-                                    break;
-                                }
-                                md5list.Add(slice.file.md5);
-                            }
-                        }
-
-                        if (suc)
-                            fi = pcs.create_superfile(remotePath, md5list.ToArray(), false); //合并分片
-                        else
-                            fi = new PcsFileInfo();
-
-                        if (fi.IsEmpty)
-                        {
-                            MessageBox.Show("Failed to upload " + localPath + " : " + pcs.getError());
-                        }
-                        else
-                        {
-                            MessageBox.Show("Upload Success");
-                            BindDirectoryTree(selectedNode, selected.path, selectedNode.Level + 1);
-                        }
+                        MessageBox.Show("Failed to upload " + localPath + " : " + pcs.getError());
                     }
                     else
                     {
-                        MessageBox.Show("Rapid Upload Success");
+                        MessageBox.Show("Upload Success");
                         BindDirectoryTree(selectedNode, selected.path, selectedNode.Level + 1);
                     }
                     frmPrg.CloseEx();
@@ -652,24 +472,22 @@ namespace Sample
             }
         }
 
-        int onUpload(BaiduPCS sender, double dltotal, double dlnow, double ultotal, double ulnow, object userdata)
+        void uploader_ProgressChange(object sender, ProgressChangeArgs e)
         {
-            try
+            if (frmPrg != null)
             {
-                if (frmPrg != null)
+                if (frmPrg.Cancelled)
                 {
-                    if (frmPrg.Cancelled)
-                        return -1;
-                    if (ultotal < 1)
-                        return 0;
-                    int percentage = (int)((ulnow * 100) / ultotal);
-                    frmPrg.Value = percentage;
-                    frmPrg.Label2 = HumanReadableSize((long)ulnow) + "/" + HumanReadableSize((long)ultotal) + "  " + percentage + "%";
+                    e.cancelled = true;
+                    return;
                 }
-                return 0;
+                if (e.size < 1)
+                    return;
+                int percentage = (int)((e.finished * 10000) / e.size);
+                frmPrg.Value = percentage / 100;
+                frmPrg.Label2 = HumanReadableSize(e.finished) + "/" + HumanReadableSize(e.size)
+                    + "  " + ((float)percentage / 100).ToString("F2") + "%";
             }
-            catch { }
-            return -1;
         }
 
         /// <summary>
@@ -701,47 +519,6 @@ namespace Sample
             catch { }
             return 0;
         }
-
-        int OnReadSlice(BaiduPCS sender, out byte[] buf, uint size, uint nmemb, object userdata)
-        {
-            Slice slice = (Slice)userdata;
-            try
-            {
-                FileStream fs = new FileStream(slice.local_file.filename, FileMode.Open, FileAccess.Read, FileShare.Read, 4096);
-                int sz = (int)(size * nmemb);
-                if (slice.uploaded_size + sz > slice.size)
-                {
-                    sz = (int)(slice.size - slice.uploaded_size);
-                }
-                buf = new byte[sz];
-                //读取的位置为，本分片的开始位置 + 本分片已经上传的数量
-                fs.Position = slice.offset + slice.uploaded_size;
-                fs.Read(buf, 0, buf.Length);
-                fs.Close();
-                slice.uploaded_size += buf.Length;
-                slice.local_file.total_uploaded_size += buf.Length;
-                if (frmPrg != null)
-                {
-                    if (frmPrg.Cancelled)
-                    {
-                        slice.local_file.cancelled_by_user = true;
-                        return NativeConst.CURL_READFUNC_ABORT;
-                    }
-                    if (slice.local_file.filesize > 0)
-                    {
-                        int percentage = (int)((slice.local_file.total_uploaded_size * 100.0f) / slice.local_file.filesize);
-                        frmPrg.Value = percentage;
-                        frmPrg.Label2 = HumanReadableSize((long)slice.local_file.total_uploaded_size) + "/" + HumanReadableSize((long)slice.local_file.filesize) + "  " + percentage + "%";
-                    }
-                }
-                return buf.Length;
-            }
-            catch { }
-            buf = null;
-            slice.local_file.cancelled_by_user = true;
-            return NativeConst.CURL_READFUNC_ABORT;
-        }
-
 
         /// <summary>
         /// 格式化文件大小为人类可读的格式

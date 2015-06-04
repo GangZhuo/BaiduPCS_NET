@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="BaiduPCS.cs" />
     <Compile Include="Delegates.cs" />
+    <Compile Include="MD5.cs" />
     <Compile Include="NativeConst.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="NativePcsFileInfo.cs" />
@@ -56,9 +57,13 @@
     <Compile Include="PcsPanApiRes.cs" />
     <Compile Include="PcsPanApiResInfo.cs" />
     <Compile Include="PcsRes.cs" />
+    <Compile Include="ProgressChangeArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Slice.cs" />
+    <Compile Include="SliceOwner.cs" />
     <Compile Include="SPair.cs" />
     <Compile Include="type_size_t.cs" />
+    <Compile Include="Uploader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
