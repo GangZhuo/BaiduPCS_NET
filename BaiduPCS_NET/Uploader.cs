@@ -37,7 +37,8 @@ namespace BaiduPCS_NET
         public BaiduPCS pcs { get; set; }
 
         /// <summary>
-        /// 获取或设置分片数据文件的保存路径
+        /// 获取或设置分片数据文件的保存路径。
+        /// 上传过程从中断恢复时，将从此目录回复上传状态。
         /// </summary>
         public string slice_dir { get; set; }
 
