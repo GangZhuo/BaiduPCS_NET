@@ -214,6 +214,10 @@ namespace BaiduPCS_NET
                 pcs.Progress += new OnHttpProgressFunction(onProgress);
                 pcs.ProgressEnabled = true;
             }
+            else
+            {
+                pcs.ProgressEnabled = false;
+            }
             fi = pcs.upload(remotePath, localPath, overwrite);
             if(pcs.ProgressEnabled)
             {
