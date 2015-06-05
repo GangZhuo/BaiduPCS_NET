@@ -116,10 +116,41 @@ namespace BaiduPCS_NET
                 && SliceUpload(localPath, remotePath, overwrite, out fi, filesize, filemd5))
                 return fi;
 
+            SetProgress();
             if (Upload(localPath, remotePath, overwrite, out fi, filesize, filemd5))
+            {
+                ResetProgress();
                 return fi;
-
+            }
+            ResetProgress();
             return new PcsFileInfo();
+        }
+
+        private bool oldPgrEnabled = false;
+        
+        /// <summary>
+        /// 直接上传前执行此函数，来配置进度条
+        /// </summary>
+        protected virtual void SetProgress()
+        {
+            if (pcs.ProgressEnabled)
+            {
+                pcs.Progress += new OnHttpProgressFunction(onProgress);
+                oldPgrEnabled = pcs.ProgressEnabled;
+                pcs.ProgressEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 直接上传完成后执行此函数，来还原进度条设置
+        /// </summary>
+        protected virtual void ResetProgress()
+        {
+            if (pcs.ProgressEnabled)
+            {
+                pcs.ProgressEnabled = oldPgrEnabled;
+                pcs.Progress -= new OnHttpProgressFunction(onProgress);
+            }
         }
 
         /// <summary>
@@ -134,19 +165,7 @@ namespace BaiduPCS_NET
         /// <returns>返回是否上传成功</returns>
         protected virtual bool Upload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, long filesize = -1, string filemd5 = null)
         {
-            bool oldPgrEnabled = false;
-            if (pcs.ProgressEnabled)
-            {
-                pcs.Progress += new OnHttpProgressFunction(onProgress);
-                oldPgrEnabled = pcs.ProgressEnabled;
-                pcs.ProgressEnabled = true;
-            }
             remoteFileInfo = pcs.upload(remotePath, localPath, overwrite);
-            if (pcs.ProgressEnabled)
-            {
-                pcs.ProgressEnabled = oldPgrEnabled;
-                pcs.Progress -= new OnHttpProgressFunction(onProgress);
-            }
             if (!remoteFileInfo.IsEmpty) //上传成功，则直接返回
                 return true;
             return false;
@@ -230,8 +249,9 @@ namespace BaiduPCS_NET
         /// <returns>返回是否上传成功</returns>
         protected virtual bool RapidUpload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, out string fileMd5)
         {
-            string slicemd5;
-            remoteFileInfo = pcs.rapid_upload(remotePath, localPath, out fileMd5, out slicemd5, overwrite); //快速上传
+            string slicemd5 = null;
+            fileMd5 = null;
+            remoteFileInfo = pcs.rapid_upload(remotePath, localPath, ref fileMd5, ref slicemd5, overwrite); //快速上传
             if (!remoteFileInfo.IsEmpty) //上传成功，则直接返回
                 return true;
             return false;

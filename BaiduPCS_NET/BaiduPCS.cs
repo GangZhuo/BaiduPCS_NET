@@ -679,9 +679,9 @@ namespace BaiduPCS_NET
         /// <param name="slice_md5">验证文件的分片的md5值</param>
         /// <param name="overwrite">如果 topath 已经存在，是否覆盖。true - 覆盖；false - 自动重命名</param>
         /// <returns>返回上传的文件的元数据</returns>
-        public PcsFileInfo rapid_upload(string topath, string local_filename, out string file_md5, out string slice_md5, bool overwrite = false)
+        public PcsFileInfo rapid_upload(string topath, string local_filename, ref string file_md5, ref string slice_md5, bool overwrite = false)
         {
-            return pcs_rapid_upload(this, topath, local_filename, out file_md5, out slice_md5, overwrite);
+            return pcs_rapid_upload(this, topath, local_filename, ref file_md5, ref slice_md5, overwrite);
         }
 
         /// <summary>
@@ -1497,14 +1497,30 @@ namespace BaiduPCS_NET
         /// <param name="slice_md5">验证文件的分片的md5值</param>
         /// <param name="overwrite">如果 topath 已经存在，是否覆盖。true - 覆盖；false - 自动重命名</param>
         /// <returns>返回上传的文件的元数据</returns>
-        public static PcsFileInfo pcs_rapid_upload(BaiduPCS pcs, string topath, string local_filename, out string file_md5, out string slice_md5, bool overwrite = false)
+        public static PcsFileInfo pcs_rapid_upload(BaiduPCS pcs, string topath, string local_filename, ref string file_md5, ref string slice_md5, bool overwrite = false)
         {
             IntPtr remotePtr = NativeUtils.str_ptr(topath);
             IntPtr localPtr = NativeUtils.str_ptr(local_filename);
             IntPtr fileMd5Ptr = Marshal.AllocHGlobal(36);
             IntPtr sliceMd5Ptr = Marshal.AllocHGlobal(36);
-            Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, fileMd5Ptr, 36); /* need fix? */
-            Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, sliceMd5Ptr, 36); /* need fix? */
+            if (!string.IsNullOrEmpty(file_md5) && file_md5.Length == 32)
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(file_md5);
+                Marshal.Copy(bytes, 0, sliceMd5Ptr, bytes.Length);
+            }
+            else
+            {
+                Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, fileMd5Ptr, 36); /* need fix? */
+            }
+            if (!string.IsNullOrEmpty(slice_md5) && slice_md5.Length == 32)
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(slice_md5);
+                Marshal.Copy(bytes, 0, sliceMd5Ptr, bytes.Length);
+            }
+            else
+            {
+                Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, sliceMd5Ptr, 36); /* need fix? */
+            }
             IntPtr fiptr = NativeMethods.pcs_rapid_upload(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False, localPtr, fileMd5Ptr, sliceMd5Ptr);
             file_md5 = NativeUtils.str(fileMd5Ptr);
             slice_md5 = NativeUtils.str(sliceMd5Ptr);
