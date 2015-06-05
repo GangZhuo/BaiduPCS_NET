@@ -80,20 +80,6 @@ namespace Sample
             pcs.ProgressEnabled = false;
         }
 
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            try
-            {
-                pcs.Dispose();
-                pcs = null;
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            base.OnClosing(e);
-        }
-
         private void BindDirectoryTree()
         {
             treeView1.Nodes.Clear();
