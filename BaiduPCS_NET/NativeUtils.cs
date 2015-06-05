@@ -50,6 +50,22 @@ namespace BaiduPCS_NET
         }
 
         /// <summary>
+        /// 返回 bytes 的 MD5 值
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static string pcs_md5(byte[] bytes)
+        {
+            IntPtr src = Marshal.AllocHGlobal(bytes.Length);
+            Marshal.Copy(bytes, 0, src, bytes.Length);
+            IntPtr r = NativeMethods.pcs_md5_string(src);
+            Marshal.FreeHGlobal(src);
+            string md5 = str(r);
+            free_str_ptr(src);
+            return md5;
+        }
+
+        /// <summary>
         /// 把 list 送入非托管空间，返回其指针
         /// </summary>
         /// <param name="list"></param>
