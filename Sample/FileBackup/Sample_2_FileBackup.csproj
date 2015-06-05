@@ -44,7 +44,8 @@
   <ItemGroup>
     <Compile Include="Core\BackupItem.cs" />
     <Compile Include="Backup\BackupWorker.cs" />
-    <Compile Include="Core\IBlockEncode.cs" />
+    <Compile Include="Core\MyBlockEncoder.cs" />
+    <Compile Include="Core\IBlockEncoder.cs" />
     <Compile Include="Core\IWorker.cs" />
     <Compile Include="Utils\MD5.cs" />
     <Compile Include="Program.cs" />

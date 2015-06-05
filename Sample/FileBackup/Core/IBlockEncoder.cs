@@ -2,7 +2,7 @@
 
 namespace FileBackup
 {
-    public interface IBlockEncode
+    public interface IBlockEncoder
     {
         /// <summary>
         /// 编码数据块
