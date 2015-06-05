@@ -115,6 +115,15 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static double pcs_speed_download(IntPtr handle);
 
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_clear_errmsg(IntPtr handle);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_set_serrmsg(IntPtr handle, IntPtr errmsg);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_cat_serrmsg(IntPtr handle, IntPtr errmsg);
+
         #endregion
 
         #region 内存分配和释放

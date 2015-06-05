@@ -418,7 +418,17 @@ namespace BaiduPCS_NET
             int size;
             return pcs_req_rawdata(this, out size, out encode);
         }
-        
+
+        /// <summary>
+        /// 获取最后一次请求的原始数据。
+        /// </summary>
+        /// <returns>返回原始数据</returns>
+        public string getRawData()
+        {
+            string encode;
+            return getRawData(out encode);
+        }
+
         /// <summary>
         /// 创建一个目录
         /// </summary>
@@ -690,6 +700,33 @@ namespace BaiduPCS_NET
         public double speed_download()
         {
             return pcs_speed_download(this);
+        }
+
+
+        /// <summary>
+        /// 清除错误消息
+        /// </summary>
+        public void clear_errmsg()
+        {
+            pcs_clear_errmsg(this);
+        }
+
+        /// <summary>
+        /// 设置错误消息
+        /// </summary>
+        /// <param name="errmsg">错误消息</param>
+        public void set_serrmsg(string errmsg)
+        {
+            pcs_set_serrmsg(this, errmsg);
+        }
+
+        /// <summary>
+        /// 添加错误消息到结尾
+        /// </summary>
+        /// <param name="errmsg">错误消息</param>
+        public void cat_serrmsg(string errmsg)
+        {
+            pcs_cat_serrmsg(this, errmsg);
         }
 
         #endregion
@@ -1536,11 +1573,37 @@ namespace BaiduPCS_NET
             return html;
         }
 
-        private class UserState
+        /// <summary>
+        /// 清除错误消息
+        /// </summary>
+        /// <param name="pcs"></param>
+        public static void pcs_clear_errmsg(BaiduPCS pcs)
         {
-            public OnReadBlockFunction onReadSlice { get; set; }
+            NativeMethods.pcs_clear_errmsg(pcs.Handle);
+        }
 
-            public object userData { get; set; }
+        /// <summary>
+        /// 设置错误消息
+        /// </summary>
+        /// <param name="pcs"></param>
+        /// <param name="errmsg">错误消息</param>
+        public static void pcs_set_serrmsg(BaiduPCS pcs, string errmsg)
+        {
+            IntPtr errmsgPtr = NativeUtils.str_ptr(errmsg);
+            NativeMethods.pcs_set_serrmsg(pcs.Handle, errmsgPtr);
+            NativeUtils.free_str_ptr(errmsgPtr);
+        }
+
+        /// <summary>
+        /// 添加错误消息到结尾
+        /// </summary>
+        /// <param name="pcs"></param>
+        /// <param name="errmsg">错误消息</param>
+        public static void pcs_cat_serrmsg(BaiduPCS pcs, string errmsg)
+        {
+            IntPtr errmsgPtr = NativeUtils.str_ptr(errmsg);
+            NativeMethods.pcs_cat_serrmsg(pcs.Handle, errmsgPtr);
+            NativeUtils.free_str_ptr(errmsgPtr);
         }
 
         /// <summary>
@@ -1581,6 +1644,13 @@ namespace BaiduPCS_NET
         /// 用户缓存用户数据
         /// </summary>
         private static Hashtable _ReadSliceStateCache = Hashtable.Synchronized(new Hashtable());
+
+        private class UserState
+        {
+            public OnReadBlockFunction onReadSlice { get; set; }
+
+            public object userData { get; set; }
+        }
 
         #endregion
 

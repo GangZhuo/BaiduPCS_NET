@@ -50,7 +50,7 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 上传分片出错时触发。
         /// </summary>
-        public event EventHandler<ErrorArgs> Error;
+        public event EventHandler<UploadSliceErrorArgs> UploadSliceError;
 
         /// <summary>
         /// 是否允许快速上传
@@ -84,6 +84,7 @@ namespace BaiduPCS_NET
 
             RapidUploadEnabled = true;
             SliceUploadEnabled = true;
+            ProgressEnabled = true;
         }
 
         #endregion
@@ -98,139 +99,234 @@ namespace BaiduPCS_NET
         /// <param name="remotePath">文件的网盘绝对路径</param>
         /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
         /// <returns>返回上传成功后的网盘中文件的元数据</returns>
-        public PcsFileInfo UploadFile(string localPath, string remotePath, bool overwrite = false)
+        public virtual PcsFileInfo UploadFile(string localPath, string remotePath, bool overwrite = false)
         {
-            PcsFileInfo fi = new PcsFileInfo();
+            PcsFileInfo fi;
             long filesize = new FileInfo(localPath).Length;
-            string filemd5 = string.Empty,
-                slicemd5;
+            string filemd5 = string.Empty;
 
             //允许快速上传，并且文件大小已经达到快速上传的要求
-            if (RapidUploadEnabled && filesize > MIN_UPLOAD_SLICE_SIZE)
-            {
-                fi = pcs.rapid_upload(remotePath, localPath, out filemd5, out slicemd5, overwrite); //快速上传
-                if (!fi.IsEmpty) //上传成功，则直接返回
-                    return fi;
-            }
-
-            //允许分片上传，并且文件大小已经达到分片上传的要求
-            if (SliceUploadEnabled && filesize > MIN_UPLOAD_SLICE_SIZE)
-            {
-                #region 分片上传，可断点续传
-
-                // 分片文件的存储路径需要文件的 MD5 值来产生，目的是防止上传中断期间，文件被修改。
-                if (string.IsNullOrEmpty(filemd5)) // 计算文件的 MD5 值
-                {
-                    if (!pcs.md5(localPath, out filemd5))
-                        return new PcsFileInfo(); //未能计算文件的 MD5 值，返回空对象
-                }
-
-                SliceOwner owner = new SliceOwner()
-                {
-                    finished = 0,
-                    size = filesize,
-                    cancelled = false,
-                    filename = localPath
-                };
-
-                List<Slice> slicelist;
-
-                //分片文件的存储路径
-                string slice_filename = MD5.Encrypt(localPath.ToLower()) + "-" + filemd5 + ".slice";
-                if (!string.IsNullOrEmpty(slice_dir))
-                    slice_filename = Path.Combine(slice_dir, slice_filename);
-
-                if (File.Exists(slice_filename))
-                {
-                    // 分片文件存在，则从该文件中还原分片信息
-                    slicelist = RestoreSliceList(slice_filename, owner);
-                }
-                else
-                {
-                    // 新建分片
-                    slicelist = CreateSliceList(owner);
-                    //保存一次分片数据
-                    SaveSliceList(slice_filename, slicelist);
-                }
-
-                // 循环上传每一个分片
-                for (int i = 0; i < slicelist.Count; i++)
-                {
-                    Slice slice = slicelist[i];
-                    // 该分片已经上传成功，且得到了其 MD5 值
-                    if (slice.status == SliceStatus.Successed)
-                        continue;
-                    else if (slice.status != SliceStatus.Pending) //上传失败，或正在上传，或正在重试，或用户取消上传
-                        slice.status = SliceStatus.Retrying;
-                    //当前分片上传失败，且原因不是因为用户取消上传，则重试上传分片。
-                    while (!UploadSlice(slice) && slice.status != SliceStatus.Cancelled && !owner.cancelled) ;
-                    if (slice.status == SliceStatus.Cancelled)
-                        owner.cancelled = true;
-                    if (owner.cancelled) //用户取消上传，则终止上传。
-                        break;
-                    //上传成功，保存分片数据
-                    if (slice.status == SliceStatus.Successed)
-                        SaveSliceList(slice_filename, slicelist);
-                }
-
-                bool suc = !owner.cancelled;
-                List<string> md5list = new List<string>();
-
-                #region 检查是否所有分片都上传成功，并创建合并分片的 md5 列表
-
-                if (suc)
-                {
-                    //检查是否所有分片都上传成功
-                    foreach (Slice slice in slicelist)
-                    {
-                        if (slice.status != SliceStatus.Successed)
-                        {
-                            suc = false;
-                            break;
-                        }
-                        md5list.Add(slice.md5);
-                    }
-                }
-
-                #endregion
-
-                if (suc)
-                {
-                    fi = pcs.create_superfile(remotePath, md5list.ToArray(), overwrite); //合并分片
-                    File.Delete(slice_filename); // 删除分片文件
-                }
-                else
-                    fi = new PcsFileInfo();
-
+            if (RapidUploadEnabled
+                && filesize > MIN_UPLOAD_SLICE_SIZE
+                && RapidUpload(localPath, remotePath, overwrite, out fi, out filemd5))
                 return fi;
 
-                #endregion
-            }
+            //允许分片上传，并且文件大小已经达到分片上传的要求
+            if (SliceUploadEnabled && filesize > MIN_UPLOAD_SLICE_SIZE
+                && SliceUpload(localPath, remotePath, overwrite, out fi, filesize, filemd5))
+                return fi;
 
-            #region 直接上传
+            if (Upload(localPath, remotePath, overwrite, out fi, filesize, filemd5))
+                return fi;
 
-            if(pcs.ProgressEnabled)
+            return new PcsFileInfo();
+        }
+
+        /// <summary>
+        /// 直接上传
+        /// </summary>
+        /// <param name="localPath"></param>
+        /// <param name="remotePath"></param>
+        /// <param name="overwrite"></param>
+        /// <param name="filesize"></param>
+        /// <param name="filemd5"></param>
+        /// <returns></returns>
+        protected virtual bool Upload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, long filesize = -1, string filemd5 = null)
+        {
+            bool oldPgrEnabled = false;
+            if (pcs.ProgressEnabled)
             {
                 pcs.Progress += new OnHttpProgressFunction(onProgress);
+                oldPgrEnabled = pcs.ProgressEnabled;
                 pcs.ProgressEnabled = true;
+            }
+            remoteFileInfo = pcs.upload(remotePath, localPath, overwrite);
+            if (pcs.ProgressEnabled)
+            {
+                pcs.ProgressEnabled = oldPgrEnabled;
+                pcs.Progress -= new OnHttpProgressFunction(onProgress);
+            }
+            if (!remoteFileInfo.IsEmpty) //上传成功，则直接返回
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 执行分片上传
+        /// </summary>
+        /// <param name="localPath"></param>
+        /// <param name="remotePath"></param>
+        /// <param name="overwrite"></param>
+        /// <param name="remoteFileInfo"></param>
+        /// <param name="filesize"></param>
+        /// <param name="filemd5"></param>
+        /// <returns></returns>
+        protected virtual bool SliceUpload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, long filesize = -1, string filemd5 = null)
+        {
+            remoteFileInfo = new PcsFileInfo();
+
+            if (filesize < 0)
+                filesize = new FileInfo(localPath).Length;
+
+            #region 分片上传，可断点续传
+
+            // 分片文件的存储路径需要文件的 MD5 值来产生，目的是防止上传中断期间，文件被修改。
+            if (string.IsNullOrEmpty(filemd5)) // 计算文件的 MD5 值
+            {
+                if (!pcs.md5(localPath, out filemd5))
+                    return false; //未能计算文件的 MD5 值，返回空对象
+            }
+
+            SliceOwner owner = new SliceOwner()
+            {
+                finished = 0,
+                size = filesize,
+                cancelled = false,
+                filename = localPath
+            };
+
+            List<Slice> slicelist;
+
+            //分片文件的存储路径
+            string slice_filename = MD5.Encrypt(localPath.ToLower()) + "-" + filemd5 + ".slice";
+            if (!string.IsNullOrEmpty(slice_dir))
+                slice_filename = Path.Combine(slice_dir, slice_filename);
+
+            if (File.Exists(slice_filename))
+            {
+                // 分片文件存在，则从该文件中还原分片信息
+                slicelist = RestoreSliceList(slice_filename, owner);
             }
             else
             {
-                pcs.ProgressEnabled = false;
+                // 新建分片
+                slicelist = CreateSliceList(owner);
+                //保存一次分片数据
+                SaveSliceList(slice_filename, slicelist);
             }
-            fi = pcs.upload(remotePath, localPath, overwrite);
-            if(pcs.ProgressEnabled)
+            List<string> md5list;
+            if (UploadSliceList(slicelist, slice_filename, out md5list))
             {
-                pcs.ProgressEnabled = false;
-                pcs.Progress -= new OnHttpProgressFunction(onProgress);
+                if (MergeSliceList(remotePath, overwrite, md5list, out remoteFileInfo))
+                {
+                    DeleteSliceFile(slice_filename);
+                    return true;
+                }
             }
-            return fi;
+            #endregion
+
+            return false;
+        }
+
+        /// <summary>
+        /// 执行快速上传
+        /// </summary>
+        /// <param name="localPath"></param>
+        /// <param name="remotePath"></param>
+        /// <param name="overwrite"></param>
+        /// <param name="remoteFileInfo"></param>
+        /// <param name="fileMd5"></param>
+        /// <returns></returns>
+        protected virtual bool RapidUpload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, out string fileMd5)
+        {
+            string slicemd5;
+            remoteFileInfo = pcs.rapid_upload(remotePath, localPath, out fileMd5, out slicemd5, overwrite); //快速上传
+            if (!remoteFileInfo.IsEmpty) //上传成功，则直接返回
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 合并上传的分片
+        /// </summary>
+        /// <param name="remotePath"></param>
+        /// <param name="overwrite"></param>
+        /// <param name="md5list"></param>
+        /// <param name="remoteFileInfo"></param>
+        /// <returns></returns>
+        protected virtual bool MergeSliceList(string remotePath, bool overwrite, List<string> md5list, out PcsFileInfo remoteFileInfo)
+        {
+            remoteFileInfo = pcs.create_superfile(remotePath, md5list.ToArray(), overwrite); //合并分片
+            if (!remoteFileInfo.IsEmpty) //上传成功，则直接返回
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 循环上传每一个分片
+        /// </summary>
+        /// <param name="slicelist"></param>
+        /// <param name="save_slice_to_filename"></param>
+        /// <param name="md5list"></param>
+        /// <returns></returns>
+        protected virtual bool UploadSliceList(List<Slice> slicelist, string save_slice_to_filename, out List<string> md5list)
+        {
+            SliceOwner owner = null;
+            // 循环上传每一个分片
+            for (int i = 0; i < slicelist.Count; i++)
+            {
+                Slice slice = slicelist[i];
+                owner = slice.owner;
+                // 该分片已经上传成功，且得到了其 MD5 值
+                if (slice.status == SliceStatus.Successed)
+                    continue;
+                else if (slice.status != SliceStatus.Pending) //上传失败，或正在上传，或正在重试，或用户取消上传
+                    slice.status = SliceStatus.Retrying;
+                //当前分片上传失败，且原因不是因为用户取消上传，则重试上传分片。
+                while (!owner.cancelled && slice.status != SliceStatus.Cancelled && !UploadSlice(slice))
+                {
+                    #region 触发错误处理事件，假如在错误处理事件中，用户设置 ErrorArgs.cancelled = false; 则重试。
+                    if (UploadSliceError != null)
+                    {
+                        UploadSliceErrorArgs arg = new UploadSliceErrorArgs(pcs.getError(), pcs.getRawData(), slice, null);
+                        UploadSliceError(this, arg);
+                        if (arg.cancelled)
+                        {
+                            slice.owner.cancelled = true;
+                            break;
+                        }
+                    }
+                    #endregion
+                }
+                if (slice.status == SliceStatus.Cancelled)
+                    owner.cancelled = true;
+                if (owner.cancelled) //用户取消上传，则终止上传。
+                    break;
+                //上传成功，保存分片数据
+                if (slice.status == SliceStatus.Successed)
+                    SaveSliceList(save_slice_to_filename, slicelist);
+            }
+
+            bool suc = !owner.cancelled;
+            md5list = new List<string>();
+
+            #region 检查是否所有分片都上传成功，并创建合并分片的 md5 列表
+
+            if (suc)
+            {
+                //检查是否所有分片都上传成功
+                foreach (Slice slice in slicelist)
+                {
+                    if (slice.status != SliceStatus.Successed)
+                    {
+                        suc = false;
+                        break;
+                    }
+                    md5list.Add(slice.md5);
+                }
+            }
 
             #endregion
 
+            return suc;
         }
 
-        protected bool UploadSlice(Slice slice)
+        /// <summary>
+        /// 上传单个分片
+        /// </summary>
+        /// <param name="slice"></param>
+        /// <returns></returns>
+        protected virtual bool UploadSlice(Slice slice)
         {
             SliceOwner owner = slice.owner;
             PcsFileInfo fi;
@@ -240,19 +336,11 @@ namespace BaiduPCS_NET
             }
             catch (Exception ex)
             {
+                try { pcs.set_serrmsg("Error when upload slice. " + ex.Message); }
+                catch { }
                 slice.status = SliceStatus.Failed;
                 owner.finished -= slice.finished;
                 slice.finished = 0;
-                if (Error != null)
-                {
-                    ErrorArgs arg = new ErrorArgs(null, null, slice, ex);
-                    Error(this, arg);
-                    if(arg.cancelled)
-                    {
-                        slice.status = SliceStatus.Cancelled;
-                        slice.owner.cancelled = true;
-                    }
-                }
                 return false;
             }
             if (string.IsNullOrEmpty(fi.md5))
@@ -274,7 +362,7 @@ namespace BaiduPCS_NET
         /// </summary>
         /// <param name="owner">拥有这些分片的 SliceOwner 对象</param>
         /// <returns>返回分片列表</returns>
-        protected List<Slice> CreateSliceList(SliceOwner owner)
+        protected virtual List<Slice> CreateSliceList(SliceOwner owner)
         {
             List<Slice> slicelist = new List<Slice>();
             
@@ -328,7 +416,7 @@ namespace BaiduPCS_NET
         /// <param name="slice_filename">上次上传时，存储的分片文件</param>
         /// <param name="owner">拥有这些分片的 SliceOwner 对象</param>
         /// <returns>返回分片列表</returns>
-        protected List<Slice> RestoreSliceList(string slice_filename, SliceOwner owner)
+        protected virtual List<Slice> RestoreSliceList(string slice_filename, SliceOwner owner)
         {
             List<Slice> list = new List<Slice>();
             Slice slice;
@@ -351,7 +439,12 @@ namespace BaiduPCS_NET
             return list;
         }
 
-        protected void SaveSliceList(string filename, List<Slice> list)
+        /// <summary>
+        /// 保存分片数据到文件
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="list"></param>
+        protected virtual void SaveSliceList(string filename, List<Slice> list)
         {
             using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Write))
             {
@@ -365,7 +458,21 @@ namespace BaiduPCS_NET
             }
         }
 
-        protected Slice ReadSlice(BinaryReader br)
+        /// <summary>
+        /// 删除分片文件
+        /// </summary>
+        /// <param name="filename"></param>
+        protected virtual void DeleteSliceFile(string filename)
+        {
+            File.Delete(filename); // 删除分片文件
+        }
+
+        /// <summary>
+        /// 读入一个分片
+        /// </summary>
+        /// <param name="br"></param>
+        /// <returns></returns>
+        protected virtual Slice ReadSlice(BinaryReader br)
         {
             byte[] bs;
             Slice slice = new Slice();
@@ -379,7 +486,12 @@ namespace BaiduPCS_NET
             return slice;
         }
 
-        protected void WriteSlice(BinaryWriter br, Slice slice)
+        /// <summary>
+        /// 写入一个分片
+        /// </summary>
+        /// <param name="br"></param>
+        /// <param name="slice"></param>
+        protected virtual void WriteSlice(BinaryWriter br, Slice slice)
         {
             byte[] bs = new byte[32];
             br.Write(slice.index);
@@ -404,9 +516,19 @@ namespace BaiduPCS_NET
             br.Write(bs);
         }
 
-        protected int OnReadSlice(BaiduPCS sender, out byte[] buf, uint size, uint nmemb, object userdata)
+        /// <summary>
+        /// 当需要读取分片数据时触发
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="buf"></param>
+        /// <param name="size"></param>
+        /// <param name="nmemb"></param>
+        /// <param name="userdata"></param>
+        /// <returns></returns>
+        protected virtual int OnReadSlice(BaiduPCS sender, out byte[] buf, uint size, uint nmemb, object userdata)
         {
             Slice slice = (Slice)userdata;
+            buf = null;
             try
             {
                 FileStream fs = new FileStream(slice.owner.filename, FileMode.Open, FileAccess.Read, FileShare.Read, 4096);
@@ -430,6 +552,7 @@ namespace BaiduPCS_NET
 
                     if(args.cancelled)
                     {
+                        pcs.set_serrmsg("Cancelled when read slice block. ");
                         slice.status = SliceStatus.Cancelled;
                         slice.owner.cancelled = true;
                         return NativeConst.CURL_READFUNC_ABORT;
@@ -439,15 +562,23 @@ namespace BaiduPCS_NET
             }
             catch (Exception ex)
             {
-
+                pcs.set_serrmsg("Error when read slice block. " + ex.Message);
+                slice.status = SliceStatus.Failed;
+                return NativeConst.CURL_READFUNC_ABORT;
             }
-            buf = null;
-            slice.status = SliceStatus.Cancelled;
-            slice.owner.cancelled = true;
-            return NativeConst.CURL_READFUNC_ABORT;
         }
 
-        protected int onProgress(BaiduPCS sender, double dltotal, double dlnow, double ultotal, double ulnow, object userdata)
+        /// <summary>
+        /// 当上传进度发生改变时触发
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="dltotal"></param>
+        /// <param name="dlnow"></param>
+        /// <param name="ultotal"></param>
+        /// <param name="ulnow"></param>
+        /// <param name="userdata"></param>
+        /// <returns></returns>
+        protected virtual int onProgress(BaiduPCS sender, double dltotal, double dlnow, double ultotal, double ulnow, object userdata)
         {
             if (ProgressChange != null && ultotal >= 1)
             {

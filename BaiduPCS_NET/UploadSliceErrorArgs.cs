@@ -2,7 +2,7 @@
 
 namespace BaiduPCS_NET
 {
-    public class ErrorArgs : EventArgs
+    public class UploadSliceErrorArgs : EventArgs
     {
         /// <summary>
         /// 设置 true，将取消操作。
@@ -29,12 +29,12 @@ namespace BaiduPCS_NET
         /// </summary>
         public Exception exception { get; private set; }
 
-        public ErrorArgs(string errmsg, string raw, Slice slice, Exception ex)
+        public UploadSliceErrorArgs(string errmsg, string raw, Slice slice, Exception ex)
         {
             this.errmsg = errmsg;
             this.raw = raw;
             this.slice = slice;
-            this.cancelled = false;
+            this.cancelled = true;
             this.exception = ex;
         }
     }

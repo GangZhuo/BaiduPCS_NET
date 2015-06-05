@@ -232,7 +232,9 @@ namespace Sample
                 
                 Uploader uploader = new Uploader(pcs, "");
                 uploader.SliceUploadEnabled = false;
+                uploader.ProgressEnabled = true;
                 uploader.ProgressChange += uploader_ProgressChange;
+                uploader.UploadSliceError += uploader_Error;
 
                 frmPrg = new frmProgress();
                 frmPrg.Label1 = "Upload " + localPath;
@@ -267,7 +269,9 @@ namespace Sample
                 string remotePath = System.IO.Path.Combine(selected.path, System.IO.Path.GetFileName(localPath)).Replace("\\", "/");
 
                 Uploader uploader = new Uploader(pcs, "");
+                uploader.ProgressEnabled = true;
                 uploader.ProgressChange += uploader_ProgressChange;
+                uploader.UploadSliceError += uploader_Error;
 
                 frmPrg = new frmProgress();
                 frmPrg.Label1 = "Upload " + localPath;
@@ -488,6 +492,11 @@ namespace Sample
                 frmPrg.Label2 = HumanReadableSize(e.finished) + "/" + HumanReadableSize(e.size)
                     + "  " + ((float)percentage / 100).ToString("F2") + "%";
             }
+        }
+
+        void uploader_Error(object sender, UploadSliceErrorArgs e)
+        {
+            MessageBox.Show(e.errmsg);
         }
 
         /// <summary>
