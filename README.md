@@ -1,5 +1,5 @@
 # BaiduPCS_NET
-The C# wrap for BaiduPCS
+The C# wrap for BaiduPCS. See https://github.com/GangZhuo/BaiduPCS .
 
 # 编译 (Windows)：
     1. git clone https://github.com/GangZhuo/BaiduPCS.git
