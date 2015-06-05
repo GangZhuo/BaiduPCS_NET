@@ -8,6 +8,8 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_version();
 
+        #region Baidu PCS API
+
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_create(IntPtr cookie_file);
 
@@ -107,26 +109,9 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static double pcs_speed_download(IntPtr handle);
 
+        #endregion
 
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_md5_string(IntPtr s);
-
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static int pcs_strlen(IntPtr s);
-
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_time2str(long time);
-
-
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static void pcs_filist_destroy(IntPtr list);
-
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static void pcs_fileinfo_destroy(IntPtr fi);
-
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static void pcs_pan_api_res_destroy(IntPtr res);
-
+        #region 内存分配和释放
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_mem_malloc_raw(uint sz);
@@ -146,6 +131,33 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static void pcs_mem_print_leak();
 
+        #endregion
+
+        #region 工具
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_md5_string(IntPtr s);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static int pcs_strlen(IntPtr s);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_time2str(long time);
+
+        #endregion
+
+        #region 结构体相关
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_filist_destroy(IntPtr list);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_fileinfo_destroy(IntPtr fi);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_pan_api_res_destroy(IntPtr res);
+
+        #endregion
 
     }
 }
