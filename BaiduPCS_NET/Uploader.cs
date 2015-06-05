@@ -236,7 +236,7 @@ namespace BaiduPCS_NET
             PcsFileInfo fi;
             try
             {
-                fi = pcs.upload_slicefile(new OnReadSliceFunction(OnReadSlice), slice, (uint)slice.size);
+                fi = pcs.upload_slicefile(new OnReadBlockFunction(OnReadSlice), slice, (uint)slice.size);
             }
             catch (Exception ex)
             {

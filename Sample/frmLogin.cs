@@ -24,7 +24,7 @@ namespace Sample
 
         private void frmLogin_Load(object sender, EventArgs e)
         {
-            pcs.GetCaptcha += new OnGetCaptchaFunction(OnGetCaptcha);            
+            pcs.GetCaptcha += new GetCaptchaFunction(OnGetCaptcha);            
         }
 
         private void btnOk_Click(object sender, EventArgs e)

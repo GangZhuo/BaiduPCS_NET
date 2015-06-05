@@ -12,7 +12,7 @@ namespace BaiduPCS_NET
     /// <param name="captcha">用于接收验证码字符</param>
     /// <param name="userdata"></param>
     /// <returns>返回验证码是否正确输入。true - 表示正确输入；false - 表示未输入。当返回 false 时，将中断登录进程。</returns>
-    public delegate bool OnGetCaptchaFunction(BaiduPCS sender, byte[] imgBytes, out string captcha, object userdata);
+    public delegate bool GetCaptchaFunction(BaiduPCS sender, byte[] imgBytes, out string captcha, object userdata);
 
     /// <summary>
     /// 当从网络获取到数据后触发该回调。
@@ -21,7 +21,7 @@ namespace BaiduPCS_NET
     /// <param name="contentlength">HTTP头中的 Content-Length 的值</param>
     /// <param name="userdata"></param>
     /// <returns>返回写入的数据长度，字节为单位，必须和 data.Length 相同，否则将会中断下载。</returns>
-    public delegate uint OnHttpWriteFunction(BaiduPCS sender, byte[] data, uint contentlength, object userdata);
+    public delegate uint WriteBlockFunction(BaiduPCS sender, byte[] data, uint contentlength, object userdata);
 
     /// <summary>
     /// 当从网络获取到全部数据后触发该回调。
@@ -56,7 +56,7 @@ namespace BaiduPCS_NET
     /// <param name="nmemb">读入多少个对象数据</param>
     /// <param name="userdata"></param>
     /// <returns>返回 0 表示已经到文件结尾，将停止上传。返回 NativeConst.CURL_READFUNC_ABORT 将离开停止上传，并返回上传错误；返回 NativeConst.CURL_READFUNC_PAUSE 将暂停上传。</returns>
-    public delegate int OnReadSliceFunction(BaiduPCS sender, out byte[] buf, uint size, uint nmemb, object userdata);
+    public delegate int OnReadBlockFunction(BaiduPCS sender, out byte[] buf, uint size, uint nmemb, object userdata);
 
     #endregion
 
@@ -120,7 +120,10 @@ namespace BaiduPCS_NET
     /// <param name="userdata"></param>
     /// <returns>返回 0 表示已经到文件结尾，将停止上传。返回 NativeMethods.CURL_READFUNC_ABORT 将离开停止上传，并返回上传错误；返回 NativeMethods.CURL_READFUNC_PAUSE 将暂停上传。</returns>
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int NativePcsReadSliceFunction(IntPtr buf, uint size, uint nmemb, IntPtr userdata);
+    public delegate int NativePcsReadBlockFunction(IntPtr buf, uint size, uint nmemb, IntPtr userdata);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void NativePcsMemLeakPrintfFunction (IntPtr ptr, IntPtr filename, int line);
 
     #endregion
 }

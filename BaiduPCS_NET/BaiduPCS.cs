@@ -25,7 +25,7 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 当需要输入验证码时触发。
         /// </summary>
-        public event OnGetCaptchaFunction GetCaptcha
+        public event GetCaptchaFunction GetCaptcha
         {
             add
             {
@@ -49,13 +49,13 @@ namespace BaiduPCS_NET
         /// 触发 OnGetCaptcha 方法时，传入该回调的 userdata
         /// </summary>
         public object GetCaptchaUserData { get; set; }
-        private OnGetCaptchaFunction _OnGetCaptcha;
+        private GetCaptchaFunction _OnGetCaptcha;
         private NativePcsGetCaptchaFunction _onGetCaptcha;
 
         /// <summary>
         /// 当从网络获取到数据后触发该回调。
         /// </summary>
-        public event OnHttpWriteFunction Write
+        public event WriteBlockFunction Write
         {
             add
             {
@@ -79,7 +79,7 @@ namespace BaiduPCS_NET
         /// 触发 OnHttpWrite 方法时，传入该回调的 userdata
         /// </summary>
         public object WriteUserData { get; set; }
-        private OnHttpWriteFunction _OnHttpWrite;
+        private WriteBlockFunction _OnHttpWrite;
         private NativePcsHttpWriteFunction _onHttpWrite;
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace BaiduPCS_NET
         private OnHttpProgressFunction _OnHttpProgress;
         private NativePcsHttpProgressFunction _onHttpProgress;
 
-        private NativePcsReadSliceFunction _onReadSlice;
+        private NativePcsReadBlockFunction _onReadSlice;
 
         /// <summary>
         /// 设置或获取是否启用进度跟踪。
@@ -189,7 +189,7 @@ namespace BaiduPCS_NET
             this._onHttpWrite = new NativePcsHttpWriteFunction(onHttpWrite);
             this._onHttpResponse = new NativePcsHttpResponseFunction(onHttpResponse);
             this._onHttpProgress = new NativePcsHttpProgressFunction(onHttpProgress);
-            this._onReadSlice = new NativePcsReadSliceFunction(onReadSlice);
+            this._onReadSlice = new NativePcsReadBlockFunction(onReadSlice);
         }
 
         ~BaiduPCS()
@@ -569,7 +569,7 @@ namespace BaiduPCS_NET
         /// <param name="userdata"></param>
         /// <param name="content_size">总共需要上传的大小</param>
         /// <returns>返回上传的分片文件的元数据 </returns>
-        public PcsFileInfo upload_slicefile(OnReadSliceFunction read_func, object userdata, uint content_size)
+        public PcsFileInfo upload_slicefile(OnReadBlockFunction read_func, object userdata, uint content_size)
         {
             return pcs_upload_slicefile(this, read_func, userdata, content_size);
         }
@@ -598,6 +598,20 @@ namespace BaiduPCS_NET
         public PcsFileInfo upload(string topath, string local_filename, bool overwrite = false)
         {
             return pcs_upload(this, topath, local_filename, overwrite);
+        }
+
+        /// <summary>
+        /// 上传文件到网盘。
+        /// </summary>
+        /// <param name="to_path">网盘文件，地址需写全，如/temp/file.txt</param>
+        /// <param name="read_func">读取该文件的方法</param>
+        /// <param name="content_size">总共需要上传的大小</param>
+        /// <param name="userdata"></param>
+        /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <returns>返回文件的元数据</returns>
+        public PcsFileInfo upload_s(string to_path, OnReadBlockFunction read_func, uint content_size, object userdata, bool overwrite = false)
+        {
+            return pcs_upload_s(this, to_path, read_func, content_size, userdata, overwrite);
         }
 
         /// <summary>
@@ -789,7 +803,7 @@ namespace BaiduPCS_NET
                         {
                             r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                         }
-                        pcs._OnGetCaptcha = (OnGetCaptchaFunction)value;
+                        pcs._OnGetCaptcha = (GetCaptchaFunction)value;
                     }
                     break;
 
@@ -811,7 +825,7 @@ namespace BaiduPCS_NET
                         {
                             r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, IntPtr.Zero);
                         }
-                        pcs._OnHttpWrite = (OnHttpWriteFunction)value;
+                        pcs._OnHttpWrite = (WriteBlockFunction)value;
                     }
                     break;
 
@@ -1232,7 +1246,7 @@ namespace BaiduPCS_NET
         /// <param name="userdata"></param>
         /// <param name="content_size">总共需要上传的大小</param>
         /// <returns>返回上传的分片文件的元数据 </returns>
-        public static PcsFileInfo pcs_upload_slicefile(BaiduPCS pcs, OnReadSliceFunction read_func, object userdata, uint content_size)
+        public static PcsFileInfo pcs_upload_slicefile(BaiduPCS pcs, OnReadBlockFunction read_func, object userdata, uint content_size)
         {
             UserState state = new UserState()
             {
@@ -1292,6 +1306,39 @@ namespace BaiduPCS_NET
             IntPtr fiptr = NativeMethods.pcs_upload(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False, localPtr);
             NativeUtils.free_str_ptr(remotePtr);
             NativeUtils.free_str_ptr(localPtr);
+            if (fiptr == IntPtr.Zero)
+                return new PcsFileInfo();
+            NativePcsFileInfo nfi = (NativePcsFileInfo)Marshal.PtrToStructure(fiptr, typeof(NativePcsFileInfo));
+            PcsFileInfo fi = new PcsFileInfo(nfi);
+            NativeMethods.pcs_fileinfo_destroy(fiptr);
+            return fi;
+        }
+
+        /// <summary>
+        /// 上传文件到网盘。
+        /// </summary>
+        /// <param name="pcs"></param>
+        /// <param name="to_path">网盘文件，地址需写全，如/temp/file.txt</param>
+        /// <param name="read_func">读取该文件的方法</param>
+        /// <param name="content_size">总共需要上传的大小</param>
+        /// <param name="userdata"></param>
+        /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <returns>返回文件的元数据</returns>
+        public static PcsFileInfo pcs_upload_s(BaiduPCS pcs, string to_path, OnReadBlockFunction read_func, uint content_size, object userdata, bool overwrite = false)
+        {
+            UserState state = new UserState()
+            {
+                onReadSlice = read_func,
+                userData = userdata
+            };
+            IntPtr remotePtr = NativeUtils.str_ptr(to_path);
+            string key = saveState(state);
+            IntPtr keyPtr = NativeUtils.str_ptr(key);
+            IntPtr fiptr = NativeMethods.pcs_upload_s(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False,
+                pcs._onReadSlice, keyPtr, content_size);
+            NativeUtils.free_str_ptr(remotePtr);
+            NativeUtils.free_str_ptr(keyPtr);
+            removeState(key);
             if (fiptr == IntPtr.Zero)
                 return new PcsFileInfo();
             NativePcsFileInfo nfi = (NativePcsFileInfo)Marshal.PtrToStructure(fiptr, typeof(NativePcsFileInfo));
@@ -1448,7 +1495,7 @@ namespace BaiduPCS_NET
 
         private class UserState
         {
-            public OnReadSliceFunction onReadSlice { get; set; }
+            public OnReadBlockFunction onReadSlice { get; set; }
 
             public object userData { get; set; }
         }

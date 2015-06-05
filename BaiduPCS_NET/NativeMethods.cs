@@ -80,13 +80,16 @@ namespace BaiduPCS_NET
         public extern static IntPtr pcs_upload_slice(IntPtr handle, IntPtr buffer, uint buffer_size);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_upload_slicefile(IntPtr handle, NativePcsReadSliceFunction read_func, IntPtr userdata, uint content_size);
+        public extern static IntPtr pcs_upload_slicefile(IntPtr handle, NativePcsReadBlockFunction read_func, IntPtr userdata, uint content_size);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_create_superfile(IntPtr handle, IntPtr path, byte overwrite, IntPtr block_list);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_upload(IntPtr handle, IntPtr path, byte overwrite, IntPtr local_filename);
+        
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_upload_s(IntPtr handle, IntPtr to_path, byte overwrite, NativePcsReadBlockFunction read_func, IntPtr userdata, uint content_size);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static long pcs_local_filesize(IntPtr handle, IntPtr path);
@@ -131,6 +134,9 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static void pcs_mem_print_leak();
 
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_mem_set_print_func(NativePcsMemLeakPrintfFunction print);
+
         #endregion
 
         #region 工具
@@ -143,6 +149,15 @@ namespace BaiduPCS_NET
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_time2str(long time);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static byte pcs_isLittleEndian();
+        
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static byte pcs_isBigEndian();
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_utils_sprintf(IntPtr fmt, __arglist);
 
         #endregion
 

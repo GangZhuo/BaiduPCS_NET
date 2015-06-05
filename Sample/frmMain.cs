@@ -76,7 +76,7 @@ namespace Sample
                 Text = pcs.getUID() + "'s Disk " + HumanReadableSize(used) + "/" + HumanReadableSize(quota);
                 BindDirectoryTree();
             }
-            pcs.Write += new OnHttpWriteFunction(onWrite);
+            pcs.Write += new WriteBlockFunction(onWrite);
             pcs.ProgressEnabled = false;
         }
 
