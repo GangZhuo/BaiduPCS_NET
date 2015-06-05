@@ -123,7 +123,7 @@ namespace BaiduPCS_NET
     public delegate int NativePcsReadBlockFunction(IntPtr buf, uint size, uint nmemb, IntPtr userdata);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void NativePcsMemLeakPrintfFunction (IntPtr ptr, IntPtr filename, int line);
+    public delegate void NativePcsMemLeakPrintfFunction (IntPtr ptr, string filename, int line);
 
     #endregion
 }
