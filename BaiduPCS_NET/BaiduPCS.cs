@@ -10,6 +10,8 @@ namespace BaiduPCS_NET
     {
         public const string USAGE = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36";
 
+        #region 属性
+
         /// <summary>
         /// 获取在本地代码中的句柄
         /// </summary>
@@ -175,6 +177,8 @@ namespace BaiduPCS_NET
             }
         }
         private string _UserAgent;
+
+        #endregion
 
         private BaiduPCS(IntPtr handle, string cookieFileName)
         {
@@ -673,6 +677,16 @@ namespace BaiduPCS_NET
         {
             IntPtr r = NativeMethods.pcs_version();
             return NativeUtils.str(r);
+        }
+
+        /// <summary>
+        /// 获取引用的 BaiduPCS.dll 是否是 DEBUG 版本
+        /// </summary>
+        /// <returns>返回是否 DEBUG 版本。true - 是 DEBUG 版本; false - 不是 DEBUG 版本。</returns>
+        public static bool pcs_isdebug()
+        {
+            string ver = pcs_version();
+            return ver.IndexOf("debug") != -1;
         }
 
         /// <summary>

@@ -107,14 +107,16 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static double pcs_speed_download(IntPtr handle);
 
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr md5_string(IntPtr s);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr type_size();
+        public extern static IntPtr pcs_md5_string(IntPtr s);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static int str_len(IntPtr s);
+        public extern static int pcs_strlen(IntPtr s);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_time2str(long time);
+
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static void pcs_filist_destroy(IntPtr list);
@@ -125,13 +127,25 @@ namespace BaiduPCS_NET
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static void pcs_pan_api_res_destroy(IntPtr res);
 
-        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_malloc_4_net(uint sz);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static void pcs_free_4_net(IntPtr ptr);
+        public extern static IntPtr pcs_mem_malloc_raw(uint sz);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr time_str(long time);
+        public extern static void pcs_mem_free_raw(IntPtr ptr);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_mem_malloc(uint sz, string filename, int line);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_mem_malloc_arg1(uint sz);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_mem_free(IntPtr ptr);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void pcs_mem_print_leak();
+
+
     }
 }

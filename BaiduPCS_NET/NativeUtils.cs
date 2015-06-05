@@ -9,12 +9,18 @@ namespace BaiduPCS_NET
     {
         public static IntPtr pcs_malloc(uint sz)
         {
-            return NativeMethods.pcs_malloc_4_net(sz);
+            if (BaiduPCS.pcs_isdebug())
+                return NativeMethods.pcs_mem_malloc_arg1(sz);
+            else
+                return NativeMethods.pcs_mem_malloc_raw(sz);
         }
 
         public static void pcs_free(IntPtr ptr)
         {
-            NativeMethods.pcs_free_4_net(ptr);
+            if (BaiduPCS.pcs_isdebug())
+                NativeMethods.pcs_mem_free(ptr);
+            else
+                NativeMethods.pcs_mem_free_raw(ptr);
         }
 
         /// <summary>
@@ -22,9 +28,9 @@ namespace BaiduPCS_NET
         /// </summary>
         /// <param name="time"></param>
         /// <returns>返回时间对应的字符串</returns>
-        public static string time_str(long time)
+        public static string pcs_time2str(long time)
         {
-            IntPtr r = NativeMethods.time_str(time);
+            IntPtr r = NativeMethods.pcs_time2str(time);
             string s = str(r);
             return s;
         }
@@ -34,10 +40,10 @@ namespace BaiduPCS_NET
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static string md5_string(string s)
+        public static string pcs_md5_string(string s)
         {
             IntPtr src = str_ptr(s);
-            IntPtr r = NativeMethods.md5_string(src);
+            IntPtr r = NativeMethods.pcs_md5_string(src);
             string md5 = str(r);
             free_str_ptr(src);
             return md5;
@@ -170,23 +176,13 @@ namespace BaiduPCS_NET
         {
             if (p == IntPtr.Zero)
                 return string.Empty;
-            int len = NativeMethods.str_len(p);
+            int len = NativeMethods.pcs_strlen(p);
             byte[] bytes = new byte[len];
             Marshal.Copy(p, bytes, 0, len);
             if (bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
                 return Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
             else
                 return Encoding.UTF8.GetString(bytes);
-        }
-
-        /// <summary>
-        /// 测试目录，获取各数据类型在非托管空间中占用的字节大小
-        /// </summary>
-        /// <returns></returns>
-        public static type_size_t type_size()
-        {
-            IntPtr structPtr = NativeMethods.type_size();
-            return (type_size_t)Marshal.PtrToStructure(structPtr, typeof(type_size_t));
         }
 
         /// <summary>

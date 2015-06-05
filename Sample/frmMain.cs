@@ -199,10 +199,10 @@ namespace Sample
                 sb.AppendLine(string.Format("fs_id={0}", rc.fs_id));
                 sb.AppendLine(string.Format("path={0}", rc.path));
                 sb.AppendLine(string.Format("server_filename={0}", rc.server_filename));
-                sb.AppendLine(string.Format("server_ctime={0}", NativeUtils.time_str(rc.server_ctime)));
-                sb.AppendLine(string.Format("server_mtime={0}", NativeUtils.time_str(rc.server_mtime)));
-                sb.AppendLine(string.Format("local_ctime={0}", NativeUtils.time_str(rc.local_ctime)));
-                sb.AppendLine(string.Format("local_mtime={0}", NativeUtils.time_str(rc.local_mtime)));
+                sb.AppendLine(string.Format("server_ctime={0}", NativeUtils.pcs_time2str(rc.server_ctime)));
+                sb.AppendLine(string.Format("server_mtime={0}", NativeUtils.pcs_time2str(rc.server_mtime)));
+                sb.AppendLine(string.Format("local_ctime={0}", NativeUtils.pcs_time2str(rc.local_ctime)));
+                sb.AppendLine(string.Format("local_mtime={0}", NativeUtils.pcs_time2str(rc.local_mtime)));
                 sb.AppendLine(string.Format("size={0}", HumanReadableSize(rc.size)));
                 sb.AppendLine(string.Format("category={0}", rc.category));
                 sb.AppendLine(string.Format("isdir={0}", rc.isdir));
