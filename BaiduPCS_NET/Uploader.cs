@@ -125,12 +125,13 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 直接上传
         /// </summary>
-        /// <param name="localPath"></param>
-        /// <param name="remotePath"></param>
-        /// <param name="overwrite"></param>
-        /// <param name="filesize"></param>
-        /// <param name="filemd5"></param>
-        /// <returns></returns>
+        /// <param name="localPath">文件的本地绝对路径</param>
+        /// <param name="remotePath">文件的网盘绝对路径</param>
+        /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <param name="remoteFileInfo">上传成功后，此变量被设置为网盘中文件的元数据</param>
+        /// <param name="filesize">传入的文件大小，如果没有传入，且内部需要，则内部会自动读取</param>
+        /// <param name="filemd5">出入的文件的MD5值，如果没有传入，且内部需要，则会自动计算</param>
+        /// <returns>返回是否上传成功</returns>
         protected virtual bool Upload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, long filesize = -1, string filemd5 = null)
         {
             bool oldPgrEnabled = false;
@@ -154,13 +155,13 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 执行分片上传
         /// </summary>
-        /// <param name="localPath"></param>
-        /// <param name="remotePath"></param>
-        /// <param name="overwrite"></param>
-        /// <param name="remoteFileInfo"></param>
-        /// <param name="filesize"></param>
-        /// <param name="filemd5"></param>
-        /// <returns></returns>
+        /// <param name="localPath">文件的本地绝对路径</param>
+        /// <param name="remotePath">文件的网盘绝对路径</param>
+        /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <param name="remoteFileInfo">上传成功后，此变量被设置为网盘中文件的元数据</param>
+        /// <param name="filesize">传入的文件大小，如果没有传入，且内部需要，则内部会自动读取</param>
+        /// <param name="filemd5">出入的文件的MD5值，如果没有传入，且内部需要，则会自动计算</param>
+        /// <returns>返回是否上传成功</returns>
         protected virtual bool SliceUpload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, long filesize = -1, string filemd5 = null)
         {
             remoteFileInfo = new PcsFileInfo();
@@ -221,12 +222,12 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 执行快速上传
         /// </summary>
-        /// <param name="localPath"></param>
-        /// <param name="remotePath"></param>
-        /// <param name="overwrite"></param>
-        /// <param name="remoteFileInfo"></param>
-        /// <param name="fileMd5"></param>
-        /// <returns></returns>
+        /// <param name="localPath">文件的本地绝对路径</param>
+        /// <param name="remotePath">文件的网盘绝对路径</param>
+        /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <param name="remoteFileInfo">上传成功后，此变量被设置为网盘中文件的元数据</param>
+        /// <param name="filemd5">出入的文件的MD5值，如果没有传入，且内部需要，则会自动计算</param>
+        /// <returns>返回是否上传成功</returns>
         protected virtual bool RapidUpload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, out string fileMd5)
         {
             string slicemd5;
@@ -239,11 +240,11 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 合并上传的分片
         /// </summary>
-        /// <param name="remotePath"></param>
-        /// <param name="overwrite"></param>
-        /// <param name="md5list"></param>
-        /// <param name="remoteFileInfo"></param>
-        /// <returns></returns>
+        /// <param name="remotePath">文件的网盘绝对路径</param>
+        /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <param name="md5list">需要合并的所有分片的MD5值</param>
+        /// <param name="remoteFileInfo">合并成功后，此变量被设置为网盘中文件的元数据</param>
+        /// <returns>返回是否合并成功</returns>
         protected virtual bool MergeSliceList(string remotePath, bool overwrite, List<string> md5list, out PcsFileInfo remoteFileInfo)
         {
             remoteFileInfo = pcs.create_superfile(remotePath, md5list.ToArray(), overwrite); //合并分片
@@ -255,10 +256,10 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 循环上传每一个分片
         /// </summary>
-        /// <param name="slicelist"></param>
-        /// <param name="save_slice_to_filename"></param>
-        /// <param name="md5list"></param>
-        /// <returns></returns>
+        /// <param name="slicelist">待上传的分片列表</param>
+        /// <param name="save_slice_to_filename">分片数据保存到此文件中，用于中断后恢复继续上传</param>
+        /// <param name="md5list">上传成功后，此变量中存储所有分片的MD5值</param>
+        /// <returns>返回是否上传成功</returns>
         protected virtual bool UploadSliceList(List<Slice> slicelist, string save_slice_to_filename, out List<string> md5list)
         {
             SliceOwner owner = null;
@@ -324,8 +325,8 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 上传单个分片
         /// </summary>
-        /// <param name="slice"></param>
-        /// <returns></returns>
+        /// <param name="slice">待上传的分片</param>
+        /// <returns>返回是否上传成功</returns>
         protected virtual bool UploadSlice(Slice slice)
         {
             SliceOwner owner = slice.owner;
@@ -442,8 +443,8 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 保存分片数据到文件
         /// </summary>
-        /// <param name="filename"></param>
-        /// <param name="list"></param>
+        /// <param name="filename">保存分片数据到此文件中</param>
+        /// <param name="list">待保存的分片列表</param>
         protected virtual void SaveSliceList(string filename, List<Slice> list)
         {
             using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Write))
@@ -461,7 +462,7 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 删除分片文件
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filename">待删除的分片文件</param>
         protected virtual void DeleteSliceFile(string filename)
         {
             File.Delete(filename); // 删除分片文件
@@ -470,7 +471,7 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 读入一个分片
         /// </summary>
-        /// <param name="br"></param>
+        /// <param name="br">用于读入数据的流</param>
         /// <returns></returns>
         protected virtual Slice ReadSlice(BinaryReader br)
         {
@@ -489,8 +490,8 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 写入一个分片
         /// </summary>
-        /// <param name="br"></param>
-        /// <param name="slice"></param>
+        /// <param name="br">用于写入数据的流</param>
+        /// <param name="slice">待写入的分片</param>
         protected virtual void WriteSlice(BinaryWriter br, Slice slice)
         {
             byte[] bs = new byte[32];
@@ -519,12 +520,12 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 当需要读取分片数据时触发
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="buf"></param>
-        /// <param name="size"></param>
-        /// <param name="nmemb"></param>
+        /// <param name="sender">触发此事件的对象</param>
+        /// <param name="buf">读入成功后，此变量中存储读入的块数据</param>
+        /// <param name="size">待读入的元素的字节大小</param>
+        /// <param name="nmemb">一共读入多少个元素</param>
         /// <param name="userdata"></param>
-        /// <returns></returns>
+        /// <returns>返回实际读入的数据的字节大小</returns>
         protected virtual int OnReadSlice(BaiduPCS sender, out byte[] buf, uint size, uint nmemb, object userdata)
         {
             Slice slice = (Slice)userdata;
@@ -571,13 +572,13 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 当上传进度发生改变时触发
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="dltotal"></param>
-        /// <param name="dlnow"></param>
-        /// <param name="ultotal"></param>
-        /// <param name="ulnow"></param>
+        /// <param name="sender">触发该事件的对象</param>
+        /// <param name="dltotal">需要下载的总的字节数</param>
+        /// <param name="dlnow">实际下载的字节数</param>
+        /// <param name="ultotal">需要上传的总的字节数</param>
+        /// <param name="ulnow">实际下载的字节数</param>
         /// <param name="userdata"></param>
-        /// <returns></returns>
+        /// <returns>返回非 0 值表示停止下载或上传；返回 0 表示继续下载或上传</returns>
         protected virtual int onProgress(BaiduPCS sender, double dltotal, double dlnow, double ultotal, double ulnow, object userdata)
         {
             if (ProgressChange != null && ultotal >= 1)
