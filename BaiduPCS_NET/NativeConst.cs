@@ -28,6 +28,10 @@ namespace BaiduPCS_NET
         /// </summary>
         public const int CURL_READFUNC_PAUSE = 0x10000001;
 
+        /// <summary>
+        /// 快速上传时，计算文件的前多少个字节的 MD5 值作为验证
+        /// </summary>
+        public const int PCS_RAPIDUPLOAD_THRESHOLD = (256 * 1024);
 
         /// <summary>
         /// 全为 0 的 8x8 矩阵
