@@ -103,7 +103,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BaiduPCS_NET\BaiduPCS_NET.csproj">
+    <ProjectReference Include="..\..\BaiduPCS_NET\BaiduPCS_NET.csproj">
       <Project>{605b8ae1-834a-459b-9461-7ba72d0212ba}</Project>
       <Name>BaiduPCS_NET</Name>
     </ProjectReference>
