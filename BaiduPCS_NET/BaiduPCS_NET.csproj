@@ -64,7 +64,6 @@
     <Compile Include="SliceOwner.cs" />
     <Compile Include="SliceStatus.cs" />
     <Compile Include="SPair.cs" />
-    <Compile Include="type_size_t.cs" />
     <Compile Include="Uploader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
