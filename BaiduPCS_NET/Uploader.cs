@@ -121,7 +121,7 @@ namespace BaiduPCS_NET
                 // 分片文件的存储路径需要文件的 MD5 值来产生，目的是防止上传中断期间，文件被修改。
                 if (string.IsNullOrEmpty(filemd5)) // 计算文件的 MD5 值
                 {
-                    if (!pcs.md5_file(localPath, out filemd5))
+                    if (!pcs.md5(localPath, out filemd5))
                         return new PcsFileInfo(); //未能计算文件的 MD5 值，返回空对象
                 }
 

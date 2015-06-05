@@ -147,7 +147,7 @@ namespace BaiduPCS_NET
         private OnHttpProgressFunction _OnHttpProgress;
         private NativePcsHttpProgressFunction _onHttpProgress;
 
-        private NativePcsReadBlockFunction _onReadSlice;
+        private NativePcsReadBlockFunction _onReadBlock;
 
         /// <summary>
         /// 设置或获取是否启用进度跟踪。
@@ -189,7 +189,7 @@ namespace BaiduPCS_NET
             this._onHttpWrite = new NativePcsHttpWriteFunction(onHttpWrite);
             this._onHttpResponse = new NativePcsHttpResponseFunction(onHttpResponse);
             this._onHttpProgress = new NativePcsHttpProgressFunction(onHttpProgress);
-            this._onReadSlice = new NativePcsReadBlockFunction(onReadSlice);
+            this._onReadBlock = new NativePcsReadBlockFunction(onReadSlice);
         }
 
         ~BaiduPCS()
@@ -630,7 +630,7 @@ namespace BaiduPCS_NET
         /// <param name="local_path">本地文件路径</param>
         /// <param name="md5">用于接收计算结果</param>
         /// <returns>返回是否计算成功。</returns>
-        public bool md5_file(string local_path, out string md5)
+        public bool md5(string local_path, out string md5)
         {
             return pcs_md5_file(this, local_path, out md5);
         }
@@ -643,10 +643,23 @@ namespace BaiduPCS_NET
         /// <param name="length">仅计算 length 长度的数据</param>
         /// <param name="md5">用于接收计算结果</param>
         /// <returns>返回是否计算成功。</returns>
-        public bool md5_file(string local_path, long offset, long length, out string md5)
+        public bool md5(string local_path, long offset, long length, out string md5)
         {
             return pcs_md5_file_slice(this, local_path, offset, length, out md5);
         }
+
+        /// <summary>
+        /// 计算 MD5 值
+        /// </summary>
+        /// <param name="read_func">读取块类容的函数</param>
+        /// <param name="userdata"></param>
+        /// <param name="md5">用于接收计算结果</param>
+        /// <returns>返回是否计算成功。</returns>
+        public bool md5(OnReadBlockFunction read_func, object userdata, out string md5)
+        {
+            return pcs_md5_s(this, read_func, userdata, out md5);
+        }
+
         /// <summary>
         /// 快速上传
         /// </summary>
@@ -1255,7 +1268,7 @@ namespace BaiduPCS_NET
             };
             string key = saveState(state);
             IntPtr keyPtr = NativeUtils.str_ptr(key);
-            IntPtr fiptr = NativeMethods.pcs_upload_slicefile(pcs.Handle, pcs._onReadSlice, keyPtr, content_size);
+            IntPtr fiptr = NativeMethods.pcs_upload_slicefile(pcs.Handle, pcs._onReadBlock, keyPtr, content_size);
             NativeUtils.free_str_ptr(keyPtr);
             removeState(key);
             if (fiptr == IntPtr.Zero)
@@ -1335,7 +1348,7 @@ namespace BaiduPCS_NET
             string key = saveState(state);
             IntPtr keyPtr = NativeUtils.str_ptr(key);
             IntPtr fiptr = NativeMethods.pcs_upload_s(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False,
-                pcs._onReadSlice, keyPtr, content_size);
+                pcs._onReadBlock, keyPtr, content_size);
             NativeUtils.free_str_ptr(remotePtr);
             NativeUtils.free_str_ptr(keyPtr);
             removeState(key);
@@ -1375,6 +1388,36 @@ namespace BaiduPCS_NET
             Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, md5Ptr, 36); /* need fix? */
             bool r = NativeMethods.pcs_md5_file(pcs.Handle, localPtr, md5Ptr) != NativeConst.False;
             NativeUtils.free_str_ptr(localPtr);
+            if (r)
+                md5 = NativeUtils.str(md5Ptr);
+            else
+                md5 = string.Empty;
+            Marshal.FreeHGlobal(md5Ptr);
+            return r;
+        }
+
+        /// <summary>
+        /// 计算 MD5 值
+        /// </summary>
+        /// <param name="pcs"></param>
+        /// <param name="read_func">读取块类容的函数</param>
+        /// <param name="userdata"></param>
+        /// <param name="md5">用于接收计算结果</param>
+        /// <returns>返回是否计算成功。</returns>
+        public static bool pcs_md5_s(BaiduPCS pcs, OnReadBlockFunction read_func, object userdata, out string md5)
+        {
+            UserState state = new UserState()
+            {
+                onReadSlice = read_func,
+                userData = userdata
+            };
+            string key = saveState(state);
+            IntPtr keyPtr = NativeUtils.str_ptr(key);
+            IntPtr md5Ptr = Marshal.AllocHGlobal(36);
+            Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, md5Ptr, 36); /* need fix? */
+            bool r = NativeMethods.pcs_md5_s(pcs.Handle, pcs._onReadBlock, keyPtr, md5Ptr) != NativeConst.False;
+            NativeUtils.free_str_ptr(keyPtr);
+            removeState(key);
             if (r)
                 md5 = NativeUtils.str(md5Ptr);
             else

@@ -98,6 +98,9 @@ namespace BaiduPCS_NET
         public extern static byte pcs_md5_file(IntPtr handle, IntPtr path, IntPtr md5);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static byte pcs_md5_s(IntPtr handle, NativePcsReadBlockFunction read_func, IntPtr userdata, IntPtr md5);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static byte pcs_md5_file_slice(IntPtr handle, IntPtr path, long offset, long length, IntPtr md5_buf);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
