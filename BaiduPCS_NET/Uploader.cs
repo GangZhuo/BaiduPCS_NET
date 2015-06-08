@@ -102,7 +102,7 @@ namespace BaiduPCS_NET
         public virtual PcsFileInfo UploadFile(string localPath, string remotePath, bool overwrite = false)
         {
             PcsFileInfo fi;
-            long filesize = new FileInfo(localPath).Length;
+            long filesize = GetFileSize(localPath);
             string filemd5 = string.Empty;
 
             //允许快速上传，并且文件大小已经达到快速上传的要求
@@ -124,6 +124,16 @@ namespace BaiduPCS_NET
             }
             ResetProgress();
             return new PcsFileInfo();
+        }
+
+        /// <summary>
+        /// 获取文件的大小
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns>返回文件的大小</returns>
+        protected virtual long GetFileSize(string filename)
+        {
+            return new FileInfo(filename).Length;
         }
 
         private bool oldPgrEnabled = false;
@@ -186,7 +196,7 @@ namespace BaiduPCS_NET
             remoteFileInfo = new PcsFileInfo();
 
             if (filesize < 0)
-                filesize = new FileInfo(localPath).Length;
+                filesize = GetFileSize(localPath);
 
             #region 分片上传，可断点续传
 
