@@ -107,6 +107,10 @@ namespace BaiduPCS_NET.Native
         public extern static IntPtr pcs_rapid_upload(IntPtr handle, IntPtr path, byte overwrite, IntPtr local_filename, IntPtr content_md5, IntPtr slice_md5);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_rapid_upload_r(IntPtr handle, IntPtr path, byte overwrite,
+	        long content_length, IntPtr content_md5, IntPtr slice_md5);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_cookie_data(IntPtr handle);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

@@ -690,6 +690,20 @@ namespace BaiduPCS_NET
         }
 
         /// <summary>
+        /// 快速上传
+        /// </summary>
+        /// <param name="topath">网盘文件</param>
+        /// <param name="filesize">本地文件的字节大小</param>
+        /// <param name="file_md5">文件的md5值</param>
+        /// <param name="slice_md5">验证文件的分片的md5值</param>
+        /// <param name="overwrite">如果 topath 已经存在，是否覆盖。true - 覆盖；false - 自动重命名</param>
+        /// <returns>返回上传的文件的元数据</returns>
+        public PcsFileInfo rapid_upload_r(string topath, long filesize, string file_md5, string slice_md5, bool overwrite = false)
+        {
+            return pcs_rapid_upload_r(this, topath, filesize, file_md5, slice_md5, overwrite);
+        }
+
+        /// <summary>
         /// 获取Cookie 数据。
         /// </summary>
         /// <returns>返回 Cookie 数据</returns>
@@ -1511,7 +1525,7 @@ namespace BaiduPCS_NET
             if (!string.IsNullOrEmpty(file_md5) && file_md5.Length == 32)
             {
                 byte[] bytes = Encoding.UTF8.GetBytes(file_md5);
-                Marshal.Copy(bytes, 0, sliceMd5Ptr, bytes.Length);
+                Marshal.Copy(bytes, 0, fileMd5Ptr, bytes.Length);
             }
             else
             {
@@ -1531,6 +1545,40 @@ namespace BaiduPCS_NET
             slice_md5 = NativeUtils.str(sliceMd5Ptr);
             NativeUtils.free_str_ptr(remotePtr);
             NativeUtils.free_str_ptr(localPtr);
+            Marshal.FreeHGlobal(fileMd5Ptr);
+            Marshal.FreeHGlobal(sliceMd5Ptr);
+            if (fiptr == IntPtr.Zero)
+                return new PcsFileInfo();
+            NativePcsFileInfo nfi = (NativePcsFileInfo)Marshal.PtrToStructure(fiptr, typeof(NativePcsFileInfo));
+            PcsFileInfo fi = new PcsFileInfo(nfi);
+            NativeMethods.pcs_fileinfo_destroy(fiptr);
+            return fi;
+        }
+
+        /// <summary>
+        /// 快速上传
+        /// </summary>
+        /// <param name="pcs"></param>
+        /// <param name="topath">网盘文件</param>
+        /// <param name="filesize">本地文件的字节大小</param>
+        /// <param name="file_md5">文件的md5值</param>
+        /// <param name="slice_md5">验证文件的分片的md5值</param>
+        /// <param name="overwrite">如果 topath 已经存在，是否覆盖。true - 覆盖；false - 自动重命名</param>
+        /// <returns>返回上传的文件的元数据</returns>
+        public static PcsFileInfo pcs_rapid_upload_r(BaiduPCS pcs, string topath, long filesize, string file_md5, string slice_md5, bool overwrite = false)
+        {
+            IntPtr remotePtr = NativeUtils.str_ptr(topath);
+            IntPtr fileMd5Ptr = Marshal.AllocHGlobal(36);
+            IntPtr sliceMd5Ptr = Marshal.AllocHGlobal(36);
+            byte[] bytes = Encoding.UTF8.GetBytes(file_md5);
+            Marshal.Copy(bytes, 0, fileMd5Ptr, bytes.Length);
+            bytes = Encoding.UTF8.GetBytes(slice_md5);
+            Marshal.Copy(bytes, 0, sliceMd5Ptr, bytes.Length);
+            IntPtr fiptr = NativeMethods.pcs_rapid_upload_r(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False,
+                filesize, fileMd5Ptr, sliceMd5Ptr);
+            file_md5 = NativeUtils.str(fileMd5Ptr);
+            slice_md5 = NativeUtils.str(sliceMd5Ptr);
+            NativeUtils.free_str_ptr(remotePtr);
             Marshal.FreeHGlobal(fileMd5Ptr);
             Marshal.FreeHGlobal(sliceMd5Ptr);
             if (fiptr == IntPtr.Zero)
