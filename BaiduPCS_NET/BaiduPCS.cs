@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 
 namespace BaiduPCS_NET
 {
+    /// <summary>
+    /// 本地代码中 PCS 对象的托管映射
+    /// </summary>
     public class BaiduPCS : IDisposable
     {
         public const string USAGE = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36";
