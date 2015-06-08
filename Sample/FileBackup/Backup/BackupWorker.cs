@@ -154,6 +154,8 @@ namespace FileBackup
                 foreach (string dir in dirs)
                 {
                     filename = Path.GetFileName(dir);
+                    if (filename == ".meta")
+                        continue;
                     BackupDirectory(dir, remotePath + "/" + filename);
                 }
             }
@@ -164,6 +166,8 @@ namespace FileBackup
                 foreach (string file in files)
                 {
                     filename = Path.GetFileName(file);
+                    if (filename.ToLower() == "thumbs.db")
+                        continue;
                     BackupFile(file, remotePath + "/" + filename);
                 }
             }
