@@ -225,7 +225,7 @@ namespace BaiduPCS_NET
             List<Slice> slicelist;
 
             //分片文件的存储路径
-            string slice_filename = "upload-" + MD5.Encrypt(localPath.ToLower()) + "-" + filemd5 + ".slice";
+            string slice_filename = "upload-" + NativeUtils.pcs_md5_string(localPath.ToLower()) + "-" + filemd5 + ".slice";
             if (!string.IsNullOrEmpty(slice_dir))
                 slice_filename = Path.Combine(slice_dir, slice_filename);
 

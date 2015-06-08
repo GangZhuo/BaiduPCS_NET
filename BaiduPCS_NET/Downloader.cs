@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.IO.MemoryMappedFiles;
 
+using BaiduPCS_NET.Native;
+
 namespace BaiduPCS_NET
 {
     public class Downloader
@@ -155,7 +157,7 @@ namespace BaiduPCS_NET
             List<Slice> slicelist;
 
             //分片文件的存储路径
-            string slice_filename = "download-" + MD5.Encrypt(localPath.ToLower()) + "-" + remoteFileInfo.md5 + ".slice";
+            string slice_filename = "download-" + NativeUtils.pcs_md5_string(localPath.ToLower()) + "-" + remoteFileInfo.md5 + ".slice";
             if (!string.IsNullOrEmpty(slice_dir))
                 slice_filename = Path.Combine(slice_dir, slice_filename);
 

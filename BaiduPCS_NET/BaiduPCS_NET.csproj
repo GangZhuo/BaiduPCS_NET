@@ -45,7 +45,6 @@
     <Compile Include="Native\NativeDelegates.cs" />
     <Compile Include="Core\SliceHelper.cs" />
     <Compile Include="Core\SliceErrorArgs.cs" />
-    <Compile Include="Utils\MD5.cs" />
     <Compile Include="Native\NativeConst.cs" />
     <Compile Include="Native\NativeMethods.cs" />
     <Compile Include="Native\NativePcsFileInfo.cs" />
@@ -56,11 +55,11 @@
     <Compile Include="Native\NativePcsSList.cs" />
     <Compile Include="Native\NativePcsSList2.cs" />
     <Compile Include="Native\NativeUtils.cs" />
-    <Compile Include="Native\PcsFileInfo.cs" />
-    <Compile Include="Native\PcsOption.cs" />
-    <Compile Include="Native\PcsPanApiRes.cs" />
-    <Compile Include="Native\PcsPanApiResInfo.cs" />
-    <Compile Include="Native\PcsRes.cs" />
+    <Compile Include="Core\PcsFileInfo.cs" />
+    <Compile Include="Core\PcsOption.cs" />
+    <Compile Include="Core\PcsPanApiRes.cs" />
+    <Compile Include="Core\PcsPanApiResInfo.cs" />
+    <Compile Include="Core\PcsRes.cs" />
     <Compile Include="Core\ProgressChangeArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\Slice.cs" />
