@@ -23,5 +23,10 @@ namespace FileBackup
             }
             return bytes;
         }
+
+        public long CalculateSize(long rawSize)
+        {
+            return rawSize;
+        }
     }
 }
