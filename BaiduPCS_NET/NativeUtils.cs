@@ -58,7 +58,7 @@ namespace BaiduPCS_NET
         {
             IntPtr src = Marshal.AllocHGlobal(bytes.Length);
             Marshal.Copy(bytes, 0, src, bytes.Length);
-            IntPtr r = NativeMethods.pcs_md5_string(src);
+            IntPtr r = NativeMethods.pcs_md5_bytes(src, bytes.Length);
             Marshal.FreeHGlobal(src);
             string md5 = str(r);
             free_str_ptr(src);

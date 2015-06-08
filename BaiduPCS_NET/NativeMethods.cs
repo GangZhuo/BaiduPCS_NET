@@ -157,6 +157,9 @@ namespace BaiduPCS_NET
         public extern static IntPtr pcs_md5_string(IntPtr s);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr pcs_md5_bytes(IntPtr bytes, int len);
+
+        [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static int pcs_strlen(IntPtr s);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
