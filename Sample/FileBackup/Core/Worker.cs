@@ -68,10 +68,13 @@ namespace FileBackup
         /// </summary>
         public int rename_fail { get; protected set; }
 
-        public virtual string ActionName
+        public virtual string WorkerName
         {
             get { return ""; }
         }
+
+        public event OnWorkDone Done;
+
 
         #endregion
 
@@ -126,7 +129,7 @@ namespace FileBackup
             if (!File.Exists(metaFilename))
                 File.AppendAllText(metaFilename, "[Backup]\r\n\tLocalPath=" + backupItem.LocalPath + "\r\n\tRemotePath=" + backupItem.RemotePath + "\r\n");
 
-            File.AppendAllText(metaFilename, "\r\nRun [" + ActionName + "] at " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff tt"));
+            File.AppendAllText(metaFilename, "\r\nRun [" + WorkerName + "] at " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff tt"));
 
         }
 
@@ -135,7 +138,8 @@ namespace FileBackup
         /// </summary>
         protected virtual void _RunCompleted()
         {
-
+            if (Done != null)
+                Done(this);
         }
 
         /// <summary>

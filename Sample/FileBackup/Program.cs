@@ -19,69 +19,83 @@ namespace FileBackup
 
         static Hashtable argIndex;
 
+        static Mail mail;
+
         public static void Main(string[] args)
         {
-            prepare();
-
-            WriteLog("Start");
-
-            #region 为参数建立索引
-
-            argIndex = new Hashtable(args.Length);
-            foreach (string arg in args)
-            {
-                string key = arg,
-                    value = null;
-                int i = arg.IndexOf('=');
-                if (i != -1)
-                {
-                    key = arg.Substring(0, i);
-                    value = arg.Substring(i + 1);
-                }
-                if (!argIndex.ContainsKey(key))
-                    argIndex.Add(key, value);
-                else
-                    argIndex[key] = value;
-            }
-
-            #endregion
-
-            #region 验证参数是否正确
-
-            if (argIndex.ContainsKey("backup") && argIndex.ContainsKey("restore"))
-            {
-                Console.WriteLine("Can't do backup and restore in same time. You should use \"FileBackup.exe backup\" or \"FileBackup.exe restore\" alone.");
-                WriteLog("Can't do backup and restore in same time.");
-                WriteLog("End");
-                return;
-            }
-
-            #endregion
-
-            backupItems = ReadBackupItems();
-            if(backupItems.Length == 0)
-            {
-                Console.WriteLine("Can't read config file or have no backup items: " + config_file);
-                WriteLog("Can't read config file or have no backup items: " + config_file);
-                WriteLog("End");
-                return;
-            }
-
+            bool noerr = false;
             try
             {
+                prepare();
+
+                WriteLog("Start");
+
+                #region 为参数建立索引
+
+                argIndex = new Hashtable(args.Length);
+                foreach (string arg in args)
+                {
+                    string key = arg,
+                        value = null;
+                    int i = arg.IndexOf('=');
+                    if (i != -1)
+                    {
+                        key = arg.Substring(0, i);
+                        value = arg.Substring(i + 1);
+                    }
+                    if (!argIndex.ContainsKey(key))
+                        argIndex.Add(key, value);
+                    else
+                        argIndex[key] = value;
+                }
+
+                #endregion
+
+                #region 验证参数是否正确
+
+                if (argIndex.ContainsKey("backup") && argIndex.ContainsKey("restore"))
+                {
+                    Console.WriteLine("Can't do backup and restore in same time. You should use \"FileBackup.exe backup\" or \"FileBackup.exe restore\" alone.");
+                    WriteLog("Can't do backup and restore in same time.");
+                    return;
+                }
+
+                #endregion
+
+                backupItems = ReadBackupItems();
+                if (backupItems.Length == 0)
+                {
+                    Console.WriteLine("Can't read config file or have no backup items: " + config_file);
+                    WriteLog("Can't read config file or have no backup items: " + config_file);
+                    return;
+                }
+
                 if (InitBaiduPCS())
                 {
                     Run();
                 }
+                noerr = true;
             }
             catch (Exception ex)
             {
                 WriteLog(ex.Message + " " + ex.StackTrace);
             }
-
-            WriteLog("End");
-
-            UninitBaiduPCS();
+            finally
+            {
+                WriteLog("End");
+                UninitBaiduPCS();
+                if (mail.IsValid())
+                {
+                    try
+                    {
+                        mail.SendLogFile("All task completed" + (noerr ? " with no error" : " with error"), "See attached log file.", log_file);
+                    }
+                    catch (Exception ex2)
+                    {
+                        WriteLog("Send mail error: " + ex2.Message);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -106,6 +120,12 @@ namespace FileBackup
             log_file = Path.Combine(log_dir, DateTime.Now.ToString("yyyyMMdd") + ".log");
             cookie_file_name = Path.Combine(user_dir, "cookie.txt");
             config_file = Path.Combine(user_dir, "config.txt");
+            mail_config_file = Path.Combine(user_dir, "mail.txt");
+
+            mail = new Mail();
+            mail.ReadConfig(mail_config_file);
+            if (mail.IsValid())
+                mail.Init();
         }
 
         static bool InitBaiduPCS()
@@ -192,6 +212,7 @@ namespace FileBackup
                     WriteLog("Backup " + backupItem.LocalPath + " => " + backupItem.RemotePath
                         + "\r\nSee details at " + userdir);
                     worker = new BackupWorker(pcs, backupItem, userdir);
+                    worker.Done += onWorkDone;
                     worker.Run();
                 }
             }
@@ -203,7 +224,41 @@ namespace FileBackup
                     WriteLog("Restore " + backupItem.RemotePath + " => " + backupItem.LocalPath
                         + "\r\nSee details at " + userdir);
                     worker = new RestoreWorker(pcs, backupItem, userdir);
+                    worker.Done += onWorkDone;
                     worker.Run();
+                }
+            }
+        }
+
+        static void onWorkDone(IWorker sender)
+        {
+            if (mail.IsValid())
+            {
+                try
+                {
+                    Worker worker = (Worker)sender;
+                    if (worker is BackupWorker)
+                    {
+                        mail.SendLogFile(worker.WorkerName + " " + worker.backupItem.LocalPath + " completed",
+                            worker.WorkerName + " " + worker.backupItem.LocalPath + " => " + worker.backupItem.RemotePath,
+                            worker.log_file);
+                    }
+                    else if (worker is RestoreWorker)
+                    {
+                        mail.SendLogFile(worker.WorkerName + " " + worker.backupItem.RemotePath + " completed",
+                            worker.WorkerName + " " + worker.backupItem.LocalPath + " => " + worker.backupItem.RemotePath,
+                            worker.log_file);
+                    }
+                    else
+                    {
+                        mail.SendLogFile(worker.WorkerName + " completed",
+                            worker.WorkerName + " " + worker.backupItem.LocalPath + " => " + worker.backupItem.RemotePath,
+                            worker.log_file);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("Send mail error: " + ex.Message);
                 }
             }
         }
@@ -344,6 +399,8 @@ namespace FileBackup
         /// 配置文件路径
         /// </summary>
         static string config_file;
+
+        static string mail_config_file;
 
         static BaiduPCS pcs;
     }

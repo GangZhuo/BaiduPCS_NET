@@ -34,7 +34,7 @@ namespace FileBackup
         /// </summary>
         public SortedDictionary<string, long> fileList { get; private set; }
 
-        public override string ActionName
+        public override string WorkerName
         {
             get
             {
@@ -76,7 +76,6 @@ namespace FileBackup
 
         protected override void _RunCompleted()
         {
-            base._RunCompleted();
 
             Uploader uploader = new Uploader(pcs, slice_dir);
             uploader.UploadSliceError += onUploadSliceError;
@@ -139,6 +138,7 @@ namespace FileBackup
 
             #endregion
 
+            base._RunCompleted();
         }
 
         /// <summary>

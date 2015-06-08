@@ -34,7 +34,7 @@ namespace FileBackup
         /// </summary>
         public IList<RemoteFileInfo> fileList { get; private set; }
 
-        public override string ActionName
+        public override string WorkerName
         {
             get
             {
@@ -76,7 +76,6 @@ namespace FileBackup
 
         protected override void _RunCompleted()
         {
-            base._RunCompleted();
 
 
             Downloader downloader = new Downloader(pcs, slice_dir);
@@ -92,8 +91,14 @@ namespace FileBackup
                 File.WriteAllText(Path.Combine(dir, "ref.txt"), listfilename);
                 string listcontent = pcs.cat(listfilename);
                 string filename = Path.GetFileName(listfilename);
-                File.WriteAllText(Path.Combine(dir, "list", filename), listcontent);
+                filename = Path.Combine(dir, "list", filename);
+                if (!Directory.Exists(Path.GetDirectoryName(filename)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(filename));
+                File.WriteAllText(filename, listcontent);
             }
+
+            base._RunCompleted();
+
         }
 
         /// <summary>

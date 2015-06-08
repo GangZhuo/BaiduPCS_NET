@@ -49,6 +49,7 @@
     <Compile Include="Core\IWorker.cs" />
     <Compile Include="Restore\RestoreWorker.cs" />
     <Compile Include="Restore\SecureDownloader.cs" />
+    <Compile Include="Utils\Mail.cs" />
     <Compile Include="Utils\MD5.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
