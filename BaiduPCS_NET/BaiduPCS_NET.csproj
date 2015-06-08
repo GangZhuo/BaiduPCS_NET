@@ -40,11 +40,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaiduPCS.cs" />
-    <Compile Include="Common\Delegates.cs" />
+    <Compile Include="Core\Delegates.cs" />
     <Compile Include="Downloader.cs" />
-    <Compile Include="Native\Delegates.cs" />
-    <Compile Include="Common\SliceHelper.cs" />
-    <Compile Include="Common\SliceErrorArgs.cs" />
+    <Compile Include="Native\NativeDelegates.cs" />
+    <Compile Include="Core\SliceHelper.cs" />
+    <Compile Include="Core\SliceErrorArgs.cs" />
     <Compile Include="Utils\MD5.cs" />
     <Compile Include="Native\NativeConst.cs" />
     <Compile Include="Native\NativeMethods.cs" />
@@ -61,12 +61,12 @@
     <Compile Include="Native\PcsPanApiRes.cs" />
     <Compile Include="Native\PcsPanApiResInfo.cs" />
     <Compile Include="Native\PcsRes.cs" />
-    <Compile Include="Common\ProgressChangeArgs.cs" />
+    <Compile Include="Core\ProgressChangeArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Common\Slice.cs" />
-    <Compile Include="Common\SliceOwner.cs" />
-    <Compile Include="Common\SliceStatus.cs" />
-    <Compile Include="Common\SPair.cs" />
+    <Compile Include="Core\Slice.cs" />
+    <Compile Include="Core\SliceOwner.cs" />
+    <Compile Include="Core\SliceStatus.cs" />
+    <Compile Include="Core\SPair.cs" />
     <Compile Include="Uploader.cs" />
   </ItemGroup>
   <ItemGroup />
