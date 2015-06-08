@@ -61,6 +61,7 @@ namespace FileBackup
         protected override void _Run()
         {
             WriteLogAndConsole("Restore " + backupItem.RemotePath + " => " + backupItem.LocalPath);
+            WriteLogAndConsole("UID: " + pcs.getUID());
 
             Console.WriteLine();
             X = Console.CursorLeft;
@@ -71,6 +72,28 @@ namespace FileBackup
                 total, skip, fail, total - skip - fail,
                 rename_total, rename_fail, rename_total - rename_fail);
             WriteLogAndConsole(s);
+        }
+
+        protected override void _RunCompleted()
+        {
+            base._RunCompleted();
+
+
+            Downloader downloader = new Downloader(pcs, slice_dir);
+            downloader.DownloadSliceError += onDownloadSliceError;
+            downloader.ProgressEnabled = false;
+
+            string dir = Path.Combine(backupItem.LocalPath, ".meta");
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            string listfilename = pcs.cat(remote_ref_file);
+            if (!string.IsNullOrEmpty(listfilename))
+            {
+                File.WriteAllText(Path.Combine(dir, "ref.txt"), listfilename);
+                string listcontent = pcs.cat(listfilename);
+                string filename = Path.GetFileName(listfilename);
+                File.WriteAllText(Path.Combine(dir, "list", filename), listcontent);
+            }
         }
 
         /// <summary>

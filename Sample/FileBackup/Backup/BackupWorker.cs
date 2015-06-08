@@ -61,6 +61,7 @@ namespace FileBackup
         protected override void _Run()
         {
             WriteLogAndConsole("Backup " + backupItem.LocalPath + " => " + backupItem.RemotePath);
+            WriteLogAndConsole("UID: " + pcs.getUID());
 
             Console.WriteLine();
             X = Console.CursorLeft;
