@@ -61,7 +61,6 @@ namespace BaiduPCS_NET
             IntPtr r = NativeMethods.pcs_md5_bytes(src, bytes.Length);
             Marshal.FreeHGlobal(src);
             string md5 = str(r);
-            free_str_ptr(src);
             return md5;
         }
 
