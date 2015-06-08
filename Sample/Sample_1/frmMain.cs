@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.IO;
 
 using BaiduPCS_NET;
+using BaiduPCS_NET.Native;
 
 namespace Sample
 {

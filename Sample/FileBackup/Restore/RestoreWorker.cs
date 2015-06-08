@@ -155,45 +155,6 @@ namespace FileBackup
             if (File.Exists(localPath))
                 File.Delete(localPath);
 
-            PcsFileInfo pfi;
-            FileInfo fi = new FileInfo(localPath);
-
-            //本地文件修改时间
-            long lastModifyTime = Utils.UnixTimeStamp(fi.LastWriteTimeUtc);
-
-            //记录到列表中
-            WriteList(lastModifyTime, remotePath);
-
-            //获取网盘中文件的最后修改时间
-            long remoteLastModifyTime = -1;
-            if (fileList.ContainsKey(remotePath))
-                remoteLastModifyTime = fileList[remotePath];
-
-            //假如本地修改时间 小于等于 网盘修改时间，则无需备份
-            if (remoteLastModifyTime > 0 && lastModifyTime <= remoteLastModifyTime)
-            {
-                skip++;
-                WriteLogAndConsole("Skip " + localPath);
-                return;
-            }
-
-            int x = Console.CursorLeft,
-                y = Console.CursorTop;
-            WriteConsole("Backup " + localPath);
-            X = Console.CursorLeft;
-            Y = Console.CursorTop;
-            pfi = uploader.UploadFile(localPath, remotePath, true);
-            pfi = Validate(pfi, remotePath);
-            if (!pfi.IsEmpty)
-            {
-                WriteLogAndConsole("Backup " + localPath + " Success", y, x);
-            }
-            else
-            {
-                fail++;
-                WriteLogAndConsole("Failed to backup " + localPath + ": " + pcs.getError(), y, x);
-                WriteLogAndConsole(pcs.getRawData(out encode));
-            }
         }
 
         /// <summary>
