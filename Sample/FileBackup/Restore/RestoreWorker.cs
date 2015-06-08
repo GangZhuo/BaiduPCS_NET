@@ -142,6 +142,9 @@ namespace FileBackup
             WriteConsole("Restore " + remoteFileInfo.Path.Substring(backupItem.RemotePath.Length) + "            ", Y, X);
             if (downloader.DownloadFile(remoteFileInfo.Path, localPath))
             {
+                File.SetCreationTime(localPath, Utils.FromUnixTimeStamp(remoteLastModifyTime).ToLocalTime());
+                File.SetLastWriteTime(localPath, Utils.FromUnixTimeStamp(remoteLastModifyTime).ToLocalTime());
+                File.SetLastAccessTime(localPath, Utils.FromUnixTimeStamp(remoteLastModifyTime).ToLocalTime());
                 WriteLogAndConsole("Restore " + remoteFileInfo.Path.Substring(backupItem.RemotePath.Length) + " Success" + "    ", Y, X);
             }
             else

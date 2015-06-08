@@ -21,6 +21,12 @@ namespace FileBackup
             return (long)ts.TotalSeconds;
         }
 
+        public static DateTime FromUnixTimeStamp(long timestamp)
+        {
+            DateTime dt = UST.AddSeconds(timestamp);
+            return dt;
+        }
+
         /// <summary>
         /// 格式化文件大小为人类可读的格式
         /// </summary>
