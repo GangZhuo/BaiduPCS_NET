@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 
+using BaiduPCS_NET.Native;
+
 namespace BaiduPCS_NET
 {
     /// <summary>

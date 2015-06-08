@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BaiduPCS_NET
+namespace BaiduPCS_NET.Native
 {
     public static class NativeConst
     {

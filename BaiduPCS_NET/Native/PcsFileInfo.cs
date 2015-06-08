@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+using BaiduPCS_NET.Native;
+
 namespace BaiduPCS_NET
 {
     public struct PcsFileInfo

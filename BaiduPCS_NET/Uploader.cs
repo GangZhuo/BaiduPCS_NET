@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using BaiduPCS_NET.Native;
+
 namespace BaiduPCS_NET
 {
     /// <summary>

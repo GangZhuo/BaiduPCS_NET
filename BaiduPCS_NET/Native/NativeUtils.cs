@@ -3,7 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace BaiduPCS_NET
+namespace BaiduPCS_NET.Native
 {
     public static class NativeUtils
     {

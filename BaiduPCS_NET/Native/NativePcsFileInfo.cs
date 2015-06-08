@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace BaiduPCS_NET
+namespace BaiduPCS_NET.Native
 {
     /// <summary>
     /// 用于存储网盘中文件的元数据

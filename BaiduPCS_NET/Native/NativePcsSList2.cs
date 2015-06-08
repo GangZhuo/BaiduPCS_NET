@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace BaiduPCS_NET
+namespace BaiduPCS_NET.Native
 {
     [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4, CharSet = CharSet.Ansi)]
     public struct NativePcsSList2
