@@ -18,12 +18,22 @@ namespace BaiduPCS_NET
         /// <summary>
         /// 文件路径
         /// </summary>
-        public string filename { get; set; }
+        public string local_filename { get; set; }
+
+        /// <summary>
+        /// 文件路径
+        /// </summary>
+        public string server_filename { get; set; }
 
         /// <summary>
         /// 是否由用户取消
         /// </summary>
         public bool cancelled { get; set; }
+
+        /// <summary>
+        /// 用户数据
+        /// </summary>
+        public object userdata { get; set; }
 
     }
 }

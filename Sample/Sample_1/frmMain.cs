@@ -480,7 +480,7 @@ namespace Sample
             }
         }
 
-        void uploader_Error(object sender, UploadSliceErrorArgs e)
+        void uploader_Error(object sender, SliceErrorArgs e)
         {
             MessageBox.Show(e.errmsg);
         }

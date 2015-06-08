@@ -197,7 +197,14 @@ namespace FileBackup
             }
             else if (argIndex.ContainsKey("restore"))
             {
-                // TODO: restore
+                foreach (BackupItem backupItem in backupItems)
+                {
+                    string userdir = Path.Combine(user_dir, MD5.Encrypt(backupItem.LocalPath.ToLower()));
+                    WriteLog("Restore " + backupItem.RemotePath + " => " + backupItem.LocalPath
+                        + "\r\nSee details at " + userdir);
+                    worker = new RestoreWorker(pcs, backupItem, userdir);
+                    worker.Run();
+                }
             }
         }
 

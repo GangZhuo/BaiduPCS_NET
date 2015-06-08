@@ -41,7 +41,9 @@
   <ItemGroup>
     <Compile Include="BaiduPCS.cs" />
     <Compile Include="Delegates.cs" />
-    <Compile Include="UploadSliceErrorArgs.cs" />
+    <Compile Include="Downloader.cs" />
+    <Compile Include="SliceHelper.cs" />
+    <Compile Include="SliceErrorArgs.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="NativeConst.cs" />
     <Compile Include="NativeMethods.cs" />

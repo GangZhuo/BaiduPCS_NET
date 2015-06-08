@@ -7,7 +7,7 @@ using BaiduPCS_NET;
 
 namespace FileBackup
 {
-    public class BackupWorker : Worker
+    public class RestoreWorker : Worker
     {
         /// <summary>
         /// 目前只有 pcs.getRawData() 函数使用，用于接收数据编码
@@ -32,9 +32,9 @@ namespace FileBackup
         /// <summary>
         /// 存储网盘中各文件的元数据
         /// </summary>
-        public SortedDictionary<string, long> fileList { get; private set; }
+        public IList<RemoteFileInfo> fileList { get; private set; }
 
-        public BackupWorker(BaiduPCS pcs, BackupItem backupItem, string userDir)
+        public RestoreWorker(BaiduPCS pcs, BackupItem backupItem, string userDir)
             : base(pcs, backupItem, userDir)
         {
 
@@ -43,7 +43,7 @@ namespace FileBackup
         protected override void _PreRun()
         {
             base._PreRun();
-            fileList = ReadRemoteFileListAsDictionary();
+            fileList = ReadRemoteFileListAsList();
             uploader = new SecureUploader(pcs, slice_dir, new MyBlockEncoder());
             uploader.ProgressChange += uploader_ProgressChange;
             uploader.UploadSliceError += uploader_UploadSliceError;
@@ -52,9 +52,9 @@ namespace FileBackup
 
         protected override void _Run()
         {
-            WriteLogAndConsole("Backup " + backupItem.LocalPath + " => " + backupItem.RemotePath);
+            WriteLogAndConsole("Restore " + backupItem.RemotePath + " => " + backupItem.LocalPath);
 
-            BackupDirectory(backupItem.LocalPath, backupItem.RemotePath);
+            RestoreDirectory(backupItem.RemotePath, backupItem.LocalPath);
 
             string s = string.Format("Total: {0}, Skip: {1}, Fail: {2}, Succ: {3}, Rename Total: {4}, Rename Fail: {5}, Rename Succ: {6}\r\n\r\n",
                 total, skip, fail, total - skip - fail,
@@ -130,37 +130,31 @@ namespace FileBackup
         }
 
         /// <summary>
-        /// 备份该目录
+        /// 还原目录
         /// </summary>
-        /// <param name="localPath"></param>
-        /// <param name="remotePath"></param>
-        protected void BackupDirectory(string localPath, string remotePath)
+        /// <param name="remotePath">网盘目录</param>
+        /// <param name="localPath">本地目录</param>
+        protected void RestoreDirectory(string remotePath, string localPath)
         {
-            string filename;
-            string[] dirs = Directory.GetDirectories(localPath);
-            if (dirs != null)
+            foreach (RemoteFileInfo f in fileList)
             {
-                foreach (string dir in dirs)
-                {
-                    filename = Path.GetFileName(dir);
-                    BackupDirectory(dir, remotePath + "/" + filename);
-                }
-            }
-
-            string[] files = Directory.GetFiles(localPath);
-            if (files != null)
-            {
-                foreach (string file in files)
-                {
-                    filename = Path.GetFileName(file);
-                    BackupFile(file, remotePath + "/" + filename);
-                }
+                string filename = f.Path.Substring(remotePath.Length);
+                string localFilename = Path.Combine(localPath, filename);
+                RestoreFile(f.Path, localFilename);
             }
         }
 
-        protected void BackupFile(string localPath, string remotePath)
+        protected void RestoreFile(string remotePath, string localPath)
         {
             total++;
+
+            string dir = Path.GetDirectoryName(localPath);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            if (File.Exists(localPath))
+                File.Delete(localPath);
+
             PcsFileInfo pfi;
             FileInfo fi = new FileInfo(localPath);
 

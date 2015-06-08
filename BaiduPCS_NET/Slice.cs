@@ -39,6 +39,11 @@ namespace BaiduPCS_NET
         /// </summary>
         public SliceOwner owner { get; set; }
 
+        /// <summary>
+        /// 用户数据
+        /// </summary>
+        public object userdata { get; set; }
+
         public Slice()
         {
             this.md5 = string.Empty;
