@@ -143,7 +143,7 @@ namespace BaiduPCS_NET
         /// </summary>
         protected virtual void SetProgress()
         {
-            if (pcs.ProgressEnabled)
+            if (ProgressEnabled)
             {
                 pcs.Progress += new OnHttpProgressFunction(onProgress);
                 oldPgrEnabled = pcs.ProgressEnabled;
@@ -156,7 +156,7 @@ namespace BaiduPCS_NET
         /// </summary>
         protected virtual void ResetProgress()
         {
-            if (pcs.ProgressEnabled)
+            if (ProgressEnabled)
             {
                 pcs.ProgressEnabled = oldPgrEnabled;
                 pcs.Progress -= new OnHttpProgressFunction(onProgress);
