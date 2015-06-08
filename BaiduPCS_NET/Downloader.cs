@@ -98,19 +98,10 @@ namespace BaiduPCS_NET
                 && SliceDownload(remotePath, localPath, filesize))
                 return true;
 
+            //直接下载
             if (DownloadDirect(remotePath, localPath))
                 return true;
             return false;
-        }
-
-        /// <summary>
-        /// 获取本地文件的大小
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns>返回文件的大小</returns>
-        protected virtual long GetFileSize(long filesize)
-        {
-            return filesize;
         }
 
         protected virtual bool DownloadDirect(string remotePath, string localPath, long filesize = -1)
@@ -120,15 +111,15 @@ namespace BaiduPCS_NET
             SliceOwner owner = new SliceOwner()
             {
                 finished = 0,
-                size = GetFileSize(filesize),
+                size = filesize,
                 cancelled = false,
                 local_filename = localPath,
                 server_filename = remotePath
             };
-            pcs.Write += onWriteDirect;
+            pcs.Write += onDirectWrite;
             pcs.WriteUserData = owner;
             PcsRes rc = pcs.download(remotePath, 0, 0);
-            pcs.Write -= onWriteDirect;
+            pcs.Write -= onDirectWrite;
             if (rc == PcsRes.PCS_OK)
                 return true;
             return false;
@@ -148,7 +139,7 @@ namespace BaiduPCS_NET
             SliceOwner owner = new SliceOwner()
             {
                 finished = 0,
-                size = GetFileSize(filesize),
+                size = filesize,
                 cancelled = false,
                 local_filename = localPath,
                 server_filename = remotePath
@@ -297,7 +288,9 @@ namespace BaiduPCS_NET
             int len = data.Length;
             if (len > slice.size - slice.finished)
                 len = (int)(slice.size - slice.finished);
-            using (MemoryMappedViewAccessor accessor = mmf.CreateViewAccessor(slice.offset + slice.finished, slice.size - slice.finished))
+            long offset = slice.offset + slice.finished;
+            long size = len;
+            using (MemoryMappedViewAccessor accessor = mmf.CreateViewAccessor(offset, size))
             {
                 accessor.WriteArray<byte>(0, data, 0, len);
             }
@@ -319,7 +312,7 @@ namespace BaiduPCS_NET
             return (uint)len;
         }
 
-        protected virtual uint onWriteDirect(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
+        protected virtual uint onDirectWrite(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
         {
             SliceOwner owner = (SliceOwner)userdata;
             using(FileStream fs = new FileStream(owner.local_filename, FileMode.Append))

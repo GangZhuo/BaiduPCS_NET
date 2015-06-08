@@ -68,6 +68,11 @@ namespace FileBackup
         /// </summary>
         public int rename_fail { get; protected set; }
 
+        public virtual string ActionName
+        {
+            get { return ""; }
+        }
+
         #endregion
 
         public Worker(BaiduPCS pcs, BackupItem backupItem, string userDir)
@@ -121,7 +126,7 @@ namespace FileBackup
             if (!File.Exists(metaFilename))
                 File.AppendAllText(metaFilename, "[Backup]\r\n\tLocalPath=" + backupItem.LocalPath + "\r\n\tRemotePath=" + backupItem.RemotePath + "\r\n");
 
-            File.AppendAllText(metaFilename, "\r\nRun at " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff tt"));
+            File.AppendAllText(metaFilename, "\r\nRun [" + ActionName + "] at " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff tt"));
 
         }
 

@@ -6,7 +6,7 @@ using BaiduPCS_NET.Native;
 
 namespace FileBackup
 {
-    public class SecureUploader : BaiduPCS_NET.Uploader
+    public class SecureUploader : Uploader
     {
         /// <summary>
         /// 加密器
@@ -81,7 +81,7 @@ namespace FileBackup
         protected override bool Upload(string localPath, string remotePath, bool overwrite, out PcsFileInfo remoteFileInfo, long filesize = -1, string filemd5 = null)
         {
             if (filesize < 0)
-                filesize = GetFileSize(localPath);
+                filesize = GetLocalFileSize(localPath);
             FileStream stream = new FileStream(localPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096);
             remoteFileInfo = pcs.upload_s(remotePath, new OnReadBlockFunction(OnReadBlock), (uint)filesize, stream, overwrite);
             stream.Close();
@@ -95,9 +95,9 @@ namespace FileBackup
         /// </summary>
         /// <param name="filename"></param>
         /// <returns>返回文件的大小</returns>
-        protected override long GetFileSize(string filename)
+        protected override long GetLocalFileSize(string filename)
         {
-            long rawSize = base.GetFileSize(filename);
+            long rawSize = base.GetLocalFileSize(filename);
             return Encoder.CalculateSize(rawSize);
         }
 

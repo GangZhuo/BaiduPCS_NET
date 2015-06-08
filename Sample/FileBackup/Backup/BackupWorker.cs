@@ -34,6 +34,14 @@ namespace FileBackup
         /// </summary>
         public SortedDictionary<string, long> fileList { get; private set; }
 
+        public override string ActionName
+        {
+            get
+            {
+                return "Backup";
+            }
+        }
+
         public BackupWorker(BaiduPCS pcs, BackupItem backupItem, string userDir)
             : base(pcs, backupItem, userDir)
         {
@@ -45,8 +53,8 @@ namespace FileBackup
             base._PreRun();
             fileList = ReadRemoteFileListAsDictionary();
             uploader = new SecureUploader(pcs, slice_dir, new MyBlockEncoder());
-            uploader.ProgressChange += uploader_ProgressChange;
-            uploader.UploadSliceError += uploader_UploadSliceError;
+            uploader.ProgressChange += onProgressChange;
+            uploader.UploadSliceError += onUploadSliceError;
             uploader.ProgressEnabled = true;
         }
 
@@ -54,6 +62,9 @@ namespace FileBackup
         {
             WriteLogAndConsole("Backup " + backupItem.LocalPath + " => " + backupItem.RemotePath);
 
+            Console.WriteLine();
+            X = Console.CursorLeft;
+            Y = Console.CursorTop;
             BackupDirectory(backupItem.LocalPath, backupItem.RemotePath);
 
             string s = string.Format("Total: {0}, Skip: {1}, Fail: {2}, Succ: {3}, Rename Total: {4}, Rename Fail: {5}, Rename Succ: {6}\r\n\r\n",
@@ -67,7 +78,7 @@ namespace FileBackup
             base._RunCompleted();
 
             Uploader uploader = new Uploader(pcs, slice_dir);
-            uploader.UploadSliceError += uploader_UploadSliceError;
+            uploader.UploadSliceError += onUploadSliceError;
             uploader.ProgressEnabled = false;
 
             #region 把文件列表记录 上传到网盘
@@ -179,25 +190,21 @@ namespace FileBackup
             if (remoteLastModifyTime > 0 && lastModifyTime <= remoteLastModifyTime)
             {
                 skip++;
-                WriteLogAndConsole("Skip " + localPath);
+                WriteLogAndConsole("Skip " + localPath.Substring(backupItem.LocalPath.Length) + "    ", Y, X);
                 return;
             }
 
-            int x = Console.CursorLeft,
-                y = Console.CursorTop;
-            WriteConsole("Backup " + localPath);
-            X = Console.CursorLeft;
-            Y = Console.CursorTop;
+            WriteConsole("Backup " + localPath.Substring(backupItem.LocalPath.Length) + "    ", Y, X);
             pfi = uploader.UploadFile(localPath, remotePath, true);
             pfi = Validate(pfi, remotePath);
             if (!pfi.IsEmpty)
             {
-                WriteLogAndConsole("Backup " + localPath + " Success", y, x);
+                WriteLogAndConsole("Backup " + localPath.Substring(backupItem.LocalPath.Length) + " Success    ", Y, X);
             }
             else
             {
                 fail++;
-                WriteLogAndConsole("Failed to backup " + localPath + ": " + pcs.getError(), y, x);
+                WriteLogAndConsole("Failed to backup " + localPath.Substring(backupItem.LocalPath.Length) + ": " + pcs.getError() + "    ", Y, X);
                 WriteLogAndConsole(pcs.getRawData(out encode));
             }
         }
@@ -224,12 +231,12 @@ namespace FileBackup
                 });
             if (ppar.error == 0)
             {
-                WriteLogAndConsole("Rename " + fi.path + " to " + filename1);
+                WriteLogAndConsole("Rename " + fi.path + " to " + filename1.Substring(backupItem.LocalPath.Length) + "    ", Y, X);
             }
             else
             {
                 rename_fail++;
-                WriteLogAndConsole("Failed to rename " + fi.path + " to " + filename1 + " : " + pcs.getError());
+                WriteLogAndConsole("Failed to rename " + fi.path + " to " + filename1.Substring(backupItem.LocalPath.Length) + " : " + pcs.getError() + "    ", Y, X);
                 WriteLogAndConsole(pcs.getRawData(out encode));
             }
             return fi;
@@ -240,7 +247,7 @@ namespace FileBackup
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void uploader_ProgressChange(object sender, ProgressChangeArgs e)
+        private void onProgressChange(object sender, ProgressChangeArgs e)
         {
             if (e.size <= 0)
                 return;
@@ -248,12 +255,12 @@ namespace FileBackup
             string percentage_msg = Utils.HumanReadableSize(e.finished)
                 + "/" + Utils.HumanReadableSize(e.size)
                 + "  " + ((float)percentage / 100.0f).ToString("F2") + "%";
-            WriteConsole(percentage_msg, Y, X);
+            WriteConsole(percentage_msg + "    ", Y + 1, X);
         }
 
-        private void uploader_UploadSliceError(object sender, SliceErrorArgs e)
+        private void onUploadSliceError(object sender, SliceErrorArgs e)
         {
-            WriteLogAndConsole(e.errmsg + "\r\n" + e.raw + "\r\n" + (e.exception != null ? e.exception.Message + "\r\n" + e.exception.StackTrace : ""));
+            WriteLogAndConsole(e.errmsg + "\r\n" + e.raw + "\r\n" + (e.exception != null ? e.exception.Message + "\r\n" + e.exception.StackTrace : "") + "    ", Y + 1, X);
             e.cancelled = false; //重试上传分片
         }
 

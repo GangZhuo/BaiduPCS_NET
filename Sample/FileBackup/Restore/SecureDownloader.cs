@@ -22,5 +22,16 @@ namespace FileBackup
             Encoder = encoder;
         }
 
+        protected override uint onWrite(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
+        {
+            data = Encoder.Encode(data, 0, data.Length);
+            return base.onWrite(sender, data, contentlength, userdata);
+        }
+
+        protected override uint onDirectWrite(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
+        {
+            data = Encoder.Encode(data, 0, data.Length);
+            return base.onDirectWrite(sender, data, contentlength, userdata);
+        }
     }
 }
