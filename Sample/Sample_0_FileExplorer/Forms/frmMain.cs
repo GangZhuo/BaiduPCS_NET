@@ -297,6 +297,7 @@ namespace FileExplorer
                 }
             }
             lvFileList.Items.AddRange(items.ToArray());
+            lblStatus.Text = lvFileList.Items.Count.ToString() + " items"; //更新状态栏
             return true;
         }
 
@@ -306,7 +307,6 @@ namespace FileExplorer
             btnNext.Enabled = next.Count > 0;
             string uppath = Path.GetDirectoryName(currentPath);
             btnUp.Enabled = !string.IsNullOrEmpty(uppath) && uppath != currentPath;
-            lblStatus.Text = lvFileList.Items.Count.ToString() + " items"; //更新状态栏
         }
 
         private PcsFileInfo GetFileMetaInformation(string path)
