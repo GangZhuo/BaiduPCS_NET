@@ -166,7 +166,7 @@ namespace BaiduPCS_NET.Native
         /// <returns>返回非托管空间的指针</returns>
         public static IntPtr str_ptr(string s)
         {
-            byte[] bytes = Encoding.ASCII.GetBytes(s);
+            byte[] bytes = Encoding.UTF8.GetBytes(s);
             IntPtr ptr = Marshal.AllocHGlobal(bytes.Length + 1);
             Marshal.Copy(bytes, 0, ptr, bytes.Length);
             Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, IntPtr.Add(ptr, bytes.Length), 1);

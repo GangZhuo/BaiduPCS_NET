@@ -135,7 +135,7 @@ namespace BaiduPCS_NET
             slice.finished = br.ReadInt64();
             slice.status = (SliceStatus)br.ReadInt32();
             bs = br.ReadBytes(32);
-            slice.md5 = Encoding.ASCII.GetString(bs).Trim('\0').Trim();
+            slice.md5 = Encoding.UTF8.GetString(bs).Trim('\0').Trim();
             return slice;
         }
 

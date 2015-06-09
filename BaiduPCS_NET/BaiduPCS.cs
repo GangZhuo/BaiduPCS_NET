@@ -226,7 +226,7 @@ namespace BaiduPCS_NET
                 string captchaStr;
                 if (this._OnGetCaptcha(this, imgBytes, out captchaStr, this.GetCaptchaUserData))
                 {
-                    byte[] captchaBytes = Encoding.ASCII.GetBytes(captchaStr);
+                    byte[] captchaBytes = Encoding.UTF8.GetBytes(captchaStr);
                     Marshal.Copy(captchaBytes, 0, captcha, captchaBytes.Length < captchaSize ? captchaBytes.Length : (int)captchaSize);
                     Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, IntPtr.Add(captcha, captchaBytes.Length), 1);
                     return NativeConst.True;
