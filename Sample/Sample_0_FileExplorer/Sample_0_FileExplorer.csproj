@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EAC9410A-0903-431D-87ED-223BFB8653C4}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FileExplorer</RootNamespace>
     <AssemblyName>FileExplorer</AssemblyName>
@@ -47,63 +47,72 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnonymousFunction.cs" />
-    <Compile Include="frmCaptcha.cs">
+    <Compile Include="Common\AnonymousFunction.cs" />
+    <Compile Include="Forms\frmCaptcha.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmCaptcha.designer.cs">
+    <Compile Include="Forms\frmCaptcha.designer.cs">
       <DependentUpon>frmCaptcha.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmLogin.cs">
+    <Compile Include="Forms\frmFileName.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmLogin.designer.cs">
+    <Compile Include="Forms\frmFileName.Designer.cs">
+      <DependentUpon>frmFileName.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmLogin.designer.cs">
       <DependentUpon>frmLogin.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmMain.cs">
+    <Compile Include="Forms\frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmMain.Designer.cs">
+    <Compile Include="Forms\frmMain.Designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmMetaInformation.cs">
+    <Compile Include="Forms\frmMetaInformation.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmMetaInformation.designer.cs">
+    <Compile Include="Forms\frmMetaInformation.designer.cs">
       <DependentUpon>frmMetaInformation.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmProgress.cs">
+    <Compile Include="Forms\frmProgress.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmProgress.designer.cs">
+    <Compile Include="Forms\frmProgress.designer.cs">
       <DependentUpon>frmProgress.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmWaiting.cs">
+    <Compile Include="Forms\frmWaiting.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmWaiting.designer.cs">
+    <Compile Include="Forms\frmWaiting.designer.cs">
       <DependentUpon>frmWaiting.cs</DependentUpon>
     </Compile>
-    <Compile Include="SystemIcon.cs" />
+    <Compile Include="Common\SystemIcon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils.cs" />
-    <EmbeddedResource Include="frmCaptcha.resx">
+    <Compile Include="Common\Utils.cs" />
+    <EmbeddedResource Include="Forms\frmCaptcha.resx">
       <DependentUpon>frmCaptcha.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmLogin.resx">
+    <EmbeddedResource Include="Forms\frmFileName.resx">
+      <DependentUpon>frmFileName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmLogin.resx">
       <DependentUpon>frmLogin.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmMain.resx">
+    <EmbeddedResource Include="Forms\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmMetaInformation.resx">
+    <EmbeddedResource Include="Forms\frmMetaInformation.resx">
       <DependentUpon>frmMetaInformation.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmProgress.resx">
+    <EmbeddedResource Include="Forms\frmProgress.resx">
       <DependentUpon>frmProgress.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmWaiting.resx">
+    <EmbeddedResource Include="Forms\frmWaiting.resx">
       <DependentUpon>frmWaiting.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
