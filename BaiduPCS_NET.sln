@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_1", "Sample\Sample_1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_2_FileBackup", "Sample\FileBackup\Sample_2_FileBackup.csproj", "{F9A3443F-9283-4214-9575-97A6E0324F46}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{FC85E053-C4CA-4E77-B958-740118D6A0C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,5 +66,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9} = {FC85E053-C4CA-4E77-B958-740118D6A0C7}
+		{F9A3443F-9283-4214-9575-97A6E0324F46} = {FC85E053-C4CA-4E77-B958-740118D6A0C7}
 	EndGlobalSection
 EndGlobal
