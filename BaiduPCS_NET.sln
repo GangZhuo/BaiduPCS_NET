@@ -7,11 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaiduPCS_NET", "BaiduPCS_NE
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaiduPCS_DLL", "..\BaiduPCS\pcs\BaiduPCS_DLL.vcxproj", "{6EDC18B3-E237-4C73-9A54-58B0BEB98998}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_1", "Sample\Sample_1\Sample_1.csproj", "{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_2_FileBackup", "Sample\FileBackup\Sample_2_FileBackup.csproj", "{F9A3443F-9283-4214-9575-97A6E0324F46}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{FC85E053-C4CA-4E77-B958-740118D6A0C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_1_FileBackup", "Sample\Sample_1_FileBackup\Sample_1_FileBackup.csproj", "{F9A3443F-9283-4214-9575-97A6E0324F46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,16 +41,6 @@ Global
 		{6EDC18B3-E237-4C73-9A54-58B0BEB98998}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{6EDC18B3-E237-4C73-9A54-58B0BEB98998}.Release|Win32.ActiveCfg = Release|Win32
 		{6EDC18B3-E237-4C73-9A54-58B0BEB98998}.Release|Win32.Build.0 = Release|Win32
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9}.Release|Win32.ActiveCfg = Release|Any CPU
 		{F9A3443F-9283-4214-9575-97A6E0324F46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F9A3443F-9283-4214-9575-97A6E0324F46}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9A3443F-9283-4214-9575-97A6E0324F46}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -68,7 +56,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{697DEA0A-FD5F-4E19-A9DC-AE7CDDEEC7B9} = {FC85E053-C4CA-4E77-B958-740118D6A0C7}
 		{F9A3443F-9283-4214-9575-97A6E0324F46} = {FC85E053-C4CA-4E77-B958-740118D6A0C7}
 	EndGlobalSection
 EndGlobal
