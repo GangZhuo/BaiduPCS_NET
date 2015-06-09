@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{EAC9410A-0903-431D-87ED-223BFB8653C4}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FileExplorer</RootNamespace>
+    <AssemblyName>FileExplorer</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnonymousFunction.cs" />
+    <Compile Include="frmCaptcha.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCaptcha.designer.cs">
+      <DependentUpon>frmCaptcha.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmLogin.designer.cs">
+      <DependentUpon>frmLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmMain.Designer.cs">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmMetaInformation.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmMetaInformation.designer.cs">
+      <DependentUpon>frmMetaInformation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmProgress.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProgress.designer.cs">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmWaiting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmWaiting.designer.cs">
+      <DependentUpon>frmWaiting.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SystemIcon.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils.cs" />
+    <EmbeddedResource Include="frmCaptcha.resx">
+      <DependentUpon>frmCaptcha.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLogin.resx">
+      <DependentUpon>frmLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMain.resx">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMetaInformation.resx">
+      <DependentUpon>frmMetaInformation.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProgress.resx">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmWaiting.resx">
+      <DependentUpon>frmWaiting.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="icons\ajax-balls.gif" />
+    <None Include="icons\arrow-down-32x32.png" />
+    <Content Include="icons\arrow-down.png" />
+    <None Include="icons\arrow-left-32x32.png" />
+    <Content Include="icons\arrow-left.png" />
+    <None Include="icons\arrow-right-32x32.png" />
+    <Content Include="icons\arrow-right-24x24.png" />
+    <Content Include="icons\arrow-right.png" />
+    <None Include="icons\arrow-up-32x32.png" />
+    <Content Include="icons\arrow-up.png" />
+    <None Include="icons\cloud-32x32.png" />
+    <Content Include="icons\cloud.png" />
+    <Content Include="icons\dislike.png" />
+    <Content Include="icons\done.png" />
+    <None Include="icons\folder-32x32.png" />
+    <Content Include="icons\folder.png" />
+    <None Include="icons\gear-32x32.png" />
+    <Content Include="icons\gear.png" />
+    <Content Include="icons\globe.png" />
+    <Content Include="icons\grid-2.png" />
+    <Content Include="icons\grid.png" />
+    <Content Include="icons\heart.png" />
+    <Content Include="icons\like.png" />
+    <Content Include="icons\link.png" />
+    <Content Include="icons\list.png" />
+    <Content Include="icons\location.png" />
+    <Content Include="icons\mail.png" />
+    <Content Include="icons\message.png" />
+    <Content Include="icons\pc.png" />
+    <Content Include="icons\picture.png" />
+    <None Include="icons\refresh-32x32.png" />
+    <Content Include="icons\refresh.png" />
+    <None Include="icons\remove-32x32.png" />
+    <Content Include="icons\remove.png" />
+    <None Include="icons\search-32x32.png" />
+    <Content Include="icons\search.png" />
+    <Content Include="icons\smartphone.png" />
+    <Content Include="icons\tablet.png" />
+    <None Include="icons\user-32x32.png" />
+    <Content Include="icons\user.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\BaiduPCS_NET\BaiduPCS_NET.csproj">
+      <Project>{605b8ae1-834a-459b-9461-7ba72d0212ba}</Project>
+      <Name>BaiduPCS_NET</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>echo F | xcopy "$(SolutionDir)$(Configuration)\BaiduPCS.dll" "$(TargetDir)" /E /R /Y</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

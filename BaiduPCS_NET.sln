@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{FC85
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_1_FileBackup", "Sample\Sample_1_FileBackup\Sample_1_FileBackup.csproj", "{F9A3443F-9283-4214-9575-97A6E0324F46}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample_0_FileExplorer", "Sample\Sample_0_FileExplorer\Sample_0_FileExplorer.csproj", "{EAC9410A-0903-431D-87ED-223BFB8653C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,11 +53,22 @@ Global
 		{F9A3443F-9283-4214-9575-97A6E0324F46}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{F9A3443F-9283-4214-9575-97A6E0324F46}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{F9A3443F-9283-4214-9575-97A6E0324F46}.Release|Win32.ActiveCfg = Release|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{EAC9410A-0903-431D-87ED-223BFB8653C4}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F9A3443F-9283-4214-9575-97A6E0324F46} = {FC85E053-C4CA-4E77-B958-740118D6A0C7}
+		{EAC9410A-0903-431D-87ED-223BFB8653C4} = {FC85E053-C4CA-4E77-B958-740118D6A0C7}
 	EndGlobalSection
 EndGlobal
