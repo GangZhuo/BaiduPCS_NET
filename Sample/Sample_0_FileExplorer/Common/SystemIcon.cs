@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,8 +14,13 @@ namespace FileExplorer
 {
     class SystemIcon
     {
+        private static Hashtable cache = new Hashtable();
+
         public static Icon GetFolderIcon(bool isLarge)
         {
+            string key = "Folder_" + isLarge;
+            if (cache.ContainsKey(key))
+                return (Icon)cache[key];
             string regIconString = null;
             string systemDirectory = Environment.SystemDirectory + "\\";
             //直接指定为文件夹图标
@@ -31,6 +37,8 @@ namespace FileExplorer
                 resultIcon = Icon.FromHandle(IconHnd);
             }
             catch { }
+            if (resultIcon != null)
+                cache.Add(key, resultIcon);
             return resultIcon;
         }
 
@@ -51,6 +59,10 @@ namespace FileExplorer
             string ext = Path.GetExtension(fileInfo.server_filename);
             if (string.IsNullOrEmpty(ext))
                 return GetUnknowTypeIcon(isLarge);
+
+            string key = "EXT_" + ext + "_" + isLarge;
+            if (cache.ContainsKey(key))
+                return (Icon)cache[key];
 
             RegistryKey regVersion = null;
             string regFileType = null;
@@ -77,17 +89,16 @@ namespace FileExplorer
 
             Icon resultIcon = GetIcon(regIconString, isLarge);
             if (resultIcon != null)
+            {
+                cache.Add(key, resultIcon);
                 return resultIcon;
+            }
 
             //后缀不是 ".exe"， 返回未知文件类型的图标
             if (!string.Equals(ext, ".exe", StringComparison.InvariantCultureIgnoreCase))
                 return GetUnknowTypeIcon(isLarge);
 
-            regIconString = systemDirectory + "shell32.dll,2"; //返回可执行文件的通用图标
-            resultIcon = GetIcon(regIconString, isLarge);
-            if (resultIcon == null)
-                return GetUnknowTypeIcon(isLarge);
-            return resultIcon;
+            return GetDefaultExeTypeIcon(isLarge);
         }
 
         /// <summary>
@@ -95,10 +106,33 @@ namespace FileExplorer
         /// </summary>
         /// <param name="isLarge"></param>
         /// <returns></returns>
-        private static Icon GetUnknowTypeIcon(bool isLarge)
+        public static Icon GetUnknowTypeIcon(bool isLarge)
         {
+            string key = "Unknow_" + isLarge;
+            if (cache.ContainsKey(key))
+                return (Icon)cache[key];
             string systemDirectory = Environment.SystemDirectory + "\\";
-            return GetIcon(systemDirectory + "shell32.dll,0", isLarge); // 返回未知文件类型的图标
+            Icon resultIcon = GetIcon(systemDirectory + "shell32.dll,0", isLarge); // 返回未知文件类型的图标
+            if (resultIcon != null)
+                cache.Add(key, resultIcon);
+            return resultIcon;
+        }
+
+        /// <summary>
+        /// 返回可执行文件的通用图标
+        /// </summary>
+        /// <param name="isLarge"></param>
+        /// <returns></returns>
+        public static Icon GetDefaultExeTypeIcon(bool isLarge)
+        {
+            string key = "exe_" + isLarge;
+            if (cache.ContainsKey(key))
+                return (Icon)cache[key];
+            string systemDirectory = Environment.SystemDirectory + "\\";
+            Icon resultIcon = GetIcon(systemDirectory + "shell32.dll,2", isLarge); // 返回未知文件类型的图标
+            if (resultIcon != null)
+                cache.Add(key, resultIcon);
+            return resultIcon;
         }
 
         /// <summary>
@@ -121,8 +155,11 @@ namespace FileExplorer
                 int[] phiconLarge = new int[1];
                 int[] phiconSmall = new int[1];
                 uint count = Win32.ExtractIconEx(fileIcon[0], Int32.Parse(fileIcon[1]), phiconLarge, phiconSmall, 1);
-                IntPtr IconHnd = new IntPtr(isLarge ? phiconLarge[0] : phiconSmall[0]);
-                resultIcon = Icon.FromHandle(IconHnd);
+                if (count > 0)
+                {
+                    IntPtr IconHnd = new IntPtr(isLarge ? phiconLarge[0] : phiconSmall[0]);
+                    resultIcon = Icon.FromHandle(IconHnd);
+                }
             }
             catch { }
             return resultIcon;

@@ -325,6 +325,8 @@ namespace FileExplorer
 
         private void Up()
         {
+            if (!currentPath.StartsWith("/"))
+                return;
             string path = Path.GetDirectoryName(currentPath).Replace("\\", "/");
             if (!string.IsNullOrEmpty(path) && path != currentPath)
             {
@@ -396,8 +398,16 @@ namespace FileExplorer
             lvFileList.Items.Clear();
             bigImageList.Images.Clear();
             smallImageList.Images.Clear();
-            bigImageList.Images.Add(SystemIcon.GetFolderIcon(true));
-            smallImageList.Images.Add(SystemIcon.GetFolderIcon(false));
+            Icon icon = SystemIcon.GetFolderIcon(true);
+            if (icon != null)
+                bigImageList.Images.Add(icon);
+            else
+                bigImageList.Images.Add(Properties.Resources.generic_folder);
+            icon = SystemIcon.GetFolderIcon(false);
+            if (icon != null)
+                smallImageList.Images.Add(icon);
+            else
+                smallImageList.Images.Add(Properties.Resources.generic_folder);
             if (list == null)
                 return;
 
@@ -420,8 +430,16 @@ namespace FileExplorer
                     item.SubItems.Add(Utils.HumanReadableSize(file.size));
                     item.SubItems.Add(Path.GetExtension(file.server_filename));
                     item.SubItems.Add(Utils.FromUnixTimeStamp(file.server_mtime).ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
-                    bigImageList.Images.Add(file.server_filename, SystemIcon.GetIcon(file, true));
-                    smallImageList.Images.Add(file.server_filename, SystemIcon.GetIcon(file, false));
+                    icon = SystemIcon.GetIcon(file, true);
+                    if (icon != null)
+                        bigImageList.Images.Add(file.server_filename, icon);
+                    else
+                        bigImageList.Images.Add(file.server_filename, Properties.Resources.generic_file);
+                    icon = SystemIcon.GetIcon(file, false);
+                    if (icon != null)
+                        smallImageList.Images.Add(file.server_filename, icon);
+                    else
+                        smallImageList.Images.Add(file.server_filename, Properties.Resources.generic_file);
                     item.ImageKey = file.server_filename;
                 }
             }
@@ -433,8 +451,13 @@ namespace FileExplorer
         {
             btnBack.Enabled = history.Count > 0;
             btnNext.Enabled = next.Count > 0;
-            string uppath = Path.GetDirectoryName(currentPath);
-            btnUp.Enabled = !string.IsNullOrEmpty(uppath) && uppath != currentPath;
+            if (currentPath.StartsWith("/"))
+            {
+                string uppath = Path.GetDirectoryName(currentPath);
+                btnUp.Enabled = !string.IsNullOrEmpty(uppath) && uppath != currentPath;
+            }
+            else
+                btnUp.Enabled = false;
         }
 
         private PcsFileInfo GetFileMetaInformation(string path)

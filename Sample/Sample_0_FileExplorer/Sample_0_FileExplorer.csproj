@@ -154,6 +154,8 @@
     <Content Include="icons\folder.png" />
     <None Include="icons\gear-32x32.png" />
     <Content Include="icons\gear.png" />
+    <Content Include="icons\generic-file.png" />
+    <Content Include="icons\generic-folder.png" />
     <Content Include="icons\globe.png" />
     <Content Include="icons\grid-2.png" />
     <Content Include="icons\grid.png" />
