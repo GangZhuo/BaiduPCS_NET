@@ -67,15 +67,19 @@
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.txSearchKeyword = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.btnGo = new System.Windows.Forms.Button();
             this.btnBack = new System.Windows.Forms.ToolStripButton();
             this.btnNext = new System.Windows.Forms.ToolStripButton();
             this.btnUp = new System.Windows.Forms.ToolStripButton();
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
-            this.btnUpload = new System.Windows.Forms.ToolStripButton();
             this.btnNewFolder = new System.Windows.Forms.ToolStripButton();
+            this.btnUpload = new System.Windows.Forms.ToolStripButton();
             this.btnSearch = new System.Windows.Forms.ToolStripButton();
+            this.btnHistory = new System.Windows.Forms.ToolStripButton();
             this.btnSettings = new System.Windows.Forms.ToolStripButton();
+            this.btnLogout = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -346,8 +350,12 @@
             this.btnNewFolder,
             this.toolStripSeparator4,
             this.btnUpload,
+            this.btnLogout,
+            this.toolStripSeparator7,
             this.btnSearch,
             this.toolStripSeparator5,
+            this.btnHistory,
+            this.toolStripSeparator6,
             this.btnSettings,
             this.txSearchKeyword});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
@@ -396,6 +404,11 @@
             this.txSearchKeyword.Size = new System.Drawing.Size(180, 23);
             this.txSearchKeyword.Text = "Search by filename";
             this.txSearchKeyword.ToolTipText = "Search by filename";
+            // 
+            // toolStripSeparator6
+            // 
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(6, 35);
             // 
             // btnGo
             // 
@@ -456,18 +469,6 @@
             this.btnRefresh.ToolTipText = "Refresh";
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
-            // btnUpload
-            // 
-            this.btnUpload.AutoSize = false;
-            this.btnUpload.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUpload.Image = global::FileExplorer.Properties.Resources.cloud_32x32;
-            this.btnUpload.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnUpload.Name = "btnUpload";
-            this.btnUpload.Size = new System.Drawing.Size(32, 32);
-            this.btnUpload.Text = "Upload";
-            this.btnUpload.ToolTipText = "Upload";
-            this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
-            // 
             // btnNewFolder
             // 
             this.btnNewFolder.AutoSize = false;
@@ -477,8 +478,20 @@
             this.btnNewFolder.Name = "btnNewFolder";
             this.btnNewFolder.Size = new System.Drawing.Size(32, 32);
             this.btnNewFolder.Text = "New Folder";
-            this.btnNewFolder.ToolTipText = "Create new folder";
+            this.btnNewFolder.ToolTipText = "Create new folder in current directory";
             this.btnNewFolder.Click += new System.EventHandler(this.btnNewFolder_Click);
+            // 
+            // btnUpload
+            // 
+            this.btnUpload.AutoSize = false;
+            this.btnUpload.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUpload.Image = global::FileExplorer.Properties.Resources.upload_32x32;
+            this.btnUpload.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUpload.Name = "btnUpload";
+            this.btnUpload.Size = new System.Drawing.Size(32, 32);
+            this.btnUpload.Text = "Upload";
+            this.btnUpload.ToolTipText = "Upload file to current directory";
+            this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
             // 
             // btnSearch
             // 
@@ -493,6 +506,17 @@
             this.btnSearch.ToolTipText = "Search";
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
+            // btnHistory
+            // 
+            this.btnHistory.AutoSize = false;
+            this.btnHistory.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnHistory.Image = global::FileExplorer.Properties.Resources.graphics_32x32;
+            this.btnHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnHistory.Name = "btnHistory";
+            this.btnHistory.Size = new System.Drawing.Size(32, 32);
+            this.btnHistory.Text = "History";
+            this.btnHistory.ToolTipText = "View download history";
+            // 
             // btnSettings
             // 
             this.btnSettings.AutoSize = false;
@@ -502,8 +526,25 @@
             this.btnSettings.Name = "btnSettings";
             this.btnSettings.Size = new System.Drawing.Size(32, 32);
             this.btnSettings.Text = "Settings";
-            this.btnSettings.ToolTipText = "Settings";
+            this.btnSettings.ToolTipText = "Open the settings window";
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
+            // 
+            // btnLogout
+            // 
+            this.btnLogout.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.btnLogout.AutoSize = false;
+            this.btnLogout.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnLogout.Image = global::FileExplorer.Properties.Resources.logout_32x32;
+            this.btnLogout.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnLogout.Name = "btnLogout";
+            this.btnLogout.Size = new System.Drawing.Size(32, 32);
+            this.btnLogout.Text = "Logout";
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 35);
             // 
             // frmMain
             // 
@@ -580,6 +621,10 @@
         private System.Windows.Forms.ToolStripMenuItem renameToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripTextBox txSearchKeyword;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.ToolStripButton btnHistory;
+        private System.Windows.Forms.ToolStripButton btnLogout;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
     }
 }
 

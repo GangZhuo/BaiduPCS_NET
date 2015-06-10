@@ -238,6 +238,7 @@ namespace FileExplorer
                 this.Invoke(new AnonymousFunction(delegate()
                 {
                     frmLogin frm = new frmLogin(pcs);
+                    frm.TopMost = true;
                     dr = frm.ShowDialog();
                 }));
                 if (dr != System.Windows.Forms.DialogResult.OK)

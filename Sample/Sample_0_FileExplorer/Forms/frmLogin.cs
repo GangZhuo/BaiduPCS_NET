@@ -63,6 +63,7 @@ namespace FileExplorer
         {
             captcha = null;
             frmCaptcha frm = new frmCaptcha(imgBytes);
+            frm.TopMost = true;
             if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 captcha = frm.Captcha;

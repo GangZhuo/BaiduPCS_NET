@@ -136,48 +136,27 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="icons\ajax-balls.gif" />
+    <Content Include="icons\loading.gif" />
+    <None Include="icons\wait_bg.png" />
     <None Include="icons\arrow-down-32x32.png" />
-    <Content Include="icons\arrow-down.png" />
     <None Include="icons\arrow-left-32x32.png" />
-    <Content Include="icons\arrow-left.png" />
     <None Include="icons\arrow-right-32x32.png" />
     <Content Include="icons\arrow-right-24x24.png" />
-    <Content Include="icons\arrow-right.png" />
     <None Include="icons\arrow-up-32x32.png" />
-    <Content Include="icons\arrow-up.png" />
     <None Include="icons\cloud-32x32.png" />
-    <Content Include="icons\cloud.png" />
-    <Content Include="icons\dislike.png" />
-    <Content Include="icons\done.png" />
     <None Include="icons\folder-32x32.png" />
+    <Content Include="icons\download-32x32.png" />
     <Content Include="icons\folder.png" />
     <None Include="icons\gear-32x32.png" />
-    <Content Include="icons\gear.png" />
     <Content Include="icons\generic-file.png" />
     <Content Include="icons\generic-folder.png" />
-    <Content Include="icons\globe.png" />
-    <Content Include="icons\grid-2.png" />
-    <Content Include="icons\grid.png" />
-    <Content Include="icons\heart.png" />
-    <Content Include="icons\like.png" />
-    <Content Include="icons\link.png" />
-    <Content Include="icons\list.png" />
-    <Content Include="icons\location.png" />
-    <Content Include="icons\mail.png" />
-    <Content Include="icons\message.png" />
-    <Content Include="icons\pc.png" />
-    <Content Include="icons\picture.png" />
+    <None Include="icons\graphics-32x32.png" />
+    <Content Include="icons\logout-32x32.png" />
     <None Include="icons\refresh-32x32.png" />
-    <Content Include="icons\refresh.png" />
     <None Include="icons\remove-32x32.png" />
-    <Content Include="icons\remove.png" />
     <None Include="icons\search-32x32.png" />
-    <Content Include="icons\search.png" />
-    <Content Include="icons\smartphone.png" />
-    <Content Include="icons\tablet.png" />
     <None Include="icons\user-32x32.png" />
-    <Content Include="icons\user.png" />
+    <Content Include="icons\upload-32x32.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BaiduPCS_NET\BaiduPCS_NET.csproj">
