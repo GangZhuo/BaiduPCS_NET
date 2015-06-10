@@ -42,6 +42,11 @@ namespace FileExplorer
             return op;
         }
 
+        public bool Contains(OperationInfo op)
+        {
+            return queue.Contains(op);
+        }
+
         public void Clear()
         {
             queue.Clear();

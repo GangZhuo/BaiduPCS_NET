@@ -25,6 +25,7 @@ namespace FileExplorer
         private PcsFileInfo source;
         private bool isMove = false;
         private DUQueue queue = null;
+        private frmHistory frmHistory = null;
 
         public frmMain()
         {
@@ -575,7 +576,23 @@ namespace FileExplorer
 
         private void ShowHistoryWindow(bool forUpload = false)
         {
+            if (frmHistory == null)
+            {
+                frmHistory = new frmHistory();
+                frmHistory.FormClosed += frmHistory_FormClosed;
+                if (forUpload)
+                    frmHistory.SelectedTabIndex = 2;
+                frmHistory.Show();
+            }
+            else
+            {
+                frmHistory.Activate();
+            }
+        }
 
+        private void frmHistory_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            frmHistory = null;
         }
 
         private PcsFileInfo GetFileMetaInformation(string path)
@@ -780,6 +797,14 @@ namespace FileExplorer
                     to = saveFileDialog1.FileName,
                     status = OperationStatus.Pending
                 };
+                if(queue.Contains(op))
+                {
+                    if (MessageBox.Show("The file have been in the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        ShowHistoryWindow();
+                    }
+                    return false;
+                }
                 queue.Enqueue(op);
                 if (MessageBox.Show("Add 1 items to the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
@@ -795,6 +820,7 @@ namespace FileExplorer
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string uid = pcs.getUID();
+                int addedCount = 0;
                 foreach (string filename in openFileDialog1.FileNames)
                 {
                     OperationInfo op = new OperationInfo()
@@ -805,13 +831,32 @@ namespace FileExplorer
                         to = to.path,
                         status = OperationStatus.Pending
                     };
+                    if (queue.Contains(op))
+                    {
+                        continue;
+                    }
                     queue.Enqueue(op);
+                    addedCount++;
                 }
-                if (MessageBox.Show("Add " + openFileDialog1.FileNames.Length + " items to the queue. View the queue?", "Upload", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                string errmsg = string.Empty;
+                if (addedCount > 0)
                 {
-                    ShowHistoryWindow(true);
+                    if (addedCount != openFileDialog1.FileNames.Length)
+                        errmsg = "Add " + addedCount + " items to the queue, duplicated " + (openFileDialog1.FileNames.Length - addedCount) + " items.";
+                    else
+                        errmsg = "Add " + addedCount + " items to the queue.";
+                    if (MessageBox.Show(errmsg + " View the queue?", "Upload", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        ShowHistoryWindow(true);
+                    }
+                    return true;
                 }
-                return true;
+                else
+                {
+                    errmsg = "Failed to add the files to the queue.";
+                    MessageBox.Show(errmsg, "Upload");
+                    return false;
+                }
             }
             return false;
         }

@@ -93,6 +93,18 @@
     </Compile>
     <Compile Include="Common\SystemIcon.cs" />
     <Compile Include="Common\Operation.cs" />
+    <Compile Include="Forms\frmSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmSettings.Designer.cs">
+      <DependentUpon>frmSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmHistory.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmHistory.Designer.cs">
+      <DependentUpon>frmHistory.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Common\Utils.cs" />
@@ -101,6 +113,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmFileName.resx">
       <DependentUpon>frmFileName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmHistory.resx">
+      <DependentUpon>frmHistory.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmLogin.resx">
       <DependentUpon>frmLogin.cs</DependentUpon>
@@ -113,6 +128,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmProgress.resx">
       <DependentUpon>frmProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmSettings.resx">
+      <DependentUpon>frmSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmWaiting.resx">
       <DependentUpon>frmWaiting.cs</DependentUpon>
