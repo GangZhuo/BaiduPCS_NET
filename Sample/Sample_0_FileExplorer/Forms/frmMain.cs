@@ -193,16 +193,26 @@ namespace FileExplorer
         private void btnSearch_Click(object sender, EventArgs e)
         {
             string keywords = txSearchKeyword.Text.Trim();
-            if(string.IsNullOrEmpty(keywords) || string.Equals(keywords, "Search by filename", StringComparison.InvariantCultureIgnoreCase))
+            if (string.IsNullOrEmpty(keywords) || string.Equals(keywords, "Search by filename", StringComparison.InvariantCultureIgnoreCase))
             {
                 MessageBox.Show("Please input the filename.");
                 txSearchKeyword.Focus();
                 return;
             }
+            if (keywords.Length <= 3)
+            {
+                if (MessageBox.Show("The keywords is too short, the result maybe very large, you maybe need to wait a long time, are you sure to continue?",
+                    "Keywords too short", MessageBoxButtons.OKCancel) != System.Windows.Forms.DialogResult.OK)
+                {
+                    txSearchKeyword.Focus();
+                    txSearchKeyword.SelectAll();
+                    return;
+                }
+            }
             string path = currentPath;
             if (!path.StartsWith("/"))
                 path = lastSearchPath;
-            if(SearchFiles(currentPath, keywords))
+            if (SearchFiles(path, keywords))
             {
                 if (!string.IsNullOrEmpty(currentPath) && currentPath.StartsWith("/"))
                     history.Push(currentPath);
@@ -377,6 +387,13 @@ namespace FileExplorer
                     list = pcs.search(path, keyword, true);
                     if (list == null)
                         errmsg = pcs.getError();
+                    else
+                    {
+                        //排序
+                        List<PcsFileInfo> l = new List<PcsFileInfo>(list);
+                        l.Sort(new PcsFileInfoComparer());
+                        list = l.ToArray();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -669,17 +686,40 @@ namespace FileExplorer
             contextItem = item;
             if (item == null)   //当前位置没有ListViewItem
             {
-                openToolStripMenuItem1.Visible = false;
-                uploadFileToolStripMenuItem.Visible = true;
-                viewToolStripMenuItem1.Visible = true;
-                refreshToolStripMenuItem1.Visible = true;
-                renameToolStripMenuItem.Visible = false;
-                cutToolStripMenuItem1.Visible = false;
-                copyToolStripMenuItem1.Visible = false;
-                deleteToolStripMenuItem1.Visible = false;
-                parseToolStripMenuItem1.Visible = !source.IsEmpty;
-                mkdirToolStripMenuItem1.Visible = true;
-                attributesToolStripMenuItem1.Visible = true;
+                if(!currentPath.StartsWith("/"))
+                {
+                    openToolStripMenuItem1.Visible = false;
+                    uploadFileToolStripMenuItem.Visible = false;
+                    viewToolStripMenuItem1.Visible = true;
+                    refreshToolStripMenuItem1.Visible = false;
+                    renameToolStripMenuItem.Visible = false;
+                    cutToolStripMenuItem1.Visible = false;
+                    copyToolStripMenuItem1.Visible = false;
+                    deleteToolStripMenuItem1.Visible = false;
+                    parseToolStripMenuItem1.Visible = false;
+                    mkdirToolStripMenuItem1.Visible = false;
+                    attributesToolStripMenuItem1.Visible = false;
+
+                    toolStripMenuItem3.Visible = false;
+                    toolStripMenuItem4.Visible = false;
+                }
+                else
+                {
+                    openToolStripMenuItem1.Visible = false;
+                    uploadFileToolStripMenuItem.Visible = true;
+                    viewToolStripMenuItem1.Visible = true;
+                    refreshToolStripMenuItem1.Visible = true;
+                    renameToolStripMenuItem.Visible = false;
+                    cutToolStripMenuItem1.Visible = false;
+                    copyToolStripMenuItem1.Visible = false;
+                    deleteToolStripMenuItem1.Visible = false;
+                    parseToolStripMenuItem1.Visible = !source.IsEmpty;
+                    mkdirToolStripMenuItem1.Visible = true;
+                    attributesToolStripMenuItem1.Visible = true;
+
+                    toolStripMenuItem3.Visible = true;
+                    toolStripMenuItem4.Visible = true;
+                }
             }
             else    //有
             {
@@ -704,6 +744,9 @@ namespace FileExplorer
                 parseToolStripMenuItem1.Visible = !source.IsEmpty && fileinfo.isdir;
                 mkdirToolStripMenuItem1.Visible = false;
                 attributesToolStripMenuItem1.Visible = true;
+
+                toolStripMenuItem3.Visible = true;
+                toolStripMenuItem4.Visible = true;
             }
         }
 
@@ -863,6 +906,25 @@ namespace FileExplorer
 
         #endregion
 
-
+        class PcsFileInfoComparer : IComparer<PcsFileInfo>
+        {
+            public int Compare(PcsFileInfo x, PcsFileInfo y)
+            {
+                int a = 10, b = 10;
+                if(!x.IsEmpty)
+                {
+                    if (x.isdir)
+                        a--;
+                }
+                if(!y.IsEmpty)
+                {
+                    if (y.isdir)
+                        b--;
+                }
+                if (a != b)
+                    return a - b;
+                return string.Compare(x.server_filename, y.server_filename);
+            }
+        }
     }
 }

@@ -58,24 +58,24 @@
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblStatus2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.btnGo = new System.Windows.Forms.Button();
             this.cmbLocation = new System.Windows.Forms.ComboBox();
             this.lblLocation = new System.Windows.Forms.Label();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.txSearchKeyword = new System.Windows.Forms.ToolStripTextBox();
+            this.btnGo = new System.Windows.Forms.Button();
             this.btnBack = new System.Windows.Forms.ToolStripButton();
             this.btnNext = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnUp = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.btnUpload = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.btnNewFolder = new System.Windows.Forms.ToolStripButton();
             this.btnSearch = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.btnSettings = new System.Windows.Forms.ToolStripButton();
-            this.txSearchKeyword = new System.Windows.Forms.ToolStripTextBox();
             this.contextMenuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -312,17 +312,6 @@
             this.panel2.Size = new System.Drawing.Size(739, 26);
             this.panel2.TabIndex = 5;
             // 
-            // btnGo
-            // 
-            this.btnGo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnGo.Image = global::FileExplorer.Properties.Resources.arrow_right_24x24;
-            this.btnGo.Location = new System.Drawing.Point(705, -1);
-            this.btnGo.Name = "btnGo";
-            this.btnGo.Size = new System.Drawing.Size(24, 24);
-            this.btnGo.TabIndex = 2;
-            this.btnGo.UseVisualStyleBackColor = true;
-            this.btnGo.Click += new System.EventHandler(this.btnGo_Click);
-            // 
             // cmbLocation
             // 
             this.cmbLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -354,9 +343,9 @@
             this.toolStripSeparator2,
             this.btnRefresh,
             this.toolStripSeparator3,
-            this.btnUpload,
-            this.toolStripSeparator4,
             this.btnNewFolder,
+            this.toolStripSeparator4,
+            this.btnUpload,
             this.btnSearch,
             this.toolStripSeparator5,
             this.btnSettings,
@@ -366,6 +355,58 @@
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.toolStrip1.Size = new System.Drawing.Size(739, 35);
             this.toolStrip1.TabIndex = 2;
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 35);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 35);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 35);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 35);
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 35);
+            // 
+            // txSearchKeyword
+            // 
+            this.txSearchKeyword.AcceptsReturn = true;
+            this.txSearchKeyword.AcceptsTab = true;
+            this.txSearchKeyword.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.txSearchKeyword.AutoSize = false;
+            this.txSearchKeyword.BackColor = System.Drawing.Color.White;
+            this.txSearchKeyword.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txSearchKeyword.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(204)))), ((int)(((byte)(204)))), ((int)(((byte)(204)))));
+            this.txSearchKeyword.Margin = new System.Windows.Forms.Padding(1, 4, 1, 4);
+            this.txSearchKeyword.MaxLength = 50;
+            this.txSearchKeyword.Name = "txSearchKeyword";
+            this.txSearchKeyword.Size = new System.Drawing.Size(180, 23);
+            this.txSearchKeyword.Text = "Search by filename";
+            this.txSearchKeyword.ToolTipText = "Search by filename";
+            // 
+            // btnGo
+            // 
+            this.btnGo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnGo.Image = global::FileExplorer.Properties.Resources.arrow_right_24x24;
+            this.btnGo.Location = new System.Drawing.Point(705, -1);
+            this.btnGo.Name = "btnGo";
+            this.btnGo.Size = new System.Drawing.Size(24, 24);
+            this.btnGo.TabIndex = 2;
+            this.btnGo.UseVisualStyleBackColor = true;
+            this.btnGo.Click += new System.EventHandler(this.btnGo_Click);
             // 
             // btnBack
             // 
@@ -391,11 +432,6 @@
             this.btnNext.ToolTipText = "Next";
             this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 35);
-            // 
             // btnUp
             // 
             this.btnUp.AutoSize = false;
@@ -407,11 +443,6 @@
             this.btnUp.Text = "Up";
             this.btnUp.ToolTipText = "Up";
             this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 35);
             // 
             // btnRefresh
             // 
@@ -425,11 +456,6 @@
             this.btnRefresh.ToolTipText = "Refresh";
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 35);
-            // 
             // btnUpload
             // 
             this.btnUpload.AutoSize = false;
@@ -441,11 +467,6 @@
             this.btnUpload.Text = "Upload";
             this.btnUpload.ToolTipText = "Upload";
             this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
-            // 
-            // toolStripSeparator4
-            // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 35);
             // 
             // btnNewFolder
             // 
@@ -472,11 +493,6 @@
             this.btnSearch.ToolTipText = "Search";
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
-            // toolStripSeparator5
-            // 
-            this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 35);
-            // 
             // btnSettings
             // 
             this.btnSettings.AutoSize = false;
@@ -488,22 +504,6 @@
             this.btnSettings.Text = "Settings";
             this.btnSettings.ToolTipText = "Settings";
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
-            // 
-            // txSearchKeyword
-            // 
-            this.txSearchKeyword.AcceptsReturn = true;
-            this.txSearchKeyword.AcceptsTab = true;
-            this.txSearchKeyword.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.txSearchKeyword.AutoSize = false;
-            this.txSearchKeyword.BackColor = System.Drawing.Color.White;
-            this.txSearchKeyword.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txSearchKeyword.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(204)))), ((int)(((byte)(204)))), ((int)(((byte)(204)))));
-            this.txSearchKeyword.Margin = new System.Windows.Forms.Padding(1, 4, 1, 4);
-            this.txSearchKeyword.MaxLength = 50;
-            this.txSearchKeyword.Name = "txSearchKeyword";
-            this.txSearchKeyword.Size = new System.Drawing.Size(180, 23);
-            this.txSearchKeyword.Text = "Search by filename";
-            this.txSearchKeyword.ToolTipText = "Search by filename";
             // 
             // frmMain
             // 
