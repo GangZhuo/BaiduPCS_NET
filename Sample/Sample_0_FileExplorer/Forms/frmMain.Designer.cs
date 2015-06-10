@@ -504,9 +504,6 @@
             this.txSearchKeyword.Size = new System.Drawing.Size(180, 23);
             this.txSearchKeyword.Text = "Search by filename";
             this.txSearchKeyword.ToolTipText = "Search by filename";
-            this.txSearchKeyword.GotFocus += txSearchKeyword_GotFocus;
-            this.txSearchKeyword.LostFocus += txSearchKeyword_LostFocus;
-            this.txSearchKeyword.KeyPress += txSearchKeyword_KeyPress;
             // 
             // frmMain
             // 

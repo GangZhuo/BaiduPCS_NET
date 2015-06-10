@@ -27,6 +27,15 @@ namespace FileExplorer
         public frmMain()
         {
             InitializeComponent();
+
+            lvFileList.DoubleClick += lvFileList_DoubleClick;
+
+            txSearchKeyword.GotFocus += txSearchKeyword_GotFocus;
+            txSearchKeyword.LostFocus += txSearchKeyword_LostFocus;
+            txSearchKeyword.KeyPress += txSearchKeyword_KeyPress;
+
+            cmbLocation.KeyPress += cmbLocation_KeyPress;
+
             history = new Stack<string>();
             next = new Stack<string>();
             source = new PcsFileInfo();
@@ -34,6 +43,51 @@ namespace FileExplorer
 
         private void Form1_Load(object sender, EventArgs e)
         {
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (pcs == null)
+            {
+                bool succ = true;
+                ExecTask("Login", "Logging in ...",
+                    new ThreadStart(delegate()
+                    {
+                        try
+                        {
+                            if (!createBaiduPCS())
+                            {
+                                succ = false;
+                                MessageBox.Show("Can't create BaiduPCS");
+                                Application.Exit();
+                                return;
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            succ = false;
+                            MessageBox.Show("Can't create BaiduPCS: " + ex.Message);
+                            Application.Exit();
+                            return;
+                        }
+                    }),
+                    new ThreadStart(delegate()
+                    {
+                        if (!succ)
+                            return;
+                        this.Invoke(new AnonymousFunction(delegate()
+                        {
+                            Go("/");
+                        }));
+                    }));
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            DisposePCS();
         }
 
         private void txSearchKeyword_LostFocus(object sender, EventArgs e)
@@ -73,12 +127,6 @@ namespace FileExplorer
             }
         }
 
-        private void btnGo_Click(object sender, EventArgs e)
-        {
-            string newPath = cmbLocation.Text;
-            Go(newPath);
-        }
-
         private void lvFileList_DoubleClick(object sender, EventArgs e)
         {
             if (lvFileList.SelectedItems.Count == 0)
@@ -88,6 +136,12 @@ namespace FileExplorer
             {
                 Go(fileInfo.path);
             }
+        }
+
+        private void btnGo_Click(object sender, EventArgs e)
+        {
+            string newPath = cmbLocation.Text;
+            Go(newPath);
         }
 
         private void btnBack_Click(object sender, EventArgs e)
@@ -140,28 +194,6 @@ namespace FileExplorer
 
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            if(pcs == null)
-            {
-                lblStatus.Text = "Logging in...";
-                new Thread(new ThreadStart(delegate() {
-                    if (!createBaiduPCS())
-                    {
-                        MessageBox.Show("Can't create BaiduPCS");
-                        Application.Exit();
-                        return;
-                    }
-                    this.Invoke(new AnonymousFunction(delegate()
-                    {
-                        Go("/");
-                    }));
-                })).Start();
-
-            }
-        }
-
         private bool createBaiduPCS()
         {
             string cookiefilename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".pcs", "cookie.txt");
@@ -190,6 +222,37 @@ namespace FileExplorer
                 lblStatus.Text = title;
             }));
             return true;
+        }
+
+        private void DisposePCS()
+        {
+            if (pcs != null)
+            {
+                try { pcs.Dispose(); }
+                catch { }
+                pcs = null;
+            }
+        }
+
+        private void ExecTask(ThreadStart task, ThreadStart onTaskFinished = null)
+        {
+            ExecTask("Processing", "Processing...\r\nPlease wait...", task, onTaskFinished);
+        }
+
+        private void ExecTask(string title, string description, ThreadStart task, ThreadStart onTaskFinished = null)
+        {
+            if(this.InvokeRequired)
+            {
+                this.Invoke(new AnonymousFunction(delegate() {
+                    frmWaiting frm = new frmWaiting(title, description);
+                    frm.Exec(task, onTaskFinished);
+                }));
+            }
+            else
+            {
+                frmWaiting frm = new frmWaiting(title, description);
+                frm.Exec(task, onTaskFinished);
+            }
         }
 
         private void Go(string newPath)
@@ -257,10 +320,9 @@ namespace FileExplorer
 
         private bool ListFiles(string path)
         {
-            frmWaiting frm = new frmWaiting("Loading", "Loading files ...");
             PcsFileInfo[] list = null;
             string errmsg = null;
-            new Thread(new ThreadStart(delegate()
+            ExecTask(new ThreadStart(delegate()
             {
                 try
                 {
@@ -268,19 +330,11 @@ namespace FileExplorer
                     if (list == null)
                         errmsg = pcs.getError();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     errmsg = ex.Message;
                 }
-                finally
-                {
-                    this.Invoke(new AnonymousFunction(delegate()
-                    {
-                        frm.Close();
-                    }));
-                }
-            })).Start();
-            frm.ShowDialog();
+            }));
             if (errmsg != null)
             {
                 MessageBox.Show("Can't list the file for " + path + ": " + errmsg);
@@ -335,9 +389,8 @@ namespace FileExplorer
         private PcsFileInfo GetFileMetaInformation(string path)
         {
             PcsFileInfo fileinfo = new PcsFileInfo();
-            frmWaiting frm = new frmWaiting("Loading", "Loading meta information ...");
             string errmsg = null;
-            new Thread(new ThreadStart(delegate()
+            ExecTask(new ThreadStart(delegate()
             {
                 try
                 {
@@ -351,15 +404,7 @@ namespace FileExplorer
                 {
                     errmsg = ex.Message;
                 }
-                finally
-                {
-                    this.Invoke(new AnonymousFunction(delegate()
-                    {
-                        frm.Close();
-                    }));
-                }
-            })).Start();
-            frm.ShowDialog();
+            }));
             if (errmsg != null)
             {
                 MessageBox.Show("Can't get meta information for " + path + ": " + errmsg);
@@ -376,13 +421,11 @@ namespace FileExplorer
         private bool MoveFile(PcsFileInfo from, PcsFileInfo to)
         {
             PcsPanApiRes ar = new PcsPanApiRes();
-            Form frm = new frmWaiting("Moving", "Moving ...");
             string errmsg = null;
-
             SPair spair = new SPair(
                         from.path,
                         to.path + "/" + from.server_filename);
-            new Thread(new ThreadStart(delegate()
+            ExecTask(new ThreadStart(delegate()
             {
                 try
                 {
@@ -396,15 +439,7 @@ namespace FileExplorer
                 {
                     errmsg = ex.Message;
                 }
-                finally
-                {
-                    this.Invoke(new AnonymousFunction(delegate()
-                    {
-                        frm.Close();
-                    }));
-                }
-            })).Start();
-            frm.ShowDialog();
+            }));
             if (errmsg != null)
             {
                 MessageBox.Show("Can't move the file (" + spair.str1 + " => " + spair.str2 + "): " + errmsg);
@@ -416,13 +451,11 @@ namespace FileExplorer
         private bool CopyFile(PcsFileInfo from, PcsFileInfo to)
         {
             PcsPanApiRes ar = new PcsPanApiRes();
-            Form frm = new frmWaiting("Copying", "Copying ...");
             string errmsg = null;
-
             SPair spair = new SPair(
                         from.path,
                         to.path + "/" + from.server_filename);
-            new Thread(new ThreadStart(delegate()
+            ExecTask(new ThreadStart(delegate()
             {
                 try
                 {
@@ -436,15 +469,7 @@ namespace FileExplorer
                 {
                     errmsg = ex.Message;
                 }
-                finally
-                {
-                    this.Invoke(new AnonymousFunction(delegate()
-                    {
-                        frm.Close();
-                    }));
-                }
-            })).Start();
-            frm.ShowDialog();
+            }));
             if (errmsg != null)
             {
                 MessageBox.Show("Can't copy the file (" + spair.str1 + " => " + spair.str2 + "): " + errmsg);
@@ -459,9 +484,8 @@ namespace FileExplorer
             if(frmFN.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string filename = frmFN.FileName;
-                frmWaiting frm = new frmWaiting("Creating Directory", "Creating Directory ...");
                 string errmsg = null;
-                new Thread(new ThreadStart(delegate()
+                ExecTask(new ThreadStart(delegate()
                 {
                     try
                     {
@@ -475,15 +499,7 @@ namespace FileExplorer
                     {
                         errmsg = ex.Message;
                     }
-                    finally
-                    {
-                        this.Invoke(new AnonymousFunction(delegate()
-                        {
-                            frm.Close();
-                        }));
-                    }
-                })).Start();
-                frm.ShowDialog();
+                }));
                 if (errmsg != null)
                 {
                     MessageBox.Show("Can't create the directory " + parentPath + "/" + filename + ": " + errmsg);
@@ -498,9 +514,8 @@ namespace FileExplorer
         {
             if(MessageBox.Show("Are you sure you want to delete " + fileinfo.path + "?", "Delete", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
             {
-                frmWaiting frm = new frmWaiting("Creating Directory", "Creating Directory ...");
                 string errmsg = null;
-                new Thread(new ThreadStart(delegate()
+                ExecTask(new ThreadStart(delegate()
                 {
                     try
                     {
@@ -514,15 +529,7 @@ namespace FileExplorer
                     {
                         errmsg = ex.Message;
                     }
-                    finally
-                    {
-                        this.Invoke(new AnonymousFunction(delegate()
-                        {
-                            frm.Close();
-                        }));
-                    }
-                })).Start();
-                frm.ShowDialog();
+                }));
                 if (errmsg != null)
                 {
                     MessageBox.Show("Can't delete " + fileinfo.path + ": " + errmsg);
@@ -543,9 +550,8 @@ namespace FileExplorer
                             fileinfo.path,
                             filename);
                 PcsPanApiRes ar = new PcsPanApiRes();
-                frmWaiting frm = new frmWaiting("Creating Directory", "Creating Directory ...");
                 string errmsg = null;
-                new Thread(new ThreadStart(delegate()
+                ExecTask(new ThreadStart(delegate()
                 {
                     try
                     {
@@ -559,15 +565,7 @@ namespace FileExplorer
                     {
                         errmsg = ex.Message;
                     }
-                    finally
-                    {
-                        this.Invoke(new AnonymousFunction(delegate()
-                        {
-                            frm.Close();
-                        }));
-                    }
-                })).Start();
-                frm.ShowDialog();
+                }));
                 if (errmsg != null)
                 {
                     MessageBox.Show("Can't rename (" + spair.str1 + " => " + spair.str2 + "): " + errmsg);

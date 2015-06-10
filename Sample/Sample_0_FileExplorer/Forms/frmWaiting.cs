@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace FileExplorer
 {
@@ -38,7 +39,61 @@ namespace FileExplorer
 
         }
 
+        private ThreadStart threadTask = null,
+            onDone = null;
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (threadTask != null)
+            {
+                new Thread(new ThreadStart(delegate()
+                {
+                    threadTask();
+                    CloseSafe();
+                    if (onDone != null)
+                        onDone();
+                })).Start();
+            }
+        }
+
+        public void Exec(ThreadStart task, ThreadStart onDone = null)
+        {
+            threadTask = task;
+            this.onDone = onDone;
+            ShowdialogSafe();
+        }
+
         #region Async Method
+
+        public void ShowdialogSafe()
+        {
+            if(this.InvokeRequired)
+            {
+                this.Invoke(new AnonymousFunction(delegate() {
+                    ShowDialog();
+                }));
+            }
+            else
+            {
+                ShowDialog();
+            }
+        }
+
+        public void CloseSafe()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new AnonymousFunction(delegate()
+                {
+                    Close();
+                }));
+            }
+            else
+            {
+                Close();
+            }
+        }
 
         private delegate void SetTextFunction(string text);
 
