@@ -68,6 +68,8 @@
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.txSearchKeyword = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.btnGo = new System.Windows.Forms.Button();
             this.btnBack = new System.Windows.Forms.ToolStripButton();
             this.btnNext = new System.Windows.Forms.ToolStripButton();
@@ -75,11 +77,11 @@
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
             this.btnNewFolder = new System.Windows.Forms.ToolStripButton();
             this.btnUpload = new System.Windows.Forms.ToolStripButton();
+            this.btnLogout = new System.Windows.Forms.ToolStripButton();
             this.btnSearch = new System.Windows.Forms.ToolStripButton();
             this.btnHistory = new System.Windows.Forms.ToolStripButton();
             this.btnSettings = new System.Windows.Forms.ToolStripButton();
-            this.btnLogout = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnGithub = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -356,8 +358,10 @@
             this.toolStripSeparator5,
             this.btnHistory,
             this.toolStripSeparator6,
-            this.btnSettings,
-            this.txSearchKeyword});
+            this.btnGithub,
+            this.txSearchKeyword,
+            this.toolStripSeparator8,
+            this.btnSettings});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(4, 0, 4, 0);
@@ -409,6 +413,17 @@
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
             this.toolStripSeparator6.Size = new System.Drawing.Size(6, 35);
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 35);
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(6, 35);
             // 
             // btnGo
             // 
@@ -493,6 +508,18 @@
             this.btnUpload.ToolTipText = "Upload file to current directory";
             this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
             // 
+            // btnLogout
+            // 
+            this.btnLogout.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.btnLogout.AutoSize = false;
+            this.btnLogout.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnLogout.Image = global::FileExplorer.Properties.Resources.logout_32x32;
+            this.btnLogout.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnLogout.Name = "btnLogout";
+            this.btnLogout.Size = new System.Drawing.Size(32, 32);
+            this.btnLogout.Text = "Logout";
+            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
+            // 
             // btnSearch
             // 
             this.btnSearch.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
@@ -530,23 +557,17 @@
             this.btnSettings.ToolTipText = "Open the settings window";
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
             // 
-            // btnLogout
+            // btnGithub
             // 
-            this.btnLogout.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.btnLogout.AutoSize = false;
-            this.btnLogout.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnLogout.Image = global::FileExplorer.Properties.Resources.logout_32x32;
-            this.btnLogout.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnLogout.Name = "btnLogout";
-            this.btnLogout.Size = new System.Drawing.Size(32, 32);
-            this.btnLogout.Text = "Logout";
-            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
-            // 
-            // toolStripSeparator7
-            // 
-            this.toolStripSeparator7.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 35);
+            this.btnGithub.AutoSize = false;
+            this.btnGithub.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnGithub.Image = global::FileExplorer.Properties.Resources.github;
+            this.btnGithub.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnGithub.Name = "btnGithub";
+            this.btnGithub.Size = new System.Drawing.Size(32, 32);
+            this.btnGithub.Text = "View source code";
+            this.btnGithub.ToolTipText = "View source code";
+            this.btnGithub.Click += new System.EventHandler(this.btnGithub_Click);
             // 
             // frmMain
             // 
@@ -627,6 +648,8 @@
         private System.Windows.Forms.ToolStripButton btnHistory;
         private System.Windows.Forms.ToolStripButton btnLogout;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
+        private System.Windows.Forms.ToolStripButton btnGithub;
     }
 }
 

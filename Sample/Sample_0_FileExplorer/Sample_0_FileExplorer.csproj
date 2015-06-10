@@ -136,6 +136,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="icons\github.png" />
     <Content Include="icons\loading.gif" />
     <None Include="icons\wait_bg.png" />
     <None Include="icons\arrow-down-32x32.png" />

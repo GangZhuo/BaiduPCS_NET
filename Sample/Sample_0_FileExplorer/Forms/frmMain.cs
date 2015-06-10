@@ -254,6 +254,18 @@ namespace FileExplorer
             }
         }
 
+        private void btnGithub_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://github.com/GangZhuo/BaiduPCS_NET");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
         private bool createBaiduPCS()
         {
             string cookiefilename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".pcs", "cookie.txt");
