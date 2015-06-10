@@ -261,7 +261,7 @@ namespace FileExplorer
                 return;
             if (!newPath.StartsWith("/"))
             {
-                MessageBox.Show("Must be the full path. e.g. /movies");
+                MessageBox.Show("Must be the full path. e.g. \"/movies\"");
                 return;
             }
             if(ListFiles(newPath))
@@ -337,7 +337,7 @@ namespace FileExplorer
             }));
             if (errmsg != null)
             {
-                MessageBox.Show("Can't list the file for " + path + ": " + errmsg);
+                MessageBox.Show("Can't list the file for \"" + path + "\": " + errmsg);
                 return false;
             }
             cmbLocation.Text = path;
@@ -407,7 +407,7 @@ namespace FileExplorer
             }));
             if (errmsg != null)
             {
-                MessageBox.Show("Can't get meta information for " + path + ": " + errmsg);
+                MessageBox.Show("Can't get meta information for \"" + path + "\": " + errmsg);
             }
             return fileinfo;
         }
@@ -442,7 +442,7 @@ namespace FileExplorer
             }));
             if (errmsg != null)
             {
-                MessageBox.Show("Can't move the file (" + spair.str1 + " => " + spair.str2 + "): " + errmsg);
+                MessageBox.Show("Can't move the file (\"" + spair.str1 + "\" => \"" + spair.str2 + "\"): " + errmsg);
                 return false;
             }
             return true;
@@ -472,7 +472,7 @@ namespace FileExplorer
             }));
             if (errmsg != null)
             {
-                MessageBox.Show("Can't copy the file (" + spair.str1 + " => " + spair.str2 + "): " + errmsg);
+                MessageBox.Show("Can't copy the file (\"" + spair.str1 + "\" => \"" + spair.str2 + "\"): " + errmsg);
                 return false;
             }
             return true;
@@ -502,7 +502,7 @@ namespace FileExplorer
                 }));
                 if (errmsg != null)
                 {
-                    MessageBox.Show("Can't create the directory " + parentPath + "/" + filename + ": " + errmsg);
+                    MessageBox.Show("Can't create the directory \"" + parentPath + "/" + filename + "\": " + errmsg);
                     return false;
                 }
                 return true;
@@ -532,7 +532,7 @@ namespace FileExplorer
                 }));
                 if (errmsg != null)
                 {
-                    MessageBox.Show("Can't delete " + fileinfo.path + ": " + errmsg);
+                    MessageBox.Show("Can't delete \"" + fileinfo.path + "\": " + errmsg);
                     return false;
                 }
                 return true;
@@ -568,7 +568,7 @@ namespace FileExplorer
                 }));
                 if (errmsg != null)
                 {
-                    MessageBox.Show("Can't rename (" + spair.str1 + " => " + spair.str2 + "): " + errmsg);
+                    MessageBox.Show("Can't rename (\"" + spair.str1 + "\" => \"" + spair.str2 + "\"): " + errmsg);
                     return false;
                 }
                 return true;
