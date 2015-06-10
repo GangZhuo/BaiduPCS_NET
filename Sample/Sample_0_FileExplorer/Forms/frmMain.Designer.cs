@@ -516,6 +516,7 @@
             this.btnHistory.Size = new System.Drawing.Size(32, 32);
             this.btnHistory.Text = "History";
             this.btnHistory.ToolTipText = "View download history";
+            this.btnHistory.Click += new System.EventHandler(this.btnHistory_Click);
             // 
             // btnSettings
             // 
@@ -539,6 +540,7 @@
             this.btnLogout.Name = "btnLogout";
             this.btnLogout.Size = new System.Drawing.Size(32, 32);
             this.btnLogout.Text = "Logout";
+            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
             // 
             // toolStripSeparator7
             // 

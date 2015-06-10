@@ -223,6 +223,37 @@ namespace FileExplorer
             }
         }
 
+        private void btnHistory_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            if(MessageBox.Show("Are you sure logout?", "Logout", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
+            {
+                Logout();
+
+                BindFileList(null);
+                history.Clear();
+                next.Clear();
+                currentPath = string.Empty;
+                source = new PcsFileInfo();
+                isMove = false;
+                lastSearchPath = string.Empty;
+                contextItem = null;
+
+                if(Login())
+                {
+                    Go("/");
+                }
+                else
+                {
+                    Application.Exit();
+                }
+            }
+        }
+
         private bool createBaiduPCS()
         {
             string cookiefilename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".pcs", "cookie.txt");
@@ -234,14 +265,7 @@ namespace FileExplorer
                 return false;
             if (pcs.isLogin() != PcsRes.PCS_LOGIN)
             {
-                System.Windows.Forms.DialogResult dr = System.Windows.Forms.DialogResult.None;
-                this.Invoke(new AnonymousFunction(delegate()
-                {
-                    frmLogin frm = new frmLogin(pcs);
-                    frm.TopMost = true;
-                    dr = frm.ShowDialog();
-                }));
-                if (dr != System.Windows.Forms.DialogResult.OK)
+                if (!Login())
                     return false;
             }
             long quota, used;
@@ -252,6 +276,55 @@ namespace FileExplorer
                 lblStatus.Text = title;
             }));
             return true;
+        }
+
+        private bool Login()
+        {
+            if(this.InvokeRequired)
+            {
+                System.Windows.Forms.DialogResult dr = System.Windows.Forms.DialogResult.None;
+                this.Invoke(new AnonymousFunction(delegate()
+                {
+                    frmLogin frm = new frmLogin(pcs);
+                    frm.TopMost = true;
+                    dr = frm.ShowDialog();
+                }));
+                if (dr != System.Windows.Forms.DialogResult.OK)
+                    return false;
+                return true;
+            }
+            else
+            {
+                frmLogin frm = new frmLogin(pcs);
+                frm.TopMost = true;
+                if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    return true;
+                return false;
+            }
+        }
+
+        private void Logout()
+        {
+            string errmsg = null;
+            ExecTask(new ThreadStart(delegate()
+            {
+                try
+                {
+                    PcsRes rc = pcs.logout();
+                    if (rc != PcsRes.PCS_OK)
+                    {
+                        errmsg = pcs.getError();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errmsg = ex.Message;
+                }
+            }));
+            if (errmsg != null)
+            {
+                MessageBox.Show("Can't logout: " + errmsg);
+            }
         }
 
         private void DisposePCS()
