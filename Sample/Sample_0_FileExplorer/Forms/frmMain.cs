@@ -24,6 +24,7 @@ namespace FileExplorer
         private ListViewItem contextItem = null;
         private PcsFileInfo source;
         private bool isMove = false;
+        private DUQueue queue = null;
 
         public frmMain()
         {
@@ -40,6 +41,8 @@ namespace FileExplorer
             history = new Stack<string>();
             next = new Stack<string>();
             source = new PcsFileInfo();
+
+            queue = new DUQueue();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -172,8 +175,8 @@ namespace FileExplorer
             fileinfo.isdir = true;
             if (UploadFile(fileinfo))
             {
-                if (string.Equals(fileinfo.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
-                    RefreshFileList();
+                //if (string.Equals(fileinfo.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
+                //    RefreshFileList();
             }
         }
 
@@ -187,7 +190,7 @@ namespace FileExplorer
 
         private void btnSettings_Click(object sender, EventArgs e)
         {
-
+            ShowSettingsWindow();
         }
 
         private void btnSearch_Click(object sender, EventArgs e)
@@ -225,12 +228,12 @@ namespace FileExplorer
 
         private void btnHistory_Click(object sender, EventArgs e)
         {
-
+            ShowHistoryWindow();
         }
 
         private void btnLogout_Click(object sender, EventArgs e)
         {
-            if(MessageBox.Show("Are you sure logout?", "Logout", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
+            if (MessageBox.Show("Are you sure logout?", "Logout", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
             {
                 Logout();
 
@@ -243,7 +246,9 @@ namespace FileExplorer
                 lastSearchPath = string.Empty;
                 contextItem = null;
 
-                if(Login())
+                queue.Clear();
+
+                if (Login())
                 {
                     Go("/");
                 }
@@ -563,6 +568,16 @@ namespace FileExplorer
                 btnUp.Enabled = false;
         }
 
+        private void ShowSettingsWindow()
+        {
+
+        }
+
+        private void ShowHistoryWindow(bool forUpload = false)
+        {
+
+        }
+
         private PcsFileInfo GetFileMetaInformation(string path)
         {
             PcsFileInfo fileinfo = new PcsFileInfo();
@@ -755,11 +770,49 @@ namespace FileExplorer
 
         private bool DownloadFile(PcsFileInfo fileinfo)
         {
+            if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                OperationInfo op = new OperationInfo()
+                {
+                    uid = pcs.getUID(),
+                    operation = Operation.Download,
+                    from = fileinfo.path,
+                    to = saveFileDialog1.FileName,
+                    status = OperationStatus.Pending
+                };
+                queue.Enqueue(op);
+                if (MessageBox.Show("Add 1 items to the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    ShowHistoryWindow();
+                }
+                return true;
+            }
             return false;
         }
 
         private bool UploadFile(PcsFileInfo to)
         {
+            if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string uid = pcs.getUID();
+                foreach (string filename in openFileDialog1.FileNames)
+                {
+                    OperationInfo op = new OperationInfo()
+                    {
+                        uid = uid,
+                        operation = Operation.Upload,
+                        from = filename,
+                        to = to.path,
+                        status = OperationStatus.Pending
+                    };
+                    queue.Enqueue(op);
+                }
+                if (MessageBox.Show("Add " + openFileDialog1.FileNames.Length + " items to the queue. View the queue?", "Upload", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    ShowHistoryWindow(true);
+                }
+                return true;
+            }
             return false;
         }
 
@@ -868,8 +921,8 @@ namespace FileExplorer
                 return;
             if(UploadFile(fileinfo))
             {
-                if (string.Equals(fileinfo.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
-                    RefreshFileList();
+                //if (string.Equals(fileinfo.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
+                //    RefreshFileList();
             }
         }
 
