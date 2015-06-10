@@ -34,12 +34,34 @@ namespace FileExplorer
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            lvFileList.DoubleClick += lvFileList_DoubleClick;
         }
 
-        private void Form1_SizeChanged(object sender, EventArgs e)
+        private void txSearchKeyword_LostFocus(object sender, EventArgs e)
         {
-            cmbLocation.Width = this.Width - 32;
+            string keyword = txSearchKeyword.Text.Trim();
+            if (string.IsNullOrEmpty(keyword) || string.Equals(keyword, "Search by filename", StringComparison.InvariantCultureIgnoreCase))
+            {
+                txSearchKeyword.Text = "Search by filename";
+                txSearchKeyword.ForeColor = Color.Gray;
+            }
+        }
+
+        private void txSearchKeyword_GotFocus(object sender, EventArgs e)
+        {
+            string keyword = txSearchKeyword.Text.Trim();
+            if (string.Equals(keyword, "Search by filename", StringComparison.InvariantCultureIgnoreCase))
+            {
+                txSearchKeyword.Text = "";
+            }
+            txSearchKeyword.ForeColor = Color.Black;
+        }
+
+        private void txSearchKeyword_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                Console.WriteLine("Press Enter");
+            }
         }
 
         private void cmbLocation_KeyPress(object sender, KeyPressEventArgs e)
@@ -278,6 +300,7 @@ namespace FileExplorer
             {
                 ListViewItem item = new ListViewItem(file.server_filename);
                 items.Add(item);
+                item.ToolTipText = file.path;
                 item.Tag = file;
                 if(file.isdir)
                 {
