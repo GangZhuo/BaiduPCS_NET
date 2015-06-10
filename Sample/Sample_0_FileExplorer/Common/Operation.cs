@@ -11,6 +11,7 @@ namespace FileExplorer
     public enum OperationStatus
     {
         Pending,
+        Processing,
         Success,
         Fail
     }

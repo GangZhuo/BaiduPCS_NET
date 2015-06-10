@@ -571,7 +571,11 @@ namespace FileExplorer
 
         private void ShowSettingsWindow()
         {
+            frmSettings frm = new frmSettings();
+            if(frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
 
+            }
         }
 
         private void ShowHistoryWindow(bool forUpload = false)
