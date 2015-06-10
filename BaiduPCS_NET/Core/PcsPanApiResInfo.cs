@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using BaiduPCS_NET.Native;
+
 namespace BaiduPCS_NET
 {
     /*网盘API返回数据格式*/
-    [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4, CharSet = CharSet.Ansi)]
     public struct PcsPanApiResInfo
     {
-        [MarshalAs(UnmanagedType.LPStr)]
-        string path;
-        int error;
+        public string path;
+        public int error;
+
+        public PcsPanApiResInfo(NativePcsPanApiResInfo fi)
+        {
+            this.path = NativeUtils.str(fi.path);
+            this.error = fi.error;
+        }
     }
 }

@@ -63,6 +63,7 @@
     <Compile Include="Core\PcsPanApiResInfo.cs" />
     <Compile Include="Core\PcsRes.cs" />
     <Compile Include="Core\ProgressChangeArgs.cs" />
+    <Compile Include="Native\NativePcsPanApiResInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\Slice.cs" />
     <Compile Include="Core\SliceOwner.cs" />

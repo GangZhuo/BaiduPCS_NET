@@ -236,7 +236,7 @@ namespace BaiduPCS_NET.Native
             for (int i = 0; p != IntPtr.Zero; i++)
             {
                 NativePcsPanApiResInfoList il = (NativePcsPanApiResInfoList)Marshal.PtrToStructure(p, typeof(NativePcsPanApiResInfoList));
-                filist.Add(il.info);
+                filist.Add(new PcsPanApiResInfo(il.info));
                 p = il.next;
             }
             res.info_list = filist.ToArray();
