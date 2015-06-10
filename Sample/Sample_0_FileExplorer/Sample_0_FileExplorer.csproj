@@ -51,6 +51,7 @@
     <Compile Include="Common\AnonymousFunction.cs" />
     <Compile Include="Common\DUQueue.cs" />
     <Compile Include="Common\DUWorker.cs" />
+    <Compile Include="Common\DUWorkerPersister.cs" />
     <Compile Include="Forms\frmCaptcha.cs">
       <SubType>Form</SubType>
     </Compile>

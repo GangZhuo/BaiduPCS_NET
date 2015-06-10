@@ -26,6 +26,7 @@ namespace FileExplorer
         private bool isMove = false;
         private frmHistory frmHistory = null;
         private DUWorker worker = null;
+        private DUWorkerPersister persister = null;
 
         public frmMain()
         {
@@ -44,6 +45,11 @@ namespace FileExplorer
             source = new PcsFileInfo();
 
             worker = new DUWorker();
+            persister = new DUWorkerPersister();
+
+            worker.OnDownloaded += worker_OnDownloaded;
+            worker.OnUploaded += worker_OnUploaded;
+            worker.queue.OnEnqueue += queue_OnEnqueue;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -83,6 +89,8 @@ namespace FileExplorer
                     {
                         if (!succ)
                             return;
+                        InitDUWorkerPersister();
+                        persister.RestoreWorker(worker);
                         this.Invoke(new AnonymousFunction(delegate()
                         {
                             Go("/");
@@ -96,6 +104,7 @@ namespace FileExplorer
         protected override void OnClosing(CancelEventArgs e)
         {
             worker.Stop();
+            persister.SaveWorker(worker);
             base.OnClosing(e);
         }
 
@@ -145,6 +154,21 @@ namespace FileExplorer
             {
                 Go(fileInfo.path);
             }
+        }
+
+        private void queue_OnEnqueue(object sender, OperationInfo op)
+        {
+            persister.SaveWorker(worker);
+        }
+
+        private void worker_OnUploaded(object sender, OperationInfo op)
+        {
+            persister.SaveWorker(worker);
+        }
+
+        private void worker_OnDownloaded(object sender, OperationInfo op)
+        {
+            persister.SaveWorker(worker);
         }
 
         private void btnGo_Click(object sender, EventArgs e)
@@ -252,10 +276,13 @@ namespace FileExplorer
                 contextItem = null;
 
                 worker.Stop();
+                persister.SaveWorker(worker);
                 worker.Reset();
 
                 if (Login())
                 {
+                    InitDUWorkerPersister();
+                    persister.RestoreWorker(worker);
                     Go("/");
                     worker.pcs = pcs;
                     worker.Start();
@@ -862,6 +889,14 @@ namespace FileExplorer
                 }
             }
             return false;
+        }
+
+        private void InitDUWorkerPersister()
+        {
+            string worker_filename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                ".pcs", "worker_" + pcs.getUID() + ".xml");
+            persister.Filename = worker_filename;
+
         }
 
         #region 上下文菜单代码

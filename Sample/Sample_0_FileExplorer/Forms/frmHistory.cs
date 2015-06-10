@@ -270,14 +270,14 @@ namespace FileExplorer
             {
                 if (op.operation == Operation.Download)
                     AddCompletedDownloadItem(op);
-                else
+                else if (op.operation == Operation.Upload)
                     AddCompletedUploadItem(op);
             }
             else
             {
                 if (op.operation == Operation.Download)
                     AddDownloadingItem(op);
-                else
+                else if (op.operation == Operation.Upload)
                     AddUploadingItem(op);
             }
         }
