@@ -16,11 +16,11 @@ namespace FileExplorer
             get { return queue.Count; }
         }
 
-        public event OnDuQueueEnqueue OnEnqueue;
+        public event OnDUQueueEnqueue OnEnqueue;
 
-        public event OnDuQueueDequeue OnDequeue;
+        public event OnDUQueueDequeue OnDequeue;
 
-        public event OnDuQueueClear OnClear;
+        public event OnDUQueueClear OnClear;
 
         public DUQueue()
         {
@@ -60,10 +60,10 @@ namespace FileExplorer
         }
     }
 
-    public delegate void OnDuQueueEnqueue(object sender, OperationInfo op);
+    public delegate void OnDUQueueEnqueue(object sender, OperationInfo op);
 
-    public delegate void OnDuQueueDequeue(object sender, OperationInfo op);
+    public delegate void OnDUQueueDequeue(object sender, OperationInfo op);
 
-    public delegate void OnDuQueueClear(object sender);
+    public delegate void OnDUQueueClear(object sender);
 
 }

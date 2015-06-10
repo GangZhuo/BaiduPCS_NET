@@ -12,6 +12,7 @@ namespace FileExplorer
     {
         Pending,
         Processing,
+        Cancel,
         Success,
         Fail
     }
@@ -27,6 +28,20 @@ namespace FileExplorer
         public string to { get; set; }
 
         public OperationStatus status { get; set; }
+
+        public string errmsg { get; set; }
+
+        /// <summary>
+        /// 完成量
+        /// </summary>
+        public long finished { get; set; }
+
+        /// <summary>
+        /// 总量
+        /// </summary>
+        public long total { get; set; }
+
+        public object Tag { get; set; }
 
         public override bool Equals(object obj)
         {

@@ -19,13 +19,13 @@ namespace FileExplorer
         private BaiduPCS pcs = null;
         private Stack<string> history = null;
         private Stack<string> next = null;
-        private string currentPath = string.Empty; //当前路径
+        private string currentPath = string.Empty;
         private string lastSearchPath = string.Empty;
         private ListViewItem contextItem = null;
         private PcsFileInfo source;
         private bool isMove = false;
-        private DUQueue queue = null;
         private frmHistory frmHistory = null;
+        private DUWorker worker = null;
 
         public frmMain()
         {
@@ -43,11 +43,13 @@ namespace FileExplorer
             next = new Stack<string>();
             source = new PcsFileInfo();
 
-            queue = new DUQueue();
+            worker = new DUWorker();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            toolStripSeparator8.Visible = false;
+            btnSettings.Visible = false;
         }
 
         protected override void OnShown(EventArgs e)
@@ -84,15 +86,17 @@ namespace FileExplorer
                         this.Invoke(new AnonymousFunction(delegate()
                         {
                             Go("/");
+                            worker.pcs = pcs;
+                            worker.Start();
                         }));
                     }));
             }
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            base.OnClosed(e);
-            DisposePCS();
+            worker.Stop();
+            base.OnClosing(e);
         }
 
         private void txSearchKeyword_LostFocus(object sender, EventArgs e)
@@ -247,11 +251,14 @@ namespace FileExplorer
                 lastSearchPath = string.Empty;
                 contextItem = null;
 
-                queue.Clear();
+                worker.Stop();
+                worker.Reset();
 
                 if (Login())
                 {
                     Go("/");
+                    worker.pcs = pcs;
+                    worker.Start();
                 }
                 else
                 {
@@ -342,16 +349,6 @@ namespace FileExplorer
             if (errmsg != null)
             {
                 MessageBox.Show("Can't logout: " + errmsg);
-            }
-        }
-
-        private void DisposePCS()
-        {
-            if (pcs != null)
-            {
-                try { pcs.Dispose(); }
-                catch { }
-                pcs = null;
             }
         }
 
@@ -582,7 +579,7 @@ namespace FileExplorer
         {
             if (frmHistory == null)
             {
-                frmHistory = new frmHistory();
+                frmHistory = new frmHistory(worker);
                 frmHistory.FormClosed += frmHistory_FormClosed;
                 if (forUpload)
                     frmHistory.SelectedTabIndex = 2;
@@ -591,6 +588,8 @@ namespace FileExplorer
             else
             {
                 frmHistory.Activate();
+                if (forUpload)
+                    frmHistory.SelectedTabIndex = 2;
             }
         }
 
@@ -801,7 +800,7 @@ namespace FileExplorer
                     to = saveFileDialog1.FileName,
                     status = OperationStatus.Pending
                 };
-                if(queue.Contains(op))
+                if (worker.queue.Contains(op))
                 {
                     if (MessageBox.Show("The file have been in the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                     {
@@ -809,7 +808,7 @@ namespace FileExplorer
                     }
                     return false;
                 }
-                queue.Enqueue(op);
+                worker.queue.Enqueue(op);
                 if (MessageBox.Show("Add 1 items to the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
                     ShowHistoryWindow();
@@ -835,11 +834,11 @@ namespace FileExplorer
                         to = to.path,
                         status = OperationStatus.Pending
                     };
-                    if (queue.Contains(op))
+                    if (worker.queue.Contains(op))
                     {
                         continue;
                     }
-                    queue.Enqueue(op);
+                    worker.queue.Enqueue(op);
                     addedCount++;
                 }
                 string errmsg = string.Empty;

@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Common\AnonymousFunction.cs" />
     <Compile Include="Common\DUQueue.cs" />
+    <Compile Include="Common\DUWorker.cs" />
     <Compile Include="Forms\frmCaptcha.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -104,6 +106,9 @@
     </Compile>
     <Compile Include="Forms\frmHistory.Designer.cs">
       <DependentUpon>frmHistory.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\ListViewProgress.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

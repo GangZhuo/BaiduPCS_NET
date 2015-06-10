@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Management;
 
 namespace FileExplorer
 {
@@ -64,5 +65,70 @@ namespace FileExplorer
             }
         }
 
+        /// <summary>
+        /// 获取 CPU 属性参数
+        /// </summary>
+        /// <returns>返回 CPU 属性参数</returns>
+        public static string GetCPUProperties()
+        {
+            // Get the WMI class
+            ManagementClass c = new ManagementClass(new ManagementPath("Win32_Processor"));
+            // Get the properties in the class
+            ManagementObjectCollection moc = c.GetInstances();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            // display the properties
+            sb.AppendLine("Property Names: ");
+            sb.AppendLine("=================");
+            foreach (ManagementObject mo in moc)
+            {
+                PropertyDataCollection properties = mo.Properties;
+                //获取内核数代码
+                sb.AppendLine("物理内核数:" + properties["NumberOfCores"].Value);
+                sb.AppendLine("逻辑内核数:" + properties["NumberOfLogicalProcessors"].Value);
+                //其他属性获取代码
+                foreach (PropertyData property in properties)
+                {
+                    sb.AppendLine(property.Name + ":" + property.Value);
+                }
+            }
+            string s = sb.ToString();
+            return s;
+        }
+
+        /// <summary>
+        /// 获取 CPU 逻辑内核数
+        /// </summary>
+        /// <returns>返回 CPU 逻辑内核数</returns>
+        public static int GetLogicProcessorCount()
+        {
+            int coreCount;
+            return GetLogicProcessorCount(out coreCount);
+        }
+
+        /// <summary>
+        /// 获取 CPU 逻辑内核数
+        /// </summary>
+        /// <param name="coreCount">函数执行成功后，此变量被设置为物理内核数</param>
+        /// <returns>返回 CPU 逻辑内核数</returns>
+        public static int GetLogicProcessorCount(out int coreCount)
+        {
+            int logicCount = 0;
+            coreCount = 0;
+            // Get the WMI class
+            ManagementClass c = new ManagementClass(new ManagementPath("Win32_Processor"));
+            // Get the properties in the class
+            ManagementObjectCollection moc = c.GetInstances();
+
+            foreach (ManagementObject mo in moc)
+            {
+                PropertyDataCollection properties = mo.Properties;
+                //获取内核数
+                logicCount = Convert.ToInt32(properties["NumberOfLogicalProcessors"].Value);
+                coreCount = Convert.ToInt32(properties["NumberOfCores"].Value);
+                break;
+            }
+            return logicCount;
+        }
     }
 }
