@@ -20,6 +20,7 @@ namespace FileExplorer
         private Stack<string> history = null;
         private Stack<string> next = null;
         private string currentPath = string.Empty; //当前路径
+        private string lastSearchPath = string.Empty;
         private ListViewItem contextItem = null;
         private PcsFileInfo source;
         private bool isMove = false;
@@ -114,7 +115,7 @@ namespace FileExplorer
         {
             if (e.KeyChar == (char)Keys.Enter)
             {
-                Console.WriteLine("Press Enter");
+                btnSearch_Click(sender, e);
             }
         }
 
@@ -191,7 +192,25 @@ namespace FileExplorer
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-
+            string keywords = txSearchKeyword.Text.Trim();
+            if(string.IsNullOrEmpty(keywords) || string.Equals(keywords, "Search by filename", StringComparison.InvariantCultureIgnoreCase))
+            {
+                MessageBox.Show("Please input the filename.");
+                txSearchKeyword.Focus();
+                return;
+            }
+            string path = currentPath;
+            if (!path.StartsWith("/"))
+                path = lastSearchPath;
+            if(SearchFiles(currentPath, keywords))
+            {
+                if (!string.IsNullOrEmpty(currentPath) && currentPath.StartsWith("/"))
+                    history.Push(currentPath);
+                next.Clear();
+                lastSearchPath = currentPath;
+                currentPath = cmbLocation.Text;
+                RefreshControls();
+            }
         }
 
         private bool createBaiduPCS()
@@ -266,7 +285,7 @@ namespace FileExplorer
             }
             if(ListFiles(newPath))
             {
-                if (!string.IsNullOrEmpty(currentPath))
+                if (!string.IsNullOrEmpty(currentPath) && currentPath.StartsWith("/"))
                     history.Push(currentPath);
                 next.Clear();
                 currentPath = newPath;
@@ -281,7 +300,7 @@ namespace FileExplorer
             {
                 if (ListFiles(path))
                 {
-                    if (!string.IsNullOrEmpty(currentPath))
+                    if (!string.IsNullOrEmpty(currentPath) && currentPath.StartsWith("/"))
                         next.Push(currentPath);
                     currentPath = path;
                     RefreshControls();
@@ -296,7 +315,7 @@ namespace FileExplorer
             {
                 if (ListFiles(path))
                 {
-                    if (!string.IsNullOrEmpty(currentPath))
+                    if (!string.IsNullOrEmpty(currentPath) && currentPath.StartsWith("/"))
                         history.Push(currentPath);
                     currentPath = path;
                     RefreshControls();
@@ -341,13 +360,46 @@ namespace FileExplorer
                 return false;
             }
             cmbLocation.Text = path;
+            BindFileList(list);
+            return true;
+        }
+
+        private bool SearchFiles(string path, string keyword)
+        {
+            PcsFileInfo[] list = null;
+            string errmsg = null;
+            ExecTask(new ThreadStart(delegate()
+            {
+                try
+                {
+                    list = pcs.search(path, keyword, true);
+                    if (list == null)
+                        errmsg = pcs.getError();
+                }
+                catch (Exception ex)
+                {
+                    errmsg = ex.Message;
+                }
+            }));
+            if (errmsg != null)
+            {
+                MessageBox.Show("Can't search \"" + keyword + "\" in \"" + path + "\": " + errmsg);
+                return false;
+            }
+            cmbLocation.Text = "Search \"" + keyword + "\" in \"" + path + "\"";
+            BindFileList(list);
+            return true;
+        }
+
+        private void BindFileList(PcsFileInfo[] list)
+        {
             lvFileList.Items.Clear();
             bigImageList.Images.Clear();
             smallImageList.Images.Clear();
             bigImageList.Images.Add(SystemIcon.GetFolderIcon(true));
             smallImageList.Images.Add(SystemIcon.GetFolderIcon(false));
             if (list == null)
-                return true;
+                return;
 
             List<ListViewItem> items = new List<ListViewItem>();
             foreach (PcsFileInfo file in list)
@@ -356,7 +408,7 @@ namespace FileExplorer
                 items.Add(item);
                 item.ToolTipText = file.path;
                 item.Tag = file;
-                if(file.isdir)
+                if (file.isdir)
                 {
                     item.SubItems.Add("");
                     item.SubItems.Add("Directory");
@@ -375,7 +427,6 @@ namespace FileExplorer
             }
             lvFileList.Items.AddRange(items.ToArray());
             lblStatus.Text = lvFileList.Items.Count.ToString() + " items"; //更新状态栏
-            return true;
         }
 
         private void RefreshControls()

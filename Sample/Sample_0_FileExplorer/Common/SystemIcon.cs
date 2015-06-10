@@ -17,16 +17,9 @@ namespace FileExplorer
         {
             string regIconString = null;
             string systemDirectory = Environment.SystemDirectory + "\\";
-
             //直接指定为文件夹图标
             regIconString = systemDirectory + "shell32.dll,3";
-
             string[] fileIcon = regIconString.Split(new char[] { ',' });
-            if (fileIcon.Length != 2)
-            {
-                //系统注册表中注册的标图不能直接提取，则返回可执行文件的通用图标
-                fileIcon = new string[] { systemDirectory + "shell32.dll", "2" };
-            }
             Icon resultIcon = null;
             try
             {
@@ -49,59 +42,78 @@ namespace FileExplorer
         /// <returns></returns>
         public static Icon GetIcon(PcsFileInfo fileInfo, bool isLarge)
         {
-            if (fileInfo.IsEmpty || string.IsNullOrEmpty(fileInfo.server_filename)) return null;
+            if (fileInfo.IsEmpty || string.IsNullOrEmpty(fileInfo.server_filename))
+                return GetUnknowTypeIcon(isLarge);
+
+            if (fileInfo.isdir)
+                return GetFolderIcon(isLarge);
+
+            string ext = Path.GetExtension(fileInfo.server_filename);
+            if (string.IsNullOrEmpty(ext))
+                return GetUnknowTypeIcon(isLarge);
 
             RegistryKey regVersion = null;
             string regFileType = null;
             string regIconString = null;
             string systemDirectory = Environment.SystemDirectory + "\\";
 
-            if (fileInfo.isdir)
+            try
             {
-                //直接指定为文件夹图标
-                regIconString = systemDirectory + "shell32.dll,3";
-            }
-            else
-            {
-                string ext = Path.GetExtension(fileInfo.server_filename);
-                if (string.IsNullOrEmpty(ext))
+                //读系统注册表中文件类型信息
+                regVersion = Registry.ClassesRoot.OpenSubKey(ext, true);
+                if (regVersion != null)
                 {
-                    //指定为未知文件类型的图标
-                    regIconString = systemDirectory + "shell32.dll,0";
-                }
-                else
-                {
-                    try
+                    regFileType = regVersion.GetValue("") as string;
+                    regVersion.Close();
+                    regVersion = Registry.ClassesRoot.OpenSubKey(regFileType + @"\DefaultIcon", true);
+                    if (regVersion != null)
                     {
-                        //读系统注册表中文件类型信息
-                        regVersion = Registry.ClassesRoot.OpenSubKey(ext, true);
-                        if (regVersion != null)
-                        {
-                            regFileType = regVersion.GetValue("") as string;
-                            regVersion.Close();
-                            regVersion = Registry.ClassesRoot.OpenSubKey(regFileType + @"\DefaultIcon", true);
-                            if (regVersion != null)
-                            {
-                                regIconString = regVersion.GetValue("") as string;
-                                regVersion.Close();
-                            }
-                        }
-                    }
-                    catch { }
-                    if (regIconString == null)
-                    {
-                        //没有读取到文件类型注册信息，指定为未知文件类型的图标
-                        regIconString = systemDirectory + "shell32.dll,0";
+                        regIconString = regVersion.GetValue("") as string;
+                        regVersion.Close();
                     }
                 }
             }
-            
-            string[] fileIcon = regIconString.Split(new char[] { ',' });
+            catch { }
+
+            Icon resultIcon = GetIcon(regIconString, isLarge);
+            if (resultIcon != null)
+                return resultIcon;
+
+            //后缀不是 ".exe"， 返回未知文件类型的图标
+            if (!string.Equals(ext, ".exe", StringComparison.InvariantCultureIgnoreCase))
+                return GetUnknowTypeIcon(isLarge);
+
+            regIconString = systemDirectory + "shell32.dll,2"; //返回可执行文件的通用图标
+            resultIcon = GetIcon(regIconString, isLarge);
+            if (resultIcon == null)
+                return GetUnknowTypeIcon(isLarge);
+            return resultIcon;
+        }
+
+        /// <summary>
+        /// 获取未知文件类型的图标
+        /// </summary>
+        /// <param name="isLarge"></param>
+        /// <returns></returns>
+        private static Icon GetUnknowTypeIcon(bool isLarge)
+        {
+            string systemDirectory = Environment.SystemDirectory + "\\";
+            return GetIcon(systemDirectory + "shell32.dll,0", isLarge); // 返回未知文件类型的图标
+        }
+
+        /// <summary>
+        /// 根据注册表项返回图标
+        /// </summary>
+        /// <param name="regIconString"></param>
+        /// <param name="isLarge"></param>
+        /// <returns></returns>
+        private static Icon GetIcon(string regIconString, bool isLarge)
+        {
+            if (string.IsNullOrEmpty(regIconString))
+                return null;
+            string[] fileIcon = regIconString.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             if (fileIcon.Length != 2)
-            {
-                //系统注册表中注册的标图不能直接提取，则返回可执行文件的通用图标
-                fileIcon = new string[] { systemDirectory + "shell32.dll", "2" };
-            }
+                return null;
             Icon resultIcon = null;
             try
             {
