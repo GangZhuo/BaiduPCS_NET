@@ -55,10 +55,7 @@ namespace FileExplorer
                 op.errmsg = n.Attributes["errmsg"].Value;
                 op.doneSize = Convert.ToInt64(n.Attributes["doneSize"].Value);
                 op.totalSize = Convert.ToInt64(n.Attributes["totalSize"].Value);
-                if (op.operation == Operation.Download)
-                    worker.queue.Enqueue(op);
-                else if (op.operation == Operation.Upload)
-                    worker.queue.Enqueue(op);
+                worker.queue.Add(op);
             }
             return true;
         }

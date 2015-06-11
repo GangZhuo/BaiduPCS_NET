@@ -8,6 +8,36 @@ namespace FileExplorer
     public class SliceHelper
     {
         /// <summary>
+        /// 计算分片大小
+        /// </summary>
+        /// <param name="fileSize">文件大小</param>
+        /// <param name="minSliceSize">允许的最小分片大小</param>
+        /// <param name="maxSliceCount">允许最多多少个分片</param>
+        /// <returns></returns>
+        public static long CalculateSliceSize(long fileSize, long minSliceSize, long maxSliceCount)
+        {
+            long sliceCount = 0; //分片数量
+
+            // 先按照最小分片计算分片数量
+            long sliceSize = minSliceSize;
+            sliceCount = (int)(fileSize / sliceSize);
+            if ((fileSize % sliceSize) != 0)
+                sliceCount++;
+
+            if(sliceCount > maxSliceCount)
+            {
+                sliceSize = fileSize / maxSliceCount;
+                if ((fileSize % maxSliceCount) != 0)
+                    sliceSize++;
+
+                sliceCount = (int)(fileSize / sliceSize);
+                if ((fileSize % sliceSize) != 0)
+                    sliceCount++;
+            }
+            return sliceSize;
+        }
+
+        /// <summary>
         /// 创建分片
         /// </summary>
         /// <param name="filesize">文件的大小</param>

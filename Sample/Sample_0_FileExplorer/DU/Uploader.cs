@@ -5,46 +5,45 @@ using BaiduPCS_NET;
 
 namespace FileExplorer
 {
-    public class Downloader : ICancellable
+
+    public class Uploader
     {
         public BaiduPCS pcs { get; protected set; }
-        public PcsFileInfo from { get; set; }
+        public string from { get; set; }
         public string to { get; set; }
-        public long DownloadedSize { get; protected set; }
+        public long UploadedSize { get; protected set; }
         public bool Success { get; protected set; }
         public bool IsCancelled { get; protected set; }
         public Exception Error { get; protected set; }
-        public bool Downloading { get; protected set; }
+        public bool Uploading { get; protected set; }
+        public PcsFileInfo Result { get; protected set; }
         public object State { get; set; }
 
         public event EventHandler<CompletedEventArgs> OnCompleted;
         public event EventHandler<ProgressEventArgs> Progress;
 
-        public Downloader(BaiduPCS pcs, PcsFileInfo from, string to)
+        public Uploader(BaiduPCS pcs, string from, string to)
         {
             this.pcs = pcs;
             this.from = from;
             this.to = to;
         }
 
-        public virtual void Download()
+        public virtual void Upload()
         {
-            if (Downloading)
-                throw new Exception("Can't download, since the previous download is not complete.");
-            FileStream stream = null;
-            DownloadedSize = 0;
+            if (Uploading)
+                throw new Exception("Can't upload, since the previous upload is not complete.");
+            UploadedSize = 0;
             Success = false;
             IsCancelled = false;
             Error = null;
-            Downloading = true;
+            Uploading = true;
             try
             {
                 BaiduPCS pcs = this.pcs.clone();
-                pcs.Write += onWrite;
-                stream = new FileStream(to, FileMode.Create, FileAccess.Write);
-                pcs.WriteUserData = stream;
-                PcsRes rc = pcs.download(from.path, 0, 0);
-                if (rc == PcsRes.PCS_OK)
+                pcs.Progress += onProgress;
+                Result = pcs.upload(to, from, false);
+                if (!Result.IsEmpty)
                 {
                     Success = true;
                     IsCancelled = false;
@@ -68,9 +67,7 @@ namespace FileExplorer
                 IsCancelled = false;
                 Error = ex;
             }
-            if (stream != null)
-                stream.Close();
-            Downloading = false;
+            Uploading = false;
             fireOnCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
         }
 
@@ -79,24 +76,16 @@ namespace FileExplorer
             IsCancelled = true;
         }
 
-        private uint onWrite(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
+        private int onProgress(BaiduPCS sender, double dltotal, double dlnow, double ultotal, double ulnow, object userdata)
         {
-            if (IsCancelled)
-                return 0;
-            if(data.Length > 0)
-            {
-                Stream stream = (Stream)userdata;
-                stream.Write(data, 0, data.Length);
-            }
-            DownloadedSize += data.Length;
-            ProgressEventArgs args = new ProgressEventArgs(DownloadedSize, from.size);
+            ProgressEventArgs args = new ProgressEventArgs((long)ulnow, (long)ultotal);
             fireProgress(args);
             if (args.Cancel)
             {
                 IsCancelled = true;
-                return 0;
+                return -1;
             }
-            return (uint)data.Length;
+            return 0;
         }
 
         protected virtual void fireProgress(ProgressEventArgs args)

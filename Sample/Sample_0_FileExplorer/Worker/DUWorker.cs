@@ -100,44 +100,43 @@ namespace FileExplorer
 
                 op.status = OperationStatus.Processing;
                 queue.place(op);
-                fireOnProgress(op);
-                if (op.operation == Operation.Download)
+                //如果在进度处理程序中，改变了状态，则跳过继续处理
+                if(op.status == OperationStatus.Processing)
                 {
-                    download(op);
-                    //如果 download() 方法中未设置状态，则设置状态为失败
-                    if (op.status == OperationStatus.Processing)
+                    if (op.operation == Operation.Download)
                     {
-                        op.errmsg = "Unknow error";
+                        download(op);
+                        //如果 download() 方法中未设置状态，则设置状态为失败
+                        if (op.status == OperationStatus.Processing)
+                        {
+                            op.errmsg = "Unknow error";
+                            op.status = OperationStatus.Fail;
+                        }
+                    }
+                    else if (op.operation == Operation.Upload)
+                    {
+                        upload(op);
+                        //如果 upload() 方法中未设置状态，则设置状态为失败
+                        if (op.status == OperationStatus.Processing)
+                        {
+                            op.errmsg = "Unknow error";
+                            op.status = OperationStatus.Fail;
+                        }
+                    }
+                    else
+                    {
+                        //未知的操作类型，直接设置状态为失败
+                        op.errmsg = "Unknow operation";
                         op.status = OperationStatus.Fail;
                     }
                 }
-                else if (op.operation == Operation.Upload)
-                {
-                    upload(op);
-                    //如果 upload() 方法中未设置状态，则设置状态为失败
-                    if (op.status == OperationStatus.Processing)
-                    {
-                        op.errmsg = "Unknow error";
-                        op.status = OperationStatus.Fail;
-                    }
-                }
-                else
-                {
-                    //未知的操作类型，直接设置状态为失败
-                    op.errmsg = "Unknow operation";
-                    op.status = OperationStatus.Fail;
-                }
+                
                 queue.place(op);
                 Interlocked.Increment(ref dirty);
 
                 #endregion
 
                 fireOnCompleted(op);
-            }
-            if (op != null && op.canceller != null)
-            {
-                op.canceller.Cancel();
-                op.canceller = null;
             }
             Interlocked.Exchange(ref status, 0);
             persister.Save();
@@ -148,16 +147,70 @@ namespace FileExplorer
 
         private void upload(OperationInfo op)
         {
-            Console.WriteLine(op.ToString());
+            Uploader u = null;
+            try
+            {
+                System.IO.FileInfo fi = new System.IO.FileInfo(op.from);
+                op.totalSize = fi.Length;
+                fireOnProgress(op); // 触发一次进度改变
+                if (fi.Length > MultiThreadUploader.MIN_SLICE_SIZE)
+                {
+                    u = new RapidUploader(pcs, op.from, op.to);
+                    u.Upload();
+                    if (u.Success)
+                        op.status = OperationStatus.Success;
+                    else if (u.IsCancelled)
+                        op.status = OperationStatus.Cancel;
+                    else
+                        u = new MultiThreadUploader(pcs, op.from, op.to, workfolder, getUploadMaxThreadCount());
+                }
+                else
+                    u = new Uploader(pcs, op.from, op.to);
+                u.Progress += u_Progress;
+                u.OnCompleted += u_OnCompleted;
+                u.State = op;
+                u.Upload();
+            }
+            catch (Exception ex)
+            {
+                op.status = OperationStatus.Fail;
+                op.errmsg = ex.Message;
+            }
+        }
+
+        private void u_OnCompleted(object sender, CompletedEventArgs e)
+        {
+            Uploader u = (Uploader)sender;
+            OperationInfo op = (OperationInfo)u.State;
+            if (e.Success)
+                op.status = OperationStatus.Success;
+            else if (e.Cancel)
+                op.status = OperationStatus.Cancel;
+            else
+            {
+                op.status = OperationStatus.Fail;
+                op.errmsg = e.Exception == null ? string.Empty : e.Exception.Message;
+            }
+        }
+
+        private void u_Progress(object sender, ProgressEventArgs e)
+        {
+            Uploader u = (Uploader)sender;
+            OperationInfo op = (OperationInfo)u.State;
+            op.totalSize = e.totalSize;
+            op.doneSize = e.doneSize;
+            fireOnProgress(op);
+            if (op.status != OperationStatus.Processing)
+                e.Cancel = true;
         }
 
         private void download(OperationInfo op)
         {
-            Console.WriteLine(op.ToString());
             Downloader d = null;
             PcsFileInfo from;
             try
             {
+                fireOnProgress(op); // 触发一次进度改变
                 from = pcs.meta(op.from);
                 if (from.IsEmpty)
                 {
@@ -169,8 +222,10 @@ namespace FileExplorer
                     op.status = OperationStatus.Fail;
                     op.errmsg = "Can't download directory (" + from.path + ").";
                 }
-                else
+                else if(op.status == OperationStatus.Processing)
                 {
+                    op.totalSize = from.size;
+                    fireOnProgress(op); // 触发一次进度改变
                     if (from.size > MultiThreadDownloader.MIN_SLICE_SIZE)
                         d = new MultiThreadDownloader(pcs, from, op.to, workfolder, getDownloadMaxThreadCount());
                     else
@@ -178,9 +233,7 @@ namespace FileExplorer
                     d.OnCompleted += d_OnCompleted;
                     d.Progress += d_Progress;
                     d.State = op;
-                    op.canceller = d;
                     d.Download();
-                    op.canceller = null;
                 }
             }
             catch (Exception ex)
@@ -197,6 +250,8 @@ namespace FileExplorer
             op.totalSize = e.totalSize;
             op.doneSize = e.doneSize;
             fireOnProgress(op);
+            if (op.status != OperationStatus.Processing)
+                e.Cancel = true;
         }
 
         private void d_OnCompleted(object sender, CompletedEventArgs e)

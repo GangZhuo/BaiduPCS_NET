@@ -50,11 +50,14 @@
   <ItemGroup>
     <Compile Include="Common\AppSettings.cs" />
     <Compile Include="Common\AnonymousFunction.cs" />
+    <Compile Include="DU\MultiThreadUploader.cs" />
     <Compile Include="DU\Slice.cs" />
     <Compile Include="DU\SliceHelper.cs" />
     <Compile Include="DU\SliceStatus.cs" />
     <Compile Include="DU\MultiThreadDownloader.cs" />
     <Compile Include="DU\ICancellable.cs" />
+    <Compile Include="DU\Uploader.cs" />
+    <Compile Include="DU\RapidUploader.cs" />
     <Compile Include="Worker\DUQueue.cs" />
     <Compile Include="Worker\DUWorker.cs" />
     <Compile Include="Worker\DUWorkerPersister.cs" />

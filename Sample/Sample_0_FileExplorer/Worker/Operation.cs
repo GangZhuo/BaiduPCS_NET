@@ -41,8 +41,6 @@ namespace FileExplorer
         /// </summary>
         public long totalSize { get; set; }
 
-        public ICancellable canceller { get; set; }
-
         public object Tag { get; set; }
 
         public override bool Equals(object obj)
