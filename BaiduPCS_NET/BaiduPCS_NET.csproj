@@ -43,10 +43,7 @@
   <ItemGroup>
     <Compile Include="BaiduPCS.cs" />
     <Compile Include="Core\Delegates.cs" />
-    <Compile Include="Downloader.cs" />
     <Compile Include="Native\NativeDelegates.cs" />
-    <Compile Include="Core\SliceHelper.cs" />
-    <Compile Include="Core\SliceErrorArgs.cs" />
     <Compile Include="Native\NativeConst.cs" />
     <Compile Include="Native\NativeMethods.cs" />
     <Compile Include="Native\NativePcsFileInfo.cs" />
@@ -62,14 +59,9 @@
     <Compile Include="Core\PcsPanApiRes.cs" />
     <Compile Include="Core\PcsPanApiResInfo.cs" />
     <Compile Include="Core\PcsRes.cs" />
-    <Compile Include="Core\ProgressChangeArgs.cs" />
     <Compile Include="Native\NativePcsPanApiResInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Core\Slice.cs" />
-    <Compile Include="Core\SliceOwner.cs" />
-    <Compile Include="Core\SliceStatus.cs" />
     <Compile Include="Core\SPair.cs" />
-    <Compile Include="Uploader\Uploader.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
