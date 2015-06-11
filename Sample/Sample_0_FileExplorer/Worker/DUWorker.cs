@@ -13,7 +13,7 @@ namespace FileExplorer
     {
         public string workfolder { get; set; }
         public BaiduPCS pcs { get; set; }
-        public int threadCount { get; set; }
+        public int logicProcessorCount { get; set; }
 
         public DUWorkerPersister persister { get; private set; }
         public DUQueue queue { get; private set; }
@@ -31,7 +31,8 @@ namespace FileExplorer
 
         public DUWorker()
         {
-            threadCount = Utils.GetLogicProcessorCount();
+            workfolder = string.Empty;
+            logicProcessorCount = Utils.GetLogicProcessorCount();
             persister = new DUWorkerPersister(this);
             queue = new DUQueue(this);
             queue.OnEnqueue += queue_OnEnqueue;
@@ -133,6 +134,11 @@ namespace FileExplorer
 
                 fireOnCompleted(op);
             }
+            if (op != null && op.canceller != null)
+            {
+                op.canceller.Cancel();
+                op.canceller = null;
+            }
             Interlocked.Exchange(ref status, 0);
             persister.Save();
             Interlocked.Exchange(ref dirty, 0);
@@ -148,6 +154,64 @@ namespace FileExplorer
         private void download(OperationInfo op)
         {
             Console.WriteLine(op.ToString());
+            Downloader d = null;
+            PcsFileInfo from;
+            try
+            {
+                from = pcs.meta(op.from);
+                if (from.IsEmpty)
+                {
+                    op.status = OperationStatus.Fail;
+                    op.errmsg = "The remote file not exists (" + from.path + ").";
+                }
+                else if (from.isdir)
+                {
+                    op.status = OperationStatus.Fail;
+                    op.errmsg = "Can't download directory (" + from.path + ").";
+                }
+                else
+                {
+                    if (from.size > MultiThreadDownloader.MIN_SLICE_SIZE)
+                        d = new MultiThreadDownloader(pcs, from, op.to, workfolder, getDownloadMaxThreadCount());
+                    else
+                        d = new Downloader(pcs, from, op.to);
+                    d.OnCompleted += d_OnCompleted;
+                    d.Progress += d_Progress;
+                    d.State = op;
+                    op.canceller = d;
+                    d.Download();
+                    op.canceller = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                op.status = OperationStatus.Fail;
+                op.errmsg = ex.Message;
+            }
+        }
+
+        private void d_Progress(object sender, ProgressEventArgs e)
+        {
+            Downloader d = (Downloader)sender;
+            OperationInfo op = (OperationInfo)d.State;
+            op.totalSize = e.totalSize;
+            op.doneSize = e.doneSize;
+            fireOnProgress(op);
+        }
+
+        private void d_OnCompleted(object sender, CompletedEventArgs e)
+        {
+            Downloader d = (Downloader)sender;
+            OperationInfo op = (OperationInfo)d.State;
+            if (e.Success)
+                op.status = OperationStatus.Success;
+            else if (e.Cancel)
+                op.status = OperationStatus.Cancel;
+            else
+            {
+                op.status = OperationStatus.Fail;
+                op.errmsg = e.Exception == null ? string.Empty : e.Exception.Message;
+            }
         }
 
         private void fireOnStart()
@@ -182,6 +246,28 @@ namespace FileExplorer
         private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
         {
             Interlocked.Increment(ref dirty);
+        }
+
+        private int getDownloadMaxThreadCount()
+        {
+            int co = 0;
+            if (AppSettings.AutomaticDownloadMaxThreadCount || AppSettings.DownloadMaxThreadCount <= 0)
+                co = logicProcessorCount - 2;
+            else
+                co = AppSettings.DownloadMaxThreadCount;
+            if (co < 1) co = 1;
+            return co;
+        }
+
+        private int getUploadMaxThreadCount()
+        {
+            int co = 0;
+            if (AppSettings.AutomaticUploadMaxThreadCount || AppSettings.UploadMaxThreadCount <= 0)
+                co = logicProcessorCount - 2;
+            else
+                co = AppSettings.UploadMaxThreadCount;
+            if (co < 1) co = 1;
+            return co;
         }
     }
 

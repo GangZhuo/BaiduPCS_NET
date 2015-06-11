@@ -45,12 +45,12 @@ namespace FileExplorer
 
             worker = new DUWorker();
             worker.workfolder = GetWorkFolder();
+
+            ReadAppSettings();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            toolStripSeparator8.Visible = false;
-            btnSettings.Visible = false;
         }
 
         protected override void OnShown(EventArgs e)
@@ -67,16 +67,24 @@ namespace FileExplorer
                             if (!createBaiduPCS())
                             {
                                 succ = false;
-                                MessageBox.Show("Can't create BaiduPCS");
-                                Application.Exit();
+                                this.Invoke(new AnonymousFunction(delegate()
+                                {
+                                    Close();
+                                    //MessageBox.Show("Can't create BaiduPCS");
+                                    Application.Exit();
+                                }));
                                 return;
                             }
                         }
                         catch(Exception ex)
                         {
                             succ = false;
-                            MessageBox.Show("Can't create BaiduPCS: " + ex.Message);
-                            Application.Exit();
+                            this.Invoke(new AnonymousFunction(delegate()
+                            {
+                                MessageBox.Show("Can't create BaiduPCS: " + ex.Message);
+                                Close();
+                                Application.Exit();
+                            }));
                             return;
                         }
                     }),
@@ -96,6 +104,8 @@ namespace FileExplorer
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            if (frmHistory != null)
+                frmHistory.Close();
             worker.Stop();
             base.OnClosing(e);
         }
@@ -265,6 +275,7 @@ namespace FileExplorer
                 }
                 else
                 {
+                    Close();
                     Application.Exit();
                 }
             }
@@ -282,19 +293,29 @@ namespace FileExplorer
             }
         }
 
+        private void ReadAppSettings()
+        {
+            AppSettings.SettingsFileName = Path.Combine(GetWorkFolder(), "settings.xml");
+            AppSettings.Restore();
+            if (AppSettings.DownloadMaxThreadCount == 0)
+                AppSettings.AutomaticDownloadMaxThreadCount = true;
+            if (AppSettings.UploadMaxThreadCount == 0)
+                AppSettings.AutomaticUploadMaxThreadCount = true;
+        }
+
         /// <summary>
         /// 获取工作目录
         /// </summary>
         /// <returns></returns>
         private string GetWorkFolder()
         {
-            string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".pcs");
+            string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BaiduCloudDisk");
             return dir;
         }
 
         private bool createBaiduPCS()
         {
-            string cookiefilename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".pcs", "cookie.txt");
+            string cookiefilename = Path.Combine(GetWorkFolder(), "cookie.txt");
             string dir = System.IO.Path.GetDirectoryName(cookiefilename);
             if (!System.IO.Directory.Exists(dir))
                 System.IO.Directory.CreateDirectory(dir);
@@ -808,6 +829,7 @@ namespace FileExplorer
 
         private bool DownloadFile(PcsFileInfo fileinfo)
         {
+            saveFileDialog1.FileName = fileinfo.server_filename;
             if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 OperationInfo op = new OperationInfo()
@@ -820,17 +842,16 @@ namespace FileExplorer
                 };
                 if (worker.queue.Contains(op))
                 {
-                    if (MessageBox.Show("The file have been in the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                    {
+                    if (frmHistory != null)
                         ShowHistoryWindow(false);
-                    }
+                    MessageBox.Show("The file have been in the queue.", "Download");
                     return false;
                 }
                 worker.queue.Enqueue(op);
-                if (MessageBox.Show("Add 1 items to the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                {
+                if (frmHistory != null)
                     ShowHistoryWindow(false);
-                }
+                else
+                    MessageBox.Show("Add 1 items to the queue.", "Download");
                 return true;
             }
             return false;
@@ -866,16 +887,18 @@ namespace FileExplorer
                         errmsg = "Add " + addedCount + " items to the queue, duplicated " + (openFileDialog1.FileNames.Length - addedCount) + " items.";
                     else
                         errmsg = "Add " + addedCount + " items to the queue.";
-                    if (MessageBox.Show(errmsg + " View the queue?", "Upload", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                    {
+                    if (frmHistory != null)
                         ShowHistoryWindow(true);
-                    }
+                    else
+                        MessageBox.Show(errmsg, "Upload");
                     return true;
                 }
                 else
                 {
                     errmsg = "Failed to add the files to the queue.";
                     MessageBox.Show(errmsg, "Upload");
+                    if (frmHistory != null)
+                        ShowHistoryWindow(true);
                     return false;
                 }
             }

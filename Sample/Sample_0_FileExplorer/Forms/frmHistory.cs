@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,6 +13,7 @@ namespace FileExplorer
     public partial class frmHistory : Form
     {
         private DUWorker worker;
+        private Hashtable updatedOp;
 
         public int SelectedTabIndex
         {
@@ -29,15 +31,19 @@ namespace FileExplorer
 
             worker.OnProgress += worker_OnProgress;
             worker.OnCompleted += worker_OnCompleted;
+
+            updatedOp = Hashtable.Synchronized(new Hashtable());
         }
 
         private void frmHistory_Load(object sender, EventArgs e)
         {
             Bind();
+            timer1.Start();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            timer1.Stop();
             worker.queue.OnEnqueue -= queue_OnEnqueue;
             worker.queue.OnRemove -= queue_OnRemove;
             worker.queue.OnClear -= queue_OnClear;
@@ -90,10 +96,11 @@ namespace FileExplorer
 
         private void worker_OnProgress(object sender, DUWorkerEventArgs e)
         {
-            if (this.InvokeRequired)
-                this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(e.op); }));
-            else
-                UpdateProgress(e.op);
+            lock(this)
+            {
+                if (!updatedOp.Contains(e.op))
+                    updatedOp.Add(e.op, e.op);
+            }
         }
 
         private void MoveToCompletedDownload(OperationInfo op)
@@ -121,17 +128,17 @@ namespace FileExplorer
             ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
             if (progress != null)
             {
-                progress.ProgressMaxValue = op.total;
-                progress.ProgressValue = op.finished;
+                progress.ProgressMaxValue = op.totalSize;
+                progress.ProgressValue = op.doneSize;
 
                 double percent = 0;
-                if (op.total > 0)
+                if (op.totalSize > 0)
                 {
-                    percent = (double)op.finished / (double)op.total;
+                    percent = (double)op.doneSize / (double)op.totalSize;
                     if (percent > 1.0f)
                         percent = 1.0f;
                 }
-                progress.Text = string.Format("{0}%  {1}/{2}", percent.ToString("F2"), Utils.HumanReadableSize(op.finished), Utils.HumanReadableSize(op.total));
+                progress.Text = string.Format("{0}%  {1}/{2}", percent.ToString("F2"), Utils.HumanReadableSize(op.doneSize), Utils.HumanReadableSize(op.totalSize));
             }
         }
 
@@ -185,8 +192,8 @@ namespace FileExplorer
             item.SubItems.Add(subitem);
             ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
             progress.Owner = item;
-            progress.ProgressMaxValue = op.total;
-            progress.ProgressValue = op.finished;
+            progress.ProgressMaxValue = op.totalSize;
+            progress.ProgressValue = op.doneSize;
             progress.Tag = op;
             op.Tag = progress;
             item.SubItems.Add(progress);
@@ -201,8 +208,8 @@ namespace FileExplorer
             item.SubItems.Add(subitem);
             ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
             progress.Owner = item;
-            progress.ProgressMaxValue = op.total;
-            progress.ProgressValue = op.finished;
+            progress.ProgressMaxValue = op.totalSize;
+            progress.ProgressValue = op.doneSize;
             progress.Tag = op;
             op.Tag = progress;
             item.SubItems.Add(progress);
@@ -250,6 +257,33 @@ namespace FileExplorer
                 default:
                     return string.Empty;
             }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                lock(this)
+                {
+                    lvDownloading.BeginUpdate();
+                    lvUploading.BeginUpdate();
+
+                    foreach(OperationInfo op in updatedOp.Keys)
+                    {
+                        if (this.InvokeRequired)
+                            this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(op); }));
+                        else
+                            UpdateProgress(op);
+                    }
+
+                    lvUploading.EndUpdate();
+                    lvDownloading.EndUpdate();
+
+                    updatedOp.Clear();
+                }
+            }
+            catch { }
+
         }
 
     }

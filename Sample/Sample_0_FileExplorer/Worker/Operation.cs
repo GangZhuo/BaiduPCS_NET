@@ -34,12 +34,14 @@ namespace FileExplorer
         /// <summary>
         /// 完成量
         /// </summary>
-        public long finished { get; set; }
+        public long doneSize { get; set; }
 
         /// <summary>
         /// 总量
         /// </summary>
-        public long total { get; set; }
+        public long totalSize { get; set; }
+
+        public ICancellable canceller { get; set; }
 
         public object Tag { get; set; }
 
@@ -66,7 +68,7 @@ namespace FileExplorer
             if (status == OperationStatus.Fail)
                 s += ": " + errmsg;
             else if (status == OperationStatus.Processing)
-                s += ": " + Utils.HumanReadableSize(finished) + "/" + Utils.HumanReadableSize(total);
+                s += ": " + Utils.HumanReadableSize(doneSize) + "/" + Utils.HumanReadableSize(totalSize);
             return s;
         }
     }

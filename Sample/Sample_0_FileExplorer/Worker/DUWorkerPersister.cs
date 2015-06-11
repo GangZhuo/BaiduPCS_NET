@@ -53,8 +53,8 @@ namespace FileExplorer
                 op.to = n.Attributes["to"].Value;
                 op.status = (OperationStatus)Enum.Parse(typeof(OperationStatus), n.Attributes["status"].Value);
                 op.errmsg = n.Attributes["errmsg"].Value;
-                op.finished = Convert.ToInt64(n.Attributes["finished"].Value);
-                op.total = Convert.ToInt64(n.Attributes["total"].Value);
+                op.doneSize = Convert.ToInt64(n.Attributes["doneSize"].Value);
+                op.totalSize = Convert.ToInt64(n.Attributes["totalSize"].Value);
                 if (op.operation == Operation.Download)
                     worker.queue.Enqueue(op);
                 else if (op.operation == Operation.Upload)
@@ -120,12 +120,12 @@ namespace FileExplorer
                     writer.WriteString(op.errmsg == null ? string.Empty : op.errmsg);
                     writer.WriteEndAttribute();
 
-                    writer.WriteStartAttribute("finished");
-                    writer.WriteString(op.finished.ToString());
+                    writer.WriteStartAttribute("doneSize");
+                    writer.WriteString(op.doneSize.ToString());
                     writer.WriteEndAttribute();
 
-                    writer.WriteStartAttribute("total");
-                    writer.WriteString(op.total.ToString());
+                    writer.WriteStartAttribute("totalSize");
+                    writer.WriteString(op.totalSize.ToString());
                     writer.WriteEndAttribute();
 
                     writer.WriteEndElement();

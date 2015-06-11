@@ -28,28 +28,30 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDownloading = new System.Windows.Forms.TabPage();
-            this.tabCompletedDownload = new System.Windows.Forms.TabPage();
-            this.tabUploading = new System.Windows.Forms.TabPage();
-            this.tabCompletedUpload = new System.Windows.Forms.TabPage();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lvDownloading = new FileExplorer.ProgressListview();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tabCompletedDownload = new System.Windows.Forms.TabPage();
             this.lvCompletedDownload = new FileExplorer.ProgressListview();
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tabUploading = new System.Windows.Forms.TabPage();
             this.lvUploading = new FileExplorer.ProgressListview();
             this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tabCompletedUpload = new System.Windows.Forms.TabPage();
             this.lvCompletedUpload = new FileExplorer.ProgressListview();
             this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader12 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.tabControl1.SuspendLayout();
             this.tabDownloading.SuspendLayout();
             this.tabCompletedDownload.SuspendLayout();
@@ -80,45 +82,6 @@
             this.tabDownloading.TabIndex = 0;
             this.tabDownloading.Text = "Downloading";
             this.tabDownloading.UseVisualStyleBackColor = true;
-            // 
-            // tabCompletedDownload
-            // 
-            this.tabCompletedDownload.Controls.Add(this.lvCompletedDownload);
-            this.tabCompletedDownload.Location = new System.Drawing.Point(4, 22);
-            this.tabCompletedDownload.Name = "tabCompletedDownload";
-            this.tabCompletedDownload.Padding = new System.Windows.Forms.Padding(3);
-            this.tabCompletedDownload.Size = new System.Drawing.Size(429, 466);
-            this.tabCompletedDownload.TabIndex = 1;
-            this.tabCompletedDownload.Text = "Completed Download";
-            this.tabCompletedDownload.UseVisualStyleBackColor = true;
-            // 
-            // tabUploading
-            // 
-            this.tabUploading.Controls.Add(this.lvUploading);
-            this.tabUploading.Location = new System.Drawing.Point(4, 22);
-            this.tabUploading.Name = "tabUploading";
-            this.tabUploading.Size = new System.Drawing.Size(429, 466);
-            this.tabUploading.TabIndex = 2;
-            this.tabUploading.Text = "Uploading";
-            this.tabUploading.UseVisualStyleBackColor = true;
-            // 
-            // tabCompletedUpload
-            // 
-            this.tabCompletedUpload.Controls.Add(this.lvCompletedUpload);
-            this.tabCompletedUpload.Location = new System.Drawing.Point(4, 22);
-            this.tabCompletedUpload.Name = "tabCompletedUpload";
-            this.tabCompletedUpload.Size = new System.Drawing.Size(429, 466);
-            this.tabCompletedUpload.TabIndex = 3;
-            this.tabCompletedUpload.Text = "Completed Upload";
-            this.tabCompletedUpload.UseVisualStyleBackColor = true;
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 492);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(437, 22);
-            this.statusStrip1.TabIndex = 1;
-            this.statusStrip1.Text = "statusStrip1";
             // 
             // lvDownloading
             // 
@@ -151,6 +114,17 @@
             this.columnHeader3.Text = "Status";
             this.columnHeader3.Width = 80;
             // 
+            // tabCompletedDownload
+            // 
+            this.tabCompletedDownload.Controls.Add(this.lvCompletedDownload);
+            this.tabCompletedDownload.Location = new System.Drawing.Point(4, 22);
+            this.tabCompletedDownload.Name = "tabCompletedDownload";
+            this.tabCompletedDownload.Padding = new System.Windows.Forms.Padding(3);
+            this.tabCompletedDownload.Size = new System.Drawing.Size(429, 466);
+            this.tabCompletedDownload.TabIndex = 1;
+            this.tabCompletedDownload.Text = "Completed Download";
+            this.tabCompletedDownload.UseVisualStyleBackColor = true;
+            // 
             // lvCompletedDownload
             // 
             this.lvCompletedDownload.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -181,6 +155,16 @@
             // 
             this.columnHeader6.Text = "Status";
             this.columnHeader6.Width = 80;
+            // 
+            // tabUploading
+            // 
+            this.tabUploading.Controls.Add(this.lvUploading);
+            this.tabUploading.Location = new System.Drawing.Point(4, 22);
+            this.tabUploading.Name = "tabUploading";
+            this.tabUploading.Size = new System.Drawing.Size(429, 466);
+            this.tabUploading.TabIndex = 2;
+            this.tabUploading.Text = "Uploading";
+            this.tabUploading.UseVisualStyleBackColor = true;
             // 
             // lvUploading
             // 
@@ -213,6 +197,16 @@
             this.columnHeader9.Text = "Status";
             this.columnHeader9.Width = 80;
             // 
+            // tabCompletedUpload
+            // 
+            this.tabCompletedUpload.Controls.Add(this.lvCompletedUpload);
+            this.tabCompletedUpload.Location = new System.Drawing.Point(4, 22);
+            this.tabCompletedUpload.Name = "tabCompletedUpload";
+            this.tabCompletedUpload.Size = new System.Drawing.Size(429, 466);
+            this.tabCompletedUpload.TabIndex = 3;
+            this.tabCompletedUpload.Text = "Completed Upload";
+            this.tabCompletedUpload.UseVisualStyleBackColor = true;
+            // 
             // lvCompletedUpload
             // 
             this.lvCompletedUpload.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -243,6 +237,20 @@
             // 
             this.columnHeader12.Text = "Status";
             this.columnHeader12.Width = 80;
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Location = new System.Drawing.Point(0, 492);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(437, 22);
+            this.statusStrip1.TabIndex = 1;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // frmHistory
             // 
@@ -288,5 +296,6 @@
         private System.Windows.Forms.ColumnHeader columnHeader10;
         private System.Windows.Forms.ColumnHeader columnHeader11;
         private System.Windows.Forms.ColumnHeader columnHeader12;
+        private System.Windows.Forms.Timer timer1;
     }
 }
