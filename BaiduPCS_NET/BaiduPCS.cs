@@ -307,7 +307,7 @@ namespace BaiduPCS_NET
         public BaiduPCS clone()
         {
             BaiduPCS pcs = pcs_create(CookieFileName);
-            pcs.cloneUserInfo(pcs);
+            pcs.cloneUserInfo(this);
             return pcs;
         }
 
