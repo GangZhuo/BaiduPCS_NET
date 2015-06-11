@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using BaiduPCS_NET;
 
@@ -12,7 +13,7 @@ namespace FileExplorer
     {
         public BaiduPCS pcs { get; set; }
 
-        public int ThreadCount { get; set; }
+        public int threadCount { get; set; }
 
         public DUQueue queue { get; private set; }
         public IList<OperationInfo> completedDownload { get; private set; }
@@ -23,9 +24,11 @@ namespace FileExplorer
         public event OnDUWorkerUploaded OnUploaded;
         public event OnDUWorkerDownloaded OnDownloaded;
 
+        private long sid = 0;
+
         public DUWorker()
         {
-            ThreadCount = Utils.GetLogicProcessorCount();
+            threadCount = Utils.GetLogicProcessorCount();
             queue = new DUQueue();
             completedDownload = new List<OperationInfo>();
             completedUpload = new List<OperationInfo>();
@@ -33,12 +36,17 @@ namespace FileExplorer
 
         public void Start()
         {
+            Interlocked.Increment(ref sid);
+            for (int i = 0; i < threadCount; i++)
+            {
+                new Thread(new ThreadStart(execTask)).Start();
+            }
 
         }
 
         public void Stop()
         {
-
+            Interlocked.Increment(ref sid);
         }
 
         public void Reset()
@@ -48,6 +56,40 @@ namespace FileExplorer
             completedUpload.Clear();
             if (OnReset != null)
                 OnReset(this);
+        }
+
+        private void execTask()
+        {
+            long csid = Interlocked.Read(ref sid);
+            BaiduPCS pcs = this.pcs.clone();
+            OperationInfo op = null;
+            while(csid == Interlocked.Read(ref sid))
+            {
+                op = queue.Dequeue();
+                if(op == null)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+                if(op.operation == Operation.Download)
+                {
+                    download(op);
+                }
+                else if(op.operation == Operation.Upload)
+                {
+                    upload(op);
+                }
+            }
+        }
+
+        private bool upload(OperationInfo op)
+        {
+            return false;
+        }
+
+        public bool download(OperationInfo op)
+        {
+            return false;
         }
 
     }
