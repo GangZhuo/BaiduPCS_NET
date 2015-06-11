@@ -58,5 +58,16 @@ namespace FileExplorer
             string s = operation.ToString() + " " + from + " to " + to;
             return s.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            string s = "[" + status.ToString() + "] " + operation.ToString() + " " + from + " => " + to;
+
+            if (status == OperationStatus.Fail)
+                s += ": " + errmsg;
+            else if (status == OperationStatus.Processing)
+                s += ": " + Utils.HumanReadableSize(finished) + "/" + Utils.HumanReadableSize(total);
+            return s;
+        }
     }
 }

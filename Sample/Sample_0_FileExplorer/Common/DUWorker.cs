@@ -11,94 +11,187 @@ namespace FileExplorer
     /// </summary>
     public class DUWorker
     {
+        public string workfolder { get; set; }
         public BaiduPCS pcs { get; set; }
-
         public int threadCount { get; set; }
 
+        public DUWorkerPersister persister { get; private set; }
         public DUQueue queue { get; private set; }
-        public IList<OperationInfo> completedDownload { get; private set; }
-        public IList<OperationInfo> completedUpload { get; private set; }
 
-        public event OnDUWorkerReset OnReset;
-        public event OnDUWorkerProgressChange OnProgressChange;
-        public event OnDUWorkerUploaded OnUploaded;
-        public event OnDUWorkerDownloaded OnDownloaded;
+        public event EventHandler OnStart;
+        public event EventHandler OnStop;
+        public event EventHandler<DUWorkerEventArgs> OnProgress;
+        public event EventHandler<DUWorkerEventArgs> OnCompleted;
 
         private long sid = 0;
+        private long status = 0;
+        private long dirty = 0;
+
+        public bool IsStart { get { return Interlocked.Read(ref status) > 0; } }
 
         public DUWorker()
         {
             threadCount = Utils.GetLogicProcessorCount();
-            queue = new DUQueue();
-            completedDownload = new List<OperationInfo>();
-            completedUpload = new List<OperationInfo>();
+            persister = new DUWorkerPersister(this);
+            queue = new DUQueue(this);
+            queue.OnEnqueue += queue_OnEnqueue;
+            queue.OnRemove += queue_OnRemove;
         }
 
         public void Start()
         {
+            if (IsStart)
+                return;
             Interlocked.Increment(ref sid);
-            for (int i = 0; i < threadCount; i++)
-            {
-                new Thread(new ThreadStart(execTask)).Start();
-            }
-
+            Interlocked.Exchange(ref status, 1);
+            new Thread(new ThreadStart(execTask)).Start();
         }
 
         public void Stop()
         {
+            if (!IsStart)
+                return;
             Interlocked.Increment(ref sid);
-        }
-
-        public void Reset()
-        {
-            queue.Clear();
-            completedDownload.Clear();
-            completedUpload.Clear();
-            if (OnReset != null)
-                OnReset(this);
         }
 
         private void execTask()
         {
             long csid = Interlocked.Read(ref sid);
-            BaiduPCS pcs = this.pcs.clone();
+            long tick = 0, ndirty;
             OperationInfo op = null;
-            while(csid == Interlocked.Read(ref sid))
+            queue.Clear();
+            persister.Restore();
+            fireOnStart();
+            while (csid == Interlocked.Read(ref sid))
             {
+                #region 每 5 秒保存一次
+                ndirty = Interlocked.Read(ref dirty);
+                if (tick > 50 && ndirty > 0)
+                {
+                    persister.Save();
+                    Interlocked.Add(ref dirty, -ndirty);
+                    tick = 0;
+                }
+                else
+                {
+                    tick++;
+                }
+                #endregion
+
+                #region 获取待处理的 OperationInfo 对象
+
                 op = queue.Dequeue();
-                if(op == null)
+                if (op == null)
                 {
                     Thread.Sleep(100);
                     continue;
                 }
-                if(op.operation == Operation.Download)
+                else if (op.status != OperationStatus.Pending
+                    && op.status != OperationStatus.Processing) // 来自中断后还原
+                {
+                    queue.place(op);
+                    continue;
+                }
+
+                #endregion
+
+                #region 处理 OperationInfo 对象
+
+                op.status = OperationStatus.Processing;
+                queue.place(op);
+                fireOnProgress(op);
+                if (op.operation == Operation.Download)
                 {
                     download(op);
+                    //如果 download() 方法中未设置状态，则设置状态为失败
+                    if (op.status == OperationStatus.Processing)
+                    {
+                        op.errmsg = "Unknow error";
+                        op.status = OperationStatus.Fail;
+                    }
                 }
-                else if(op.operation == Operation.Upload)
+                else if (op.operation == Operation.Upload)
                 {
                     upload(op);
+                    //如果 upload() 方法中未设置状态，则设置状态为失败
+                    if (op.status == OperationStatus.Processing)
+                    {
+                        op.errmsg = "Unknow error";
+                        op.status = OperationStatus.Fail;
+                    }
                 }
+                else
+                {
+                    //未知的操作类型，直接设置状态为失败
+                    op.errmsg = "Unknow operation";
+                    op.status = OperationStatus.Fail;
+                }
+                queue.place(op);
+                Interlocked.Increment(ref dirty);
+
+                #endregion
+
+                fireOnCompleted(op);
             }
+            Interlocked.Exchange(ref status, 0);
+            persister.Save();
+            Interlocked.Exchange(ref dirty, 0);
+            queue.Clear();
+            fireOnStop();
         }
 
-        private bool upload(OperationInfo op)
+        private void upload(OperationInfo op)
         {
-            return false;
+            Console.WriteLine(op.ToString());
         }
 
-        public bool download(OperationInfo op)
+        private void download(OperationInfo op)
         {
-            return false;
+            Console.WriteLine(op.ToString());
         }
 
+        private void fireOnStart()
+        {
+            if (OnStart != null)
+                OnStart(this, new EventArgs());
+        }
+
+        private void fireOnStop()
+        {
+            if (OnStop != null)
+                OnStop(this, new EventArgs());
+        }
+
+        private void fireOnProgress(OperationInfo op)
+        {
+            if (OnProgress != null)
+                OnProgress(this, new DUWorkerEventArgs(op));
+        }
+
+        private void fireOnCompleted(OperationInfo op)
+        {
+            if (OnCompleted != null)
+                OnCompleted(this, new DUWorkerEventArgs(op));
+        }
+
+        private void queue_OnRemove(object sender, DUQueueEventArgs e)
+        {
+            Interlocked.Increment(ref dirty);
+        }
+
+        private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
+        {
+            Interlocked.Increment(ref dirty);
+        }
     }
 
-    public delegate void OnDUWorkerReset(object sender);
+    public class DUWorkerEventArgs : EventArgs
+    {
+        public OperationInfo op { get; private set; }
 
-    public delegate void OnDUWorkerProgressChange(object sender, OperationInfo op);
-
-    public delegate void OnDUWorkerUploaded(object sender, OperationInfo op);
-
-    public delegate void OnDUWorkerDownloaded(object sender, OperationInfo op);
+        public DUWorkerEventArgs(OperationInfo op)
+        {
+            this.op = op;
+        }
+    }
 }

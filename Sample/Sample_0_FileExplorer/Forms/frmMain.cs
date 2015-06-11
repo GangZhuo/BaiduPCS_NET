@@ -26,7 +26,6 @@ namespace FileExplorer
         private bool isMove = false;
         private frmHistory frmHistory = null;
         private DUWorker worker = null;
-        private DUWorkerPersister persister = null;
 
         public frmMain()
         {
@@ -45,11 +44,7 @@ namespace FileExplorer
             source = new PcsFileInfo();
 
             worker = new DUWorker();
-            persister = new DUWorkerPersister();
-
-            worker.OnDownloaded += worker_OnDownloaded;
-            worker.OnUploaded += worker_OnUploaded;
-            worker.queue.OnEnqueue += queue_OnEnqueue;
+            worker.workfolder = GetWorkFolder();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -89,8 +84,6 @@ namespace FileExplorer
                     {
                         if (!succ)
                             return;
-                        InitDUWorkerPersister();
-                        persister.RestoreWorker(worker);
                         this.Invoke(new AnonymousFunction(delegate()
                         {
                             Go("/");
@@ -104,7 +97,6 @@ namespace FileExplorer
         protected override void OnClosing(CancelEventArgs e)
         {
             worker.Stop();
-            persister.SaveWorker(worker);
             base.OnClosing(e);
         }
 
@@ -154,21 +146,6 @@ namespace FileExplorer
             {
                 Go(fileInfo.path);
             }
-        }
-
-        private void queue_OnEnqueue(object sender, OperationInfo op)
-        {
-            persister.SaveWorker(worker);
-        }
-
-        private void worker_OnUploaded(object sender, OperationInfo op)
-        {
-            persister.SaveWorker(worker);
-        }
-
-        private void worker_OnDownloaded(object sender, OperationInfo op)
-        {
-            persister.SaveWorker(worker);
         }
 
         private void btnGo_Click(object sender, EventArgs e)
@@ -275,14 +252,13 @@ namespace FileExplorer
                 lastSearchPath = string.Empty;
                 contextItem = null;
 
+                if(frmHistory != null)
+                    frmHistory.Close();
+
                 worker.Stop();
-                persister.SaveWorker(worker);
-                worker.Reset();
 
                 if (Login())
                 {
-                    InitDUWorkerPersister();
-                    persister.RestoreWorker(worker);
                     Go("/");
                     worker.pcs = pcs;
                     worker.Start();
@@ -304,6 +280,16 @@ namespace FileExplorer
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// 获取工作目录
+        /// </summary>
+        /// <returns></returns>
+        private string GetWorkFolder()
+        {
+            string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".pcs");
+            return dir;
         }
 
         private bool createBaiduPCS()
@@ -601,23 +587,28 @@ namespace FileExplorer
 
             }
         }
-
-        private void ShowHistoryWindow(bool forUpload = false)
+        
+        private void ShowHistoryWindow()
         {
             if (frmHistory == null)
             {
                 frmHistory = new frmHistory(worker);
                 frmHistory.FormClosed += frmHistory_FormClosed;
-                if (forUpload)
-                    frmHistory.SelectedTabIndex = 2;
                 frmHistory.Show();
             }
             else
             {
                 frmHistory.Activate();
-                if (forUpload)
-                    frmHistory.SelectedTabIndex = 2;
             }
+        }
+
+        private void ShowHistoryWindow(bool forUpload)
+        {
+            ShowHistoryWindow();
+            if (forUpload)
+                frmHistory.SelectedTabIndex = 2;
+            else
+                frmHistory.SelectedTabIndex = 0;
         }
 
         private void frmHistory_FormClosed(object sender, FormClosedEventArgs e)
@@ -831,14 +822,14 @@ namespace FileExplorer
                 {
                     if (MessageBox.Show("The file have been in the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                     {
-                        ShowHistoryWindow();
+                        ShowHistoryWindow(false);
                     }
                     return false;
                 }
                 worker.queue.Enqueue(op);
                 if (MessageBox.Show("Add 1 items to the queue. View the queue?", "Download", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
-                    ShowHistoryWindow();
+                    ShowHistoryWindow(false);
                 }
                 return true;
             }
@@ -889,14 +880,6 @@ namespace FileExplorer
                 }
             }
             return false;
-        }
-
-        private void InitDUWorkerPersister()
-        {
-            string worker_filename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                ".pcs", "worker_" + pcs.getUID() + ".xml");
-            persister.Filename = worker_filename;
-
         }
 
         #region 上下文菜单代码

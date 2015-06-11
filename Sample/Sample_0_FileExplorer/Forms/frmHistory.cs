@@ -23,12 +23,12 @@ namespace FileExplorer
         {
             InitializeComponent();
             this.worker = worker;
-
             worker.queue.OnEnqueue += queue_OnEnqueue;
-            worker.OnReset += worker_OnReset;
-            worker.OnProgressChange += worker_OnProgressChange;
-            worker.OnUploaded += worker_OnUploaded;
-            worker.OnDownloaded += worker_OnDownloaded;
+            worker.queue.OnRemove += queue_OnRemove;
+            worker.queue.OnClear += queue_OnClear;
+
+            worker.OnProgress += worker_OnProgress;
+            worker.OnCompleted += worker_OnCompleted;
         }
 
         private void frmHistory_Load(object sender, EventArgs e)
@@ -39,112 +39,61 @@ namespace FileExplorer
         protected override void OnClosing(CancelEventArgs e)
         {
             worker.queue.OnEnqueue -= queue_OnEnqueue;
-            worker.OnReset -= worker_OnReset;
-            worker.OnProgressChange -= worker_OnProgressChange;
-            worker.OnUploaded -= worker_OnUploaded;
-            worker.OnDownloaded -= worker_OnDownloaded;
+            worker.queue.OnRemove -= queue_OnRemove;
+            worker.queue.OnClear -= queue_OnClear;
+
+            worker.OnProgress -= worker_OnProgress;
+            worker.OnCompleted -= worker_OnCompleted;
 
             base.OnClosing(e);
         }
 
-        private void worker_OnReset(object sender)
+        private void queue_OnClear(object sender, EventArgs e)
         {
-            if(this.InvokeRequired)
-            {
-                this.Invoke(new OnDUWorkerReset(worker_OnReset), new object[] { sender });
-            }
+            if (this.InvokeRequired)
+                this.Invoke(new AnonymousFunction(delegate() { Bind(); }));
             else
-            {
                 Bind();
-            }
         }
 
-        private void queue_OnEnqueue(object sender, OperationInfo op)
+        private void queue_OnRemove(object sender, DUQueueEventArgs e)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new AnonymousFunction(delegate() { RemoveItem(e.op); }));
+            else
+                RemoveItem(e.op);
+        }
+
+        private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new AnonymousFunction(delegate() { AddItem(e.op); }));
+            else
+                AddItem(e.op);
+        }
+
+        private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new OnDUQueueEnqueue(queue_OnEnqueue), new object[] { sender, op });
+                this.Invoke(new AnonymousFunction(delegate() { 
+                    RemoveItem(e.op);
+                    AddItem(e.op);
+                }));
             }
             else
             {
-                AddItem(op);
+                RemoveItem(e.op);
+                AddItem(e.op);
             }
         }
 
-        private void worker_OnProgressChange(object sender, OperationInfo op)
+        private void worker_OnProgress(object sender, DUWorkerEventArgs e)
         {
             if (this.InvokeRequired)
-            {
-                this.Invoke(new OnDUWorkerProgressChange(worker_OnProgressChange), new object[] { sender, op });
-            }
+                this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(e.op); }));
             else
-            {
-                UpdateProgress(op);
-            }
-        }
-
-        private void worker_OnDownloaded(object sender, OperationInfo op)
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new OnDUWorkerDownloaded(worker_OnDownloaded), new object[] { sender, op });
-            }
-            else
-            {
-                if (op.status == OperationStatus.Success)
-                {
-                    MoveToCompletedDownload(op);
-                }
-                else
-                {
-                    ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-                    if (progress != null)
-                    {
-                        if (op.status == OperationStatus.Cancel)
-                        {
-                            progress.ShowProgress = false;
-                            progress.Text = GetStatusText(op.status);
-                        }
-                        else
-                        {
-                            progress.ShowProgress = false;
-                            progress.Text = GetStatusText(op.status) + ": " + op.errmsg;
-                        }
-                    }
-                }
-            }
-        }
-
-        private void worker_OnUploaded(object sender, OperationInfo op)
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new OnDUWorkerUploaded(worker_OnUploaded), new object[] { sender, op });
-            }
-            else
-            {
-                if (op.status == OperationStatus.Success)
-                {
-                    MoveToCompletedUpload(op);
-                }
-                else
-                {
-                    ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-                    if (progress != null)
-                    {
-                        if (op.status == OperationStatus.Cancel)
-                        {
-                            progress.ShowProgress = false;
-                            progress.Text = GetStatusText(op.status);
-                        }
-                        else
-                        {
-                            progress.ShowProgress = false;
-                            progress.Text = GetStatusText(op.status) + ": " + op.errmsg;
-                        }
-                    }
-                }
-            }
+                UpdateProgress(e.op);
         }
 
         private void MoveToCompletedDownload(OperationInfo op)
@@ -190,78 +139,12 @@ namespace FileExplorer
         {
             lvDownloading.Items.Clear();
             lvUploading.Items.Clear();
-            foreach (OperationInfo op in worker.queue)
-            {
-                AddItem(op);
-            }
-
             lvCompletedDownload.Items.Clear();
-            foreach (OperationInfo op in worker.completedDownload)
-            {
-                AddItem(op);
-            }
-
             lvCompletedUpload.Items.Clear();
-            foreach (OperationInfo op in worker.completedUpload)
+            foreach (OperationInfo op in worker.queue.list())
             {
                 AddItem(op);
             }
-        }
-
-        private void AddDownloadingItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op.status));
-            progress.Owner = item;
-            progress.ProgressMaxValue = op.total;
-            progress.ProgressValue = op.finished;
-            progress.Tag = op;
-            op.Tag = progress;
-            item.SubItems.Add(progress);
-            lvDownloading.Items.Add(item);
-        }
-
-        private void AddUploadingItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op.status));
-            progress.Owner = item;
-            progress.ProgressMaxValue = op.total;
-            progress.ProgressValue = op.finished;
-            progress.Tag = op;
-            op.Tag = progress;
-            item.SubItems.Add(progress);
-            lvUploading.Items.Add(item);
-        }
-
-        private void AddCompletedDownloadItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            subitem = new ListViewItem.ListViewSubItem(item, GetStatusText(op.status));
-            subitem.Tag = op;
-            item.SubItems.Add(subitem);
-            lvCompletedDownload.Items.Add(item);
-        }
-
-        private void AddCompletedUploadItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            subitem = new ListViewItem.ListViewSubItem(item, GetStatusText(op.status));
-            subitem.Tag = op;
-            item.SubItems.Add(subitem);
-            lvCompletedUpload.Items.Add(item);
         }
 
         private void AddItem(OperationInfo op)
@@ -282,9 +165,77 @@ namespace FileExplorer
             }
         }
 
-        private string GetStatusText(OperationStatus status)
+        private void RemoveItem(OperationInfo op)
         {
-            switch(status)
+            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
+            if (progress != null && progress.Owner != null)
+            {
+                lvDownloading.Items.Remove(progress.Owner);
+                lvUploading.Items.Remove(progress.Owner);
+                lvCompletedDownload.Items.Remove(progress.Owner);
+                lvCompletedUpload.Items.Remove(progress.Owner);
+            }
+        }
+
+        private void AddDownloadingItem(OperationInfo op)
+        {
+            ListViewItem item = new ListViewItem(op.from);
+            item.Tag = op;
+            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
+            item.SubItems.Add(subitem);
+            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
+            progress.Owner = item;
+            progress.ProgressMaxValue = op.total;
+            progress.ProgressValue = op.finished;
+            progress.Tag = op;
+            op.Tag = progress;
+            item.SubItems.Add(progress);
+            lvDownloading.Items.Add(item);
+        }
+
+        private void AddUploadingItem(OperationInfo op)
+        {
+            ListViewItem item = new ListViewItem(op.from);
+            item.Tag = op;
+            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
+            item.SubItems.Add(subitem);
+            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
+            progress.Owner = item;
+            progress.ProgressMaxValue = op.total;
+            progress.ProgressValue = op.finished;
+            progress.Tag = op;
+            op.Tag = progress;
+            item.SubItems.Add(progress);
+            lvUploading.Items.Add(item);
+        }
+
+        private void AddCompletedDownloadItem(OperationInfo op)
+        {
+            ListViewItem item = new ListViewItem(op.from);
+            item.Tag = op;
+            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
+            item.SubItems.Add(subitem);
+            subitem = new ListViewItem.ListViewSubItem(item, GetStatusText(op));
+            subitem.Tag = op;
+            item.SubItems.Add(subitem);
+            lvCompletedDownload.Items.Add(item);
+        }
+
+        private void AddCompletedUploadItem(OperationInfo op)
+        {
+            ListViewItem item = new ListViewItem(op.from);
+            item.Tag = op;
+            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
+            item.SubItems.Add(subitem);
+            subitem = new ListViewItem.ListViewSubItem(item, GetStatusText(op));
+            subitem.Tag = op;
+            item.SubItems.Add(subitem);
+            lvCompletedUpload.Items.Add(item);
+        }
+
+        private string GetStatusText(OperationInfo op)
+        {
+            switch (op.status)
             {
                 case OperationStatus.Pending:
                     return "Pending";
@@ -295,7 +246,7 @@ namespace FileExplorer
                 case OperationStatus.Success:
                     return "Success";
                 case OperationStatus.Fail:
-                    return "Fail";
+                    return "Fail: " + op.errmsg;
                 default:
                     return string.Empty;
             }
