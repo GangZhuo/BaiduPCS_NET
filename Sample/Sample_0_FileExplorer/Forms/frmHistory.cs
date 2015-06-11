@@ -96,7 +96,12 @@ namespace FileExplorer
 
         private void worker_OnProgress(object sender, DUWorkerEventArgs e)
         {
-            lock(this)
+            ProgressListview.ProgressSubItem progress = e.op.Tag as ProgressListview.ProgressSubItem;
+            if (progress != null && progress.Owner != null)
+            {
+                progress.ShowProgress = true;
+            }
+            lock (this)
             {
                 if (!updatedOp.Contains(e.op))
                     updatedOp.Add(e.op, e.op);
@@ -194,6 +199,7 @@ namespace FileExplorer
             progress.Owner = item;
             progress.ProgressMaxValue = op.totalSize;
             progress.ProgressValue = op.doneSize;
+            progress.ShowProgress = false;
             progress.Tag = op;
             op.Tag = progress;
             item.SubItems.Add(progress);
@@ -210,6 +216,7 @@ namespace FileExplorer
             progress.Owner = item;
             progress.ProgressMaxValue = op.totalSize;
             progress.ProgressValue = op.doneSize;
+            progress.ShowProgress = false;
             progress.Tag = op;
             op.Tag = progress;
             item.SubItems.Add(progress);
