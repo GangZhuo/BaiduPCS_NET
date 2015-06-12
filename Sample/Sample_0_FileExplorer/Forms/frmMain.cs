@@ -45,6 +45,7 @@ namespace FileExplorer
 
             worker = new DUWorker();
             worker.workfolder = GetWorkFolder();
+            worker.OnCompleted += worker_OnCompleted;
 
             ReadAppSettings();
         }
@@ -155,6 +156,22 @@ namespace FileExplorer
             if(fileInfo.isdir)
             {
                 Go(fileInfo.path);
+            }
+        }
+
+        private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
+        {
+            if(e.op.operation == Operation.Upload && e.op.status == OperationStatus.Success)
+            {
+                int i = e.op.to.LastIndexOf('/');
+                string dir = e.op.to.Substring(0, i);
+                if (string.Equals(dir, currentPath, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (lvFileList.InvokeRequired)
+                        lvFileList.Invoke(new AnonymousFunction(delegate() { RefreshFileList(); }));
+                    else
+                        RefreshFileList();
+                }
             }
         }
 
@@ -870,7 +887,7 @@ namespace FileExplorer
                         uid = uid,
                         operation = Operation.Upload,
                         from = filename,
-                        to = to.path,
+                        to = to.path + "/" + Path.GetFileName(filename),
                         status = OperationStatus.Pending
                     };
                     if (worker.queue.Contains(op))

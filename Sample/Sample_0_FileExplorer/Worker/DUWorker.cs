@@ -169,7 +169,7 @@ namespace FileExplorer
                         u = new Uploader(pcs, op.from, op.to);
                     else
                         u = null; // op 的状态已经被改变，且不是 OperationStatus.Processing
-                    if (u != null)
+                    if (u != null && op.status == OperationStatus.Processing)
                     {
                         u.Progress += u_Progress;
                         u.OnCompleted += u_OnCompleted;
@@ -190,7 +190,10 @@ namespace FileExplorer
             Uploader u = (Uploader)sender;
             OperationInfo op = (OperationInfo)u.State;
             if (e.Success)
+            {
+                op.to = u.Result.path;
                 op.status = OperationStatus.Success;
+            }
             else if (e.Cancel)
                 op.status = OperationStatus.Cancel;
             else
