@@ -21,6 +21,9 @@ namespace FileExplorer
         public frmHistory(DUWorker worker)
         {
             InitializeComponent();
+
+            lvItems.DoubleClick += lvItems_DoubleClick;
+
             this.worker = worker;
             worker.queue.OnEnqueue += queue_OnEnqueue;
             worker.queue.OnRemove += queue_OnRemove;
@@ -52,6 +55,38 @@ namespace FileExplorer
             worker.OnCompleted -= worker_OnCompleted;
 
             base.OnClosing(e);
+        }
+
+        private void lvItems_DoubleClick(object sender, EventArgs e)
+        {
+            if (lvItems.SelectedItems.Count == 0)
+                return;
+            OperationInfo op = lvItems.SelectedItems[0].Tag as OperationInfo;
+            if (op != null)
+            {
+                if (op.operation == Operation.Download)
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(op.to))
+                            System.Diagnostics.Process.Start("Explorer", "/select,\"" + op.to + "\"");
+                        else
+                            System.Diagnostics.Process.Start("Explorer", "\"" + System.IO.Path.GetDirectoryName(op.to) + "\"");
+                    }
+                    catch { }
+                }
+                else if (op.operation == Operation.Upload)
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(op.from))
+                            System.Diagnostics.Process.Start("Explorer", "/select,\"" + op.from + "\"");
+                        else
+                            System.Diagnostics.Process.Start("Explorer", "\"" + System.IO.Path.GetDirectoryName(op.from) + "\"");
+                    }
+                    catch { }
+                }
+            }
         }
 
         private void queue_OnClear(object sender, EventArgs e)
@@ -100,16 +135,35 @@ namespace FileExplorer
 
         private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
         {
+            if (e.op.status == OperationStatus.Fail)
+            {
+                if (AppSettings.RetryWhenDownloadFailed && e.op.operation == Operation.Download)
+                {
+                    if (lvItems.InvokeRequired)
+                        lvItems.Invoke(new AnonymousFunction(delegate() { ChangeOpStatus(e.op, OperationStatus.Pending); }));
+                    else
+                        ChangeOpStatus(e.op, OperationStatus.Pending);
+                    return;
+                }
+                else if (AppSettings.RetryWhenUploadFailed && e.op.operation == Operation.Upload)
+                {
+                    if (lvItems.InvokeRequired)
+                        lvItems.Invoke(new AnonymousFunction(delegate() { ChangeOpStatus(e.op, OperationStatus.Pending); }));
+                    else
+                        ChangeOpStatus(e.op, OperationStatus.Pending);
+                    return;
+                }
+            }
             ProgressListview.ProgressSubItem progress = e.op.Tag as ProgressListview.ProgressSubItem;
             if (progress != null && progress.Owner != null)
             {
+                lock (locker)
+                {
+                    if (updatedOp.Contains(e.op))
+                        updatedOp.Remove(e.op);
+                }
                 if (lvItems.InvokeRequired)
                 {
-                    lock(locker)
-                    {
-                        if (updatedOp.Contains(e.op))
-                            updatedOp.Remove(e.op);
-                    }
                     lvItems.Invoke(new AnonymousFunction(delegate()
                     {
                         progress.ShowProgress = false;
@@ -378,6 +432,7 @@ namespace FileExplorer
         {
             try
             {
+                lblStatusST.Text = lvItems.Items.Count.ToString() + " items";
                 if (updatedOp.Count > 0)
                 {
                     lock (locker)

@@ -17,6 +17,9 @@ namespace FileExplorer
         public static int UploadMaxThreadCount { get; set; }
         public static bool AutomaticUploadMaxThreadCount { get; set; }
 
+        public static bool RetryWhenDownloadFailed { get; set; }
+        public static bool RetryWhenUploadFailed { get; set; }
+
         public static bool Restore()
         {
             string filename = SettingsFileName;
@@ -64,6 +67,14 @@ namespace FileExplorer
                     case "AutomaticUploadMaxThreadCount":
                         AutomaticUploadMaxThreadCount = Convert.ToBoolean(value);
                         break;
+
+                    case "RetryWhenDownloadFailed":
+                        RetryWhenDownloadFailed = Convert.ToBoolean(value);
+                        break;
+                    case "RetryWhenUploadFailed":
+                        RetryWhenUploadFailed = Convert.ToBoolean(value);
+                        break;
+
                 }
             }
             return true;
@@ -98,50 +109,13 @@ namespace FileExplorer
 
                 #region
 
-                writer.WriteStartElement("item");
-                writer.WriteStartAttribute("name");
-                writer.WriteString("ResumeDownloadAndUploadOnStartup");
-                writer.WriteEndAttribute();
-                writer.WriteStartAttribute("value");
-                writer.WriteString(ResumeDownloadAndUploadOnStartup.ToString());
-                writer.WriteEndAttribute();
-                writer.WriteEndElement();
-
-                writer.WriteStartElement("item");
-                writer.WriteStartAttribute("name");
-                writer.WriteString("DownloadMaxThreadCount");
-                writer.WriteEndAttribute();
-                writer.WriteStartAttribute("value");
-                writer.WriteString(DownloadMaxThreadCount.ToString());
-                writer.WriteEndAttribute();
-                writer.WriteEndElement();
-
-                writer.WriteStartElement("item");
-                writer.WriteStartAttribute("name");
-                writer.WriteString("AutomaticDownloadMaxThreadCount");
-                writer.WriteEndAttribute();
-                writer.WriteStartAttribute("value");
-                writer.WriteString(AutomaticDownloadMaxThreadCount.ToString());
-                writer.WriteEndAttribute();
-                writer.WriteEndElement();
-
-                writer.WriteStartElement("item");
-                writer.WriteStartAttribute("name");
-                writer.WriteString("UploadMaxThreadCount");
-                writer.WriteEndAttribute();
-                writer.WriteStartAttribute("value");
-                writer.WriteString(UploadMaxThreadCount.ToString());
-                writer.WriteEndAttribute();
-                writer.WriteEndElement();
-
-                writer.WriteStartElement("item");
-                writer.WriteStartAttribute("name");
-                writer.WriteString("AutomaticUploadMaxThreadCount");
-                writer.WriteEndAttribute();
-                writer.WriteStartAttribute("value");
-                writer.WriteString(AutomaticUploadMaxThreadCount.ToString());
-                writer.WriteEndAttribute();
-                writer.WriteEndElement();
+                WriteItem(writer, "ResumeDownloadAndUploadOnStartup", ResumeDownloadAndUploadOnStartup.ToString());
+                WriteItem(writer, "DownloadMaxThreadCount", DownloadMaxThreadCount.ToString());
+                WriteItem(writer, "AutomaticDownloadMaxThreadCount", AutomaticDownloadMaxThreadCount.ToString());
+                WriteItem(writer, "UploadMaxThreadCount", UploadMaxThreadCount.ToString());
+                WriteItem(writer, "AutomaticUploadMaxThreadCount", AutomaticUploadMaxThreadCount.ToString());
+                WriteItem(writer, "RetryWhenDownloadFailed", RetryWhenDownloadFailed.ToString());
+                WriteItem(writer, "RetryWhenUploadFailed", RetryWhenUploadFailed.ToString());
 
                 #endregion
 
@@ -149,6 +123,18 @@ namespace FileExplorer
                 writer.WriteEndDocument();
             }
             return true;
+        }
+
+        private static void WriteItem(XmlWriter writer, string name, string value)
+        {
+            writer.WriteStartElement("item");
+            writer.WriteStartAttribute("name");
+            writer.WriteString(name);
+            writer.WriteEndAttribute();
+            writer.WriteStartAttribute("value");
+            writer.WriteString(value);
+            writer.WriteEndAttribute();
+            writer.WriteEndElement();
         }
 
     }

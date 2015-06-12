@@ -322,6 +322,8 @@ namespace FileExplorer
                 AppSettings.ResumeDownloadAndUploadOnStartup = true;
                 AppSettings.AutomaticDownloadMaxThreadCount = true;
                 AppSettings.AutomaticUploadMaxThreadCount = true;
+                AppSettings.RetryWhenDownloadFailed = true;
+                AppSettings.RetryWhenUploadFailed = true;
             }
         }
 

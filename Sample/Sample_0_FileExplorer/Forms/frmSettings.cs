@@ -23,9 +23,11 @@ namespace FileExplorer
 
             numDownloadMaxThreadCount.Value = AppSettings.DownloadMaxThreadCount;
             ckAutomaticDownloadMaxThreadCount.Checked = AppSettings.AutomaticDownloadMaxThreadCount;
+            ckRetryWhenDownloadFail.Checked = AppSettings.RetryWhenDownloadFailed;
 
             numUploadMaxThreadCount.Value = AppSettings.UploadMaxThreadCount;
             ckAutomaticUploadMaxThreadCount.Checked = AppSettings.AutomaticUploadMaxThreadCount;
+            ckRetryWhenUploadFail.Checked = AppSettings.RetryWhenUploadFailed;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -34,9 +36,11 @@ namespace FileExplorer
 
             AppSettings.DownloadMaxThreadCount = (int)numDownloadMaxThreadCount.Value;
             AppSettings.AutomaticDownloadMaxThreadCount = ckAutomaticDownloadMaxThreadCount.Checked;
+            AppSettings.RetryWhenDownloadFailed = ckRetryWhenDownloadFail.Checked;
 
             AppSettings.UploadMaxThreadCount = (int)numUploadMaxThreadCount.Value;
             AppSettings.AutomaticUploadMaxThreadCount = ckAutomaticUploadMaxThreadCount.Checked;
+            AppSettings.RetryWhenUploadFailed = ckRetryWhenUploadFail.Checked;
 
             AppSettings.Save();
 

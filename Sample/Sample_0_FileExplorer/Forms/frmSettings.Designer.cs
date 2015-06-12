@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.ckResumeDownloadAndUploadOnStartup = new System.Windows.Forms.CheckBox();
             this.tabDownloadOptions = new System.Windows.Forms.TabPage();
             this.ckAutomaticDownloadMaxThreadCount = new System.Windows.Forms.CheckBox();
             this.numDownloadMaxThreadCount = new System.Windows.Forms.NumericUpDown();
@@ -40,15 +42,15 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.tabGeneral = new System.Windows.Forms.TabPage();
-            this.ckResumeDownloadAndUploadOnStartup = new System.Windows.Forms.CheckBox();
+            this.ckRetryWhenDownloadFail = new System.Windows.Forms.CheckBox();
+            this.ckRetryWhenUploadFail = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
+            this.tabGeneral.SuspendLayout();
             this.tabDownloadOptions.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numDownloadMaxThreadCount)).BeginInit();
             this.tabUploadOptions.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numUploadMaxThreadCount)).BeginInit();
             this.panel1.SuspendLayout();
-            this.tabGeneral.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -63,8 +65,30 @@
             this.tabControl1.Size = new System.Drawing.Size(367, 293);
             this.tabControl1.TabIndex = 0;
             // 
+            // tabGeneral
+            // 
+            this.tabGeneral.Controls.Add(this.ckResumeDownloadAndUploadOnStartup);
+            this.tabGeneral.Location = new System.Drawing.Point(4, 22);
+            this.tabGeneral.Name = "tabGeneral";
+            this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
+            this.tabGeneral.Size = new System.Drawing.Size(359, 267);
+            this.tabGeneral.TabIndex = 2;
+            this.tabGeneral.Text = "General";
+            this.tabGeneral.UseVisualStyleBackColor = true;
+            // 
+            // ckResumeDownloadAndUploadOnStartup
+            // 
+            this.ckResumeDownloadAndUploadOnStartup.AutoSize = true;
+            this.ckResumeDownloadAndUploadOnStartup.Location = new System.Drawing.Point(20, 16);
+            this.ckResumeDownloadAndUploadOnStartup.Name = "ckResumeDownloadAndUploadOnStartup";
+            this.ckResumeDownloadAndUploadOnStartup.Size = new System.Drawing.Size(223, 17);
+            this.ckResumeDownloadAndUploadOnStartup.TabIndex = 3;
+            this.ckResumeDownloadAndUploadOnStartup.Text = "Resume download and upload on startup.";
+            this.ckResumeDownloadAndUploadOnStartup.UseVisualStyleBackColor = true;
+            // 
             // tabDownloadOptions
             // 
+            this.tabDownloadOptions.Controls.Add(this.ckRetryWhenDownloadFail);
             this.tabDownloadOptions.Controls.Add(this.ckAutomaticDownloadMaxThreadCount);
             this.tabDownloadOptions.Controls.Add(this.numDownloadMaxThreadCount);
             this.tabDownloadOptions.Controls.Add(this.label1);
@@ -104,6 +128,7 @@
             // 
             // tabUploadOptions
             // 
+            this.tabUploadOptions.Controls.Add(this.ckRetryWhenUploadFail);
             this.tabUploadOptions.Controls.Add(this.ckAutomaticUploadMaxThreadCount);
             this.tabUploadOptions.Controls.Add(this.numUploadMaxThreadCount);
             this.tabUploadOptions.Controls.Add(this.label2);
@@ -171,26 +196,25 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // tabGeneral
+            // ckRetryWhenDownloadFail
             // 
-            this.tabGeneral.Controls.Add(this.ckResumeDownloadAndUploadOnStartup);
-            this.tabGeneral.Location = new System.Drawing.Point(4, 22);
-            this.tabGeneral.Name = "tabGeneral";
-            this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(359, 267);
-            this.tabGeneral.TabIndex = 2;
-            this.tabGeneral.Text = "General";
-            this.tabGeneral.UseVisualStyleBackColor = true;
+            this.ckRetryWhenDownloadFail.AutoSize = true;
+            this.ckRetryWhenDownloadFail.Location = new System.Drawing.Point(49, 73);
+            this.ckRetryWhenDownloadFail.Name = "ckRetryWhenDownloadFail";
+            this.ckRetryWhenDownloadFail.Size = new System.Drawing.Size(157, 17);
+            this.ckRetryWhenDownloadFail.TabIndex = 3;
+            this.ckRetryWhenDownloadFail.Text = "Retry when download failed";
+            this.ckRetryWhenDownloadFail.UseVisualStyleBackColor = true;
             // 
-            // ckResume
+            // ckRetryWhenUploadFail
             // 
-            this.ckResumeDownloadAndUploadOnStartup.AutoSize = true;
-            this.ckResumeDownloadAndUploadOnStartup.Location = new System.Drawing.Point(20, 16);
-            this.ckResumeDownloadAndUploadOnStartup.Name = "ckResume";
-            this.ckResumeDownloadAndUploadOnStartup.Size = new System.Drawing.Size(223, 17);
-            this.ckResumeDownloadAndUploadOnStartup.TabIndex = 3;
-            this.ckResumeDownloadAndUploadOnStartup.Text = "Resume download and upload on startup.";
-            this.ckResumeDownloadAndUploadOnStartup.UseVisualStyleBackColor = true;
+            this.ckRetryWhenUploadFail.AutoSize = true;
+            this.ckRetryWhenUploadFail.Location = new System.Drawing.Point(49, 73);
+            this.ckRetryWhenUploadFail.Name = "ckRetryWhenUploadFail";
+            this.ckRetryWhenUploadFail.Size = new System.Drawing.Size(143, 17);
+            this.ckRetryWhenUploadFail.TabIndex = 4;
+            this.ckRetryWhenUploadFail.Text = "Retry when upload failed";
+            this.ckRetryWhenUploadFail.UseVisualStyleBackColor = true;
             // 
             // frmSettings
             // 
@@ -207,6 +231,8 @@
             this.Text = "Settings";
             this.Load += new System.EventHandler(this.frmSettings_Load);
             this.tabControl1.ResumeLayout(false);
+            this.tabGeneral.ResumeLayout(false);
+            this.tabGeneral.PerformLayout();
             this.tabDownloadOptions.ResumeLayout(false);
             this.tabDownloadOptions.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numDownloadMaxThreadCount)).EndInit();
@@ -214,8 +240,6 @@
             this.tabUploadOptions.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numUploadMaxThreadCount)).EndInit();
             this.panel1.ResumeLayout(false);
-            this.tabGeneral.ResumeLayout(false);
-            this.tabGeneral.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -236,5 +260,7 @@
         private System.Windows.Forms.CheckBox ckAutomaticUploadMaxThreadCount;
         private System.Windows.Forms.TabPage tabGeneral;
         private System.Windows.Forms.CheckBox ckResumeDownloadAndUploadOnStartup;
+        private System.Windows.Forms.CheckBox ckRetryWhenDownloadFail;
+        private System.Windows.Forms.CheckBox ckRetryWhenUploadFail;
     }
 }

@@ -52,6 +52,11 @@ namespace FileExplorer
         /// </summary>
         public long sid { get; set; }
 
+        /// <summary>
+        /// 重试次数。内部使用。
+        /// </summary>
+        public int retryTimes { get; set; }
+
         public object Tag { get; set; }
 
         public override bool Equals(object obj)
