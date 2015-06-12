@@ -47,14 +47,35 @@ namespace FileExplorer
             foreach (XmlNode n in nodes)
             {
                 OperationInfo op = new OperationInfo();
-                op.uid = n.Attributes["uid"].Value;
-                op.operation = (Operation)Enum.Parse(typeof(Operation), n.Attributes["operation"].Value);
-                op.from = n.Attributes["from"].Value;
-                op.to = n.Attributes["to"].Value;
-                op.status = (OperationStatus)Enum.Parse(typeof(OperationStatus), n.Attributes["status"].Value);
-                op.errmsg = n.Attributes["errmsg"].Value;
-                op.doneSize = Convert.ToInt64(n.Attributes["doneSize"].Value);
-                op.totalSize = Convert.ToInt64(n.Attributes["totalSize"].Value);
+                XmlAttribute attr;
+
+                attr = n.Attributes["uid"];
+                op.uid = attr != null ? attr.Value : "";
+
+                attr = n.Attributes["operation"];
+                op.operation = attr != null ? (Operation)Enum.Parse(typeof(Operation), attr.Value) : Operation.Download;
+
+                attr = n.Attributes["from"];
+                op.from = attr != null ? attr.Value : "";
+
+                attr = n.Attributes["to"];
+                op.to = attr != null ? attr.Value : "";
+
+                attr = n.Attributes["status"];
+                op.status = attr != null ? (OperationStatus)Enum.Parse(typeof(OperationStatus), attr.Value) : OperationStatus.Pending;
+
+                attr = n.Attributes["errmsg"];
+                op.errmsg = attr != null ? attr.Value : "";
+
+                attr = n.Attributes["doneSize"];
+                op.doneSize = attr != null ? Convert.ToInt64(attr.Value) : 0;
+
+                attr = n.Attributes["totalSize"];
+                op.totalSize = attr != null ? Convert.ToInt64(attr.Value) : 0;
+
+                attr = n.Attributes["sliceFileName"];
+                op.sliceFileName = attr != null ? attr.Value : "";
+
                 worker.queue.Add(op);
             }
             return true;
@@ -123,6 +144,10 @@ namespace FileExplorer
 
                     writer.WriteStartAttribute("totalSize");
                     writer.WriteString(op.totalSize.ToString());
+                    writer.WriteEndAttribute();
+
+                    writer.WriteStartAttribute("sliceFileName");
+                    writer.WriteString(op.sliceFileName);
                     writer.WriteEndAttribute();
 
                     writer.WriteEndElement();

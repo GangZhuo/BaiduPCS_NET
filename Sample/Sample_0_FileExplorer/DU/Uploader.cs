@@ -21,6 +21,7 @@ namespace FileExplorer
 
         public event EventHandler<CompletedEventArgs> OnCompleted;
         public event EventHandler<ProgressEventArgs> Progress;
+        public event EventHandler<SliceFileNameCreatedEventArgs> OnFileNameCreated;
 
         public Uploader(BaiduPCS pcs, string from, string to)
         {
@@ -98,6 +99,12 @@ namespace FileExplorer
         {
             if (OnCompleted != null)
                 OnCompleted(this, args);
+        }
+
+        protected virtual void fireOnFileNameCreated(SliceFileNameCreatedEventArgs args)
+        {
+            if (OnFileNameCreated != null)
+                OnFileNameCreated(this, args);
         }
     }
 }

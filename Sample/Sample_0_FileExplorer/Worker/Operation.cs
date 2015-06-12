@@ -41,6 +41,11 @@ namespace FileExplorer
         /// </summary>
         public long totalSize { get; set; }
 
+        /// <summary>
+        /// 分片文件路径
+        /// </summary>
+        public string sliceFileName { get; set; }
+
         public object Tag { get; set; }
 
         public override bool Equals(object obj)

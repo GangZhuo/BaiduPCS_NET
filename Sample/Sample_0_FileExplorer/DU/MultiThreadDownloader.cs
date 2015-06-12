@@ -57,6 +57,12 @@ namespace FileExplorer
             {
                 SliceFileName = "download-" + from.md5 + ".slice";
                 SliceFileName = Path.Combine(WorkFolder, pcs.getUID(), SliceFileName);
+                SliceFileNameCreatedEventArgs args = new SliceFileNameCreatedEventArgs()
+                {
+                    SliceFileName = SliceFileName
+                };
+                fireOnFileNameCreated(args);
+                SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
                 CreateLocalFile(); // 如果需要则创建本地文件
                 mmf = MemoryMappedFile.CreateFromFile(to, FileMode.Open); //映射文件到内存
@@ -70,7 +76,7 @@ namespace FileExplorer
                 Wait(); // 等待所有线程退出
                 CheckResult(); // 检查下载结果
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Success = false;
                 IsCancelled = false;

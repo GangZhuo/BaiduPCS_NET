@@ -76,6 +76,12 @@ namespace FileExplorer
                     key = FileMD5;
                 SliceFileName = "upload-" + key + ".slice";
                 SliceFileName = Path.Combine(WorkFolder, pcs.getUID(), SliceFileName);
+                SliceFileNameCreatedEventArgs args = new SliceFileNameCreatedEventArgs()
+                {
+                    SliceFileName = SliceFileName
+                };
+                fireOnFileNameCreated(args);
+                SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
                 foreach (Slice slice in SliceList)
                 {

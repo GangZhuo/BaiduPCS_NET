@@ -173,6 +173,7 @@ namespace FileExplorer
                     {
                         u.Progress += u_Progress;
                         u.OnCompleted += u_OnCompleted;
+                        u.OnFileNameCreated += u_OnFileNameCreated;
                         u.State = op;
                         u.Upload();
                     }
@@ -183,6 +184,13 @@ namespace FileExplorer
                 op.status = OperationStatus.Fail;
                 op.errmsg = ex.Message;
             }
+        }
+
+        private void u_OnFileNameCreated(object sender, SliceFileNameCreatedEventArgs e)
+        {
+            Uploader u = (Uploader)sender;
+            OperationInfo op = (OperationInfo)u.State;
+            op.sliceFileName = e.SliceFileName;
         }
 
         private void u_OnCompleted(object sender, CompletedEventArgs e)
@@ -245,6 +253,7 @@ namespace FileExplorer
                             d = new Downloader(pcs, from, op.to);
                         d.OnCompleted += d_OnCompleted;
                         d.Progress += d_Progress;
+                        d.OnFileNameCreated += d_OnFileNameCreated;
                         d.State = op;
                         d.Download();
                     }
@@ -255,6 +264,13 @@ namespace FileExplorer
                 op.status = OperationStatus.Fail;
                 op.errmsg = ex.Message;
             }
+        }
+
+        private void d_OnFileNameCreated(object sender, SliceFileNameCreatedEventArgs e)
+        {
+            Downloader d = (Downloader)sender;
+            OperationInfo op = (OperationInfo)d.State;
+            op.sliceFileName = e.SliceFileName;
         }
 
         private void d_Progress(object sender, ProgressEventArgs e)

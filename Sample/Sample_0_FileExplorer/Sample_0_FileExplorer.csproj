@@ -58,6 +58,7 @@
     <Compile Include="DU\ICancellable.cs" />
     <Compile Include="DU\Uploader.cs" />
     <Compile Include="DU\RapidUploader.cs" />
+    <Compile Include="DU\SliceFileNameCreatedEventArgs.cs" />
     <Compile Include="Worker\DUQueue.cs" />
     <Compile Include="Worker\DUWorker.cs" />
     <Compile Include="Worker\DUWorkerPersister.cs" />

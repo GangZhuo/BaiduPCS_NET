@@ -33,6 +33,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.lvItems = new FileExplorer.ProgressListview();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -60,15 +61,22 @@
             this.imageList1.Images.SetKeyName(0, "upload-orange-32x32.png");
             this.imageList1.Images.SetKeyName(1, "download-lightblue-32x32.png");
             // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
+            // 
             // lvItems
             // 
             this.lvItems.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
             this.columnHeader2,
             this.columnHeader3});
+            this.lvItems.ContextMenuStrip = this.contextMenuStrip1;
             this.lvItems.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvItems.LargeImageList = this.imageList1;
             this.lvItems.Location = new System.Drawing.Point(0, 0);
+            this.lvItems.MultiSelect = false;
             this.lvItems.Name = "lvItems";
             this.lvItems.OwnerDraw = true;
             this.lvItems.ShowItemToolTips = true;
@@ -117,5 +125,6 @@
         private System.Windows.Forms.ColumnHeader columnHeader3;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
     }
 }
