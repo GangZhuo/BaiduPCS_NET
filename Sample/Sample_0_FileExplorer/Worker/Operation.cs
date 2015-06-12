@@ -12,6 +12,7 @@ namespace FileExplorer
     {
         Pending,
         Processing,
+        Pause,
         Cancel,
         Success,
         Fail
@@ -42,9 +43,14 @@ namespace FileExplorer
         public long totalSize { get; set; }
 
         /// <summary>
-        /// 分片文件路径
+        /// 分片文件路径。内部使用。
         /// </summary>
         public string sliceFileName { get; set; }
+
+        /// <summary>
+        /// 本次服务 id。内部使用。
+        /// </summary>
+        public long sid { get; set; }
 
         public object Tag { get; set; }
 

@@ -79,8 +79,8 @@
             this.btnLogout = new System.Windows.Forms.ToolStripButton();
             this.btnSearch = new System.Windows.Forms.ToolStripButton();
             this.btnHistory = new System.Windows.Forms.ToolStripButton();
-            this.btnGithub = new System.Windows.Forms.ToolStripButton();
             this.btnSettings = new System.Windows.Forms.ToolStripButton();
+            this.btnGithub = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -354,9 +354,9 @@
             this.btnLogout,
             this.toolStripSeparator7,
             this.btnSearch,
+            this.btnHistory,
             this.toolStripSeparator6,
             this.txSearchKeyword,
-            this.btnHistory,
             this.btnSettings,
             this.btnGithub});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
@@ -539,18 +539,6 @@
             this.btnHistory.ToolTipText = "View download history";
             this.btnHistory.Click += new System.EventHandler(this.btnHistory_Click);
             // 
-            // btnGithub
-            // 
-            this.btnGithub.AutoSize = false;
-            this.btnGithub.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnGithub.Image = global::FileExplorer.Properties.Resources.github;
-            this.btnGithub.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnGithub.Name = "btnGithub";
-            this.btnGithub.Size = new System.Drawing.Size(32, 32);
-            this.btnGithub.Text = "View source code";
-            this.btnGithub.ToolTipText = "View source code";
-            this.btnGithub.Click += new System.EventHandler(this.btnGithub_Click);
-            // 
             // btnSettings
             // 
             this.btnSettings.AutoSize = false;
@@ -562,6 +550,18 @@
             this.btnSettings.Text = "Settings";
             this.btnSettings.ToolTipText = "Open the settings window";
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
+            // 
+            // btnGithub
+            // 
+            this.btnGithub.AutoSize = false;
+            this.btnGithub.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnGithub.Image = global::FileExplorer.Properties.Resources.github;
+            this.btnGithub.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnGithub.Name = "btnGithub";
+            this.btnGithub.Size = new System.Drawing.Size(32, 32);
+            this.btnGithub.Text = "View source code";
+            this.btnGithub.ToolTipText = "View source code";
+            this.btnGithub.Click += new System.EventHandler(this.btnGithub_Click);
             // 
             // frmMain
             // 

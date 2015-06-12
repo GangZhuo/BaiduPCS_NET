@@ -9,6 +9,8 @@ namespace FileExplorer
     {
         public static string SettingsFileName { get; set; }
 
+        public static bool ResumeDownloadAndUploadOnStartup { get; set; }
+
         public static int DownloadMaxThreadCount { get; set; }
         public static bool AutomaticDownloadMaxThreadCount { get; set; }
 
@@ -46,6 +48,9 @@ namespace FileExplorer
                 string value = n.Attributes["value"].Value;
                 switch(name)
                 {
+                    case "ResumeDownloadAndUploadOnStartup":
+                        ResumeDownloadAndUploadOnStartup = Convert.ToBoolean(value);
+                        break;
                     case "DownloadMaxThreadCount":
                         DownloadMaxThreadCount = Convert.ToInt32(value);
                         break;
@@ -92,6 +97,15 @@ namespace FileExplorer
                 writer.WriteStartElement("items");
 
                 #region
+
+                writer.WriteStartElement("item");
+                writer.WriteStartAttribute("name");
+                writer.WriteString("ResumeDownloadAndUploadOnStartup");
+                writer.WriteEndAttribute();
+                writer.WriteStartAttribute("value");
+                writer.WriteString(ResumeDownloadAndUploadOnStartup.ToString());
+                writer.WriteEndAttribute();
+                writer.WriteEndElement();
 
                 writer.WriteStartElement("item");
                 writer.WriteStartAttribute("name");

@@ -28,10 +28,12 @@ namespace FileExplorer
         public int ThreadCount { get; private set; }
         public string SliceFileName { get; private set; }
         public List<Slice> SliceList { get; private set; }
-        
+
         private MemoryMappedFile mmf;
         private long taskId = 0; //本地下载任务的 ID
         private long runningThreadCount = 0; //正在运行的线程数
+        private object locker = new object();
+        private object sliceFileLocker = new object();
 
         public MultiThreadDownloader(BaiduPCS pcs, PcsFileInfo from, string to,
             string workfolder, int threadCount)
@@ -45,7 +47,7 @@ namespace FileExplorer
         {
             if (Downloading)
                 throw new Exception("Can't download, since the previous download is not complete.");
-            DownloadedSize = 0;
+            DoneSize = 0;
             Success = false;
             IsCancelled = false;
             Error = null;
@@ -57,18 +59,18 @@ namespace FileExplorer
             {
                 SliceFileName = "download-" + from.md5 + ".slice";
                 SliceFileName = Path.Combine(WorkFolder, pcs.getUID(), SliceFileName);
-                SliceFileNameCreatedEventArgs args = new SliceFileNameCreatedEventArgs()
+                StateFileNameDecideEventArgs args = new StateFileNameDecideEventArgs()
                 {
                     SliceFileName = SliceFileName
                 };
-                fireOnFileNameCreated(args);
+                fireStateFileNameDecide(args);
                 SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
                 CreateLocalFile(); // 如果需要则创建本地文件
                 mmf = MemoryMappedFile.CreateFromFile(to, FileMode.Open); //映射文件到内存
                 foreach (Slice slice in SliceList)
                 {
-                    DownloadedSize += slice.doneSize;
+                    DoneSize += slice.doneSize;
                     if (slice.status != SliceStatus.Successed)
                         slice.status = SliceStatus.Pending; //重新下载未成功的分片
                 }
@@ -90,12 +92,12 @@ namespace FileExplorer
             if (Success)
                 SliceHelper.DeleteSliceFile(SliceFileName);
             Downloading = false;
-            fireOnCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
         }
 
         public override void Cancel()
         {
-            lock(this) IsCancelled = true;
+            lock (locker) IsCancelled = true;
             StopAllDownloadThreads();
         }
 
@@ -141,7 +143,7 @@ namespace FileExplorer
 
         private void Wait()
         {
-            while(true)
+            while (true)
             {
                 if (Interlocked.Read(ref runningThreadCount) > 0)
                     Thread.Sleep(100);
@@ -197,14 +199,14 @@ namespace FileExplorer
                     else
                     {
                         slice.status = SliceStatus.Failed;
-                        lock (this) Error = new Exception(pcs.getError());
+                        lock (locker) Error = new Exception(pcs.getError());
                         StopAllDownloadThreads();
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                lock (this) Error = ex;
+                lock (locker) Error = ex;
                 StopAllDownloadThreads();
             }
             Interlocked.Decrement(ref runningThreadCount);
@@ -239,7 +241,7 @@ namespace FileExplorer
             long size = data.Length;
             if (size > slice.totalSize - slice.doneSize)
                 size = slice.totalSize - slice.doneSize;
-            if(size > 0)
+            if (size > 0)
             {
                 using (MemoryMappedViewAccessor accessor = mmf.CreateViewAccessor(slice.start + slice.doneSize, size))
                 {
@@ -247,20 +249,20 @@ namespace FileExplorer
                 }
             }
             slice.doneSize += size;
-            lock (this) DownloadedSize += size;
+            lock (locker) DoneSize += size;
             if (slice.doneSize == slice.totalSize) //分片已经下载完成
             {
                 slice.status = SliceStatus.Successed;
                 size = 0;
             }
-            lock(this) SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+            lock (sliceFileLocker) SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
             if (slice.tid != Interlocked.Read(ref taskId))//本次任务被取消
             {
                 slice.status = SliceStatus.Cancelled;
                 return 0;
             }
             long downloadedSize = 0;
-            lock (this) downloadedSize = DownloadedSize;
+            lock (locker) downloadedSize = DoneSize;
             ProgressEventArgs args = new ProgressEventArgs(downloadedSize, from.size);
             fireProgress(args);
             if (args.Cancel)

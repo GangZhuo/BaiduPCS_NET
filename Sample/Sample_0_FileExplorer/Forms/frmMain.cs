@@ -98,6 +98,8 @@ namespace FileExplorer
                             Go("/");
                             worker.pcs = pcs;
                             worker.Start();
+                            if (AppSettings.ResumeDownloadAndUploadOnStartup)
+                                worker.Resume();
                         }));
                     }));
             }
@@ -289,6 +291,8 @@ namespace FileExplorer
                     Go("/");
                     worker.pcs = pcs;
                     worker.Start();
+                    if (AppSettings.ResumeDownloadAndUploadOnStartup)
+                        worker.Resume();
                 }
                 else
                 {
@@ -313,11 +317,12 @@ namespace FileExplorer
         private void ReadAppSettings()
         {
             AppSettings.SettingsFileName = Path.Combine(GetWorkFolder(), "settings.xml");
-            AppSettings.Restore();
-            if (AppSettings.DownloadMaxThreadCount == 0)
+            if (!AppSettings.Restore())
+            {
+                AppSettings.ResumeDownloadAndUploadOnStartup = true;
                 AppSettings.AutomaticDownloadMaxThreadCount = true;
-            if (AppSettings.UploadMaxThreadCount == 0)
                 AppSettings.AutomaticUploadMaxThreadCount = true;
+            }
         }
 
         /// <summary>

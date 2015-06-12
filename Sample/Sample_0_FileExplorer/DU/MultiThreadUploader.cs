@@ -37,6 +37,9 @@ namespace FileExplorer
         private long taskId = 0; //本地下载任务的 ID
         private long runningThreadCount = 0; //正在运行的线程数
 
+        private object locker = new object();
+        private object sliceFileLocker = new object();
+
         public MultiThreadUploader(BaiduPCS pcs, string from, string to,
             string workfolder, int threadCount)
             : base(pcs, from, to)
@@ -49,7 +52,7 @@ namespace FileExplorer
         {
             if (Uploading)
                 throw new Exception("Can't upload, since the previous upload is not complete.");
-            UploadedSize = 0;
+            DoneSize = 0;
             Success = false;
             IsCancelled = false;
             Error = null;
@@ -76,11 +79,11 @@ namespace FileExplorer
                     key = FileMD5;
                 SliceFileName = "upload-" + key + ".slice";
                 SliceFileName = Path.Combine(WorkFolder, pcs.getUID(), SliceFileName);
-                SliceFileNameCreatedEventArgs args = new SliceFileNameCreatedEventArgs()
+                StateFileNameDecideEventArgs args = new StateFileNameDecideEventArgs()
                 {
                     SliceFileName = SliceFileName
                 };
-                fireOnFileNameCreated(args);
+                fireStateFileNameDecide(args);
                 SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
                 foreach (Slice slice in SliceList)
@@ -92,7 +95,7 @@ namespace FileExplorer
                     }
                     else
                     {
-                        UploadedSize += slice.doneSize;
+                        DoneSize += slice.doneSize;
                     }
                 }
                 UploadSliceList(); // 启动线程来下载分片
@@ -118,7 +121,7 @@ namespace FileExplorer
                     Success = false;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Success = false;
                 IsCancelled = false;
@@ -127,12 +130,12 @@ namespace FileExplorer
             if (Success)
                 SliceHelper.DeleteSliceFile(SliceFileName);
             Uploading = false;
-            fireOnCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
         }
 
         public override void Cancel()
         {
-            lock(this) IsCancelled = true;
+            lock (locker) IsCancelled = true;
             StopAllDownloadThreads();
         }
 
@@ -166,7 +169,7 @@ namespace FileExplorer
 
         private void Wait()
         {
-            while(true)
+            while (true)
             {
                 if (Interlocked.Read(ref runningThreadCount) > 0)
                     Thread.Sleep(100);
@@ -228,14 +231,15 @@ namespace FileExplorer
                     else
                     {
                         slice.status = SliceStatus.Failed;
-                        lock (this) Error = new Exception(pcs.getError());
+                        lock (locker) Error = new Exception(pcs.getError());
                         StopAllDownloadThreads();
                     }
+                    lock (sliceFileLocker) SliceHelper.SaveSliceList(SliceFileName, SliceList);
                 }
             }
             catch (Exception ex)
             {
-                lock (this) Error = ex;
+                lock (locker) Error = ex;
                 StopAllDownloadThreads();
             }
             Interlocked.Decrement(ref runningThreadCount);
@@ -290,10 +294,10 @@ namespace FileExplorer
             }
             slice.doneSize += sz;
             long uploadedSize = 0;
-            lock (this)
+            lock (locker)
             {
-                UploadedSize += sz;
-                uploadedSize = UploadedSize;
+                DoneSize += sz;
+                uploadedSize = DoneSize;
             }
             ProgressEventArgs args = new ProgressEventArgs(uploadedSize, fromFileInfo.Length);
             fireProgress(args);

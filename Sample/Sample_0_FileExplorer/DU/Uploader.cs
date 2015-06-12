@@ -6,12 +6,12 @@ using BaiduPCS_NET;
 namespace FileExplorer
 {
 
-    public class Uploader
+    public class Uploader : ICancellable, IProgressable
     {
         public BaiduPCS pcs { get; protected set; }
         public string from { get; set; }
         public string to { get; set; }
-        public long UploadedSize { get; protected set; }
+        public long DoneSize { get; protected set; }
         public bool Success { get; protected set; }
         public bool IsCancelled { get; protected set; }
         public Exception Error { get; protected set; }
@@ -19,9 +19,9 @@ namespace FileExplorer
         public PcsFileInfo Result { get; protected set; }
         public object State { get; set; }
 
-        public event EventHandler<CompletedEventArgs> OnCompleted;
+        public event EventHandler<CompletedEventArgs> Completed;
         public event EventHandler<ProgressEventArgs> Progress;
-        public event EventHandler<SliceFileNameCreatedEventArgs> OnFileNameCreated;
+        public event EventHandler<StateFileNameDecideEventArgs> StateFileNameDecide;
 
         public Uploader(BaiduPCS pcs, string from, string to)
         {
@@ -34,7 +34,7 @@ namespace FileExplorer
         {
             if (Uploading)
                 throw new Exception("Can't upload, since the previous upload is not complete.");
-            UploadedSize = 0;
+            DoneSize = 0;
             Success = false;
             IsCancelled = false;
             Error = null;
@@ -69,7 +69,7 @@ namespace FileExplorer
                 Error = ex;
             }
             Uploading = false;
-            fireOnCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
         }
 
         public virtual void Cancel()
@@ -95,16 +95,16 @@ namespace FileExplorer
                 Progress(this, args);
         }
 
-        protected virtual void fireOnCompleted(CompletedEventArgs args)
+        protected virtual void fireCompleted(CompletedEventArgs args)
         {
-            if (OnCompleted != null)
-                OnCompleted(this, args);
+            if (Completed != null)
+                Completed(this, args);
         }
 
-        protected virtual void fireOnFileNameCreated(SliceFileNameCreatedEventArgs args)
+        protected virtual void fireStateFileNameDecide(StateFileNameDecideEventArgs args)
         {
-            if (OnFileNameCreated != null)
-                OnFileNameCreated(this, args);
+            if (StateFileNameDecide != null)
+                StateFileNameDecide(this, args);
         }
     }
 }

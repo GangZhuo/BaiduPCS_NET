@@ -58,7 +58,8 @@
     <Compile Include="DU\ICancellable.cs" />
     <Compile Include="DU\Uploader.cs" />
     <Compile Include="DU\RapidUploader.cs" />
-    <Compile Include="DU\SliceFileNameCreatedEventArgs.cs" />
+    <Compile Include="DU\StateFileNameDecideEventArgs.cs" />
+    <Compile Include="DU\IProgressable.cs" />
     <Compile Include="Worker\DUQueue.cs" />
     <Compile Include="Worker\DUWorker.cs" />
     <Compile Include="Worker\DUWorkerPersister.cs" />
@@ -175,10 +176,16 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="icons\clean-200x200.png" />
+    <Content Include="icons\clean-32x32.png" />
     <Content Include="icons\download-lightblue-32x32.png" />
     <Content Include="icons\download-lightblue.png" />
     <Content Include="icons\github.png" />
     <Content Include="icons\loading.gif" />
+    <Content Include="icons\pause-200x200.png" />
+    <Content Include="icons\pause-32x32.png" />
+    <Content Include="icons\play-200x200.png" />
+    <Content Include="icons\play-32x32.png" />
     <Content Include="icons\upload-orange-32x32.png" />
     <Content Include="icons\upload-orange.png" />
     <None Include="icons\wait_bg.png" />

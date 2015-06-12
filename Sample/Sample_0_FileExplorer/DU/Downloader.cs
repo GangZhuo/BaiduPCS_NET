@@ -5,21 +5,21 @@ using BaiduPCS_NET;
 
 namespace FileExplorer
 {
-    public class Downloader : ICancellable
+    public class Downloader : ICancellable, IProgressable
     {
         public BaiduPCS pcs { get; protected set; }
         public PcsFileInfo from { get; set; }
         public string to { get; set; }
-        public long DownloadedSize { get; protected set; }
+        public long DoneSize { get; protected set; }
         public bool Success { get; protected set; }
         public bool IsCancelled { get; protected set; }
         public Exception Error { get; protected set; }
         public bool Downloading { get; protected set; }
         public object State { get; set; }
 
-        public event EventHandler<CompletedEventArgs> OnCompleted;
+        public event EventHandler<CompletedEventArgs> Completed;
         public event EventHandler<ProgressEventArgs> Progress;
-        public event EventHandler<SliceFileNameCreatedEventArgs> OnFileNameCreated;
+        public event EventHandler<StateFileNameDecideEventArgs> StateFileNameDecide;
 
         public Downloader(BaiduPCS pcs, PcsFileInfo from, string to)
         {
@@ -33,7 +33,7 @@ namespace FileExplorer
             if (Downloading)
                 throw new Exception("Can't download, since the previous download is not complete.");
             FileStream stream = null;
-            DownloadedSize = 0;
+            DoneSize = 0;
             Success = false;
             IsCancelled = false;
             Error = null;
@@ -72,7 +72,7 @@ namespace FileExplorer
             if (stream != null)
                 stream.Close();
             Downloading = false;
-            fireOnCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
         }
 
         public virtual void Cancel()
@@ -89,8 +89,8 @@ namespace FileExplorer
                 Stream stream = (Stream)userdata;
                 stream.Write(data, 0, data.Length);
             }
-            DownloadedSize += data.Length;
-            ProgressEventArgs args = new ProgressEventArgs(DownloadedSize, from.size);
+            DoneSize += data.Length;
+            ProgressEventArgs args = new ProgressEventArgs(DoneSize, from.size);
             fireProgress(args);
             if (args.Cancel)
             {
@@ -106,16 +106,16 @@ namespace FileExplorer
                 Progress(this, args);
         }
 
-        protected virtual void fireOnCompleted(CompletedEventArgs args)
+        protected virtual void fireCompleted(CompletedEventArgs args)
         {
-            if (OnCompleted != null)
-                OnCompleted(this, args);
+            if (Completed != null)
+                Completed(this, args);
         }
 
-        protected virtual void fireOnFileNameCreated(SliceFileNameCreatedEventArgs args)
+        protected virtual void fireStateFileNameDecide(StateFileNameDecideEventArgs args)
         {
-            if (OnFileNameCreated != null)
-                OnFileNameCreated(this, args);
+            if (StateFileNameDecide != null)
+                StateFileNameDecide(this, args);
         }
     }
 }

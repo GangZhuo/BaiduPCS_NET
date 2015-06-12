@@ -133,6 +133,9 @@
   <data name="arrow_up_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\arrow-up-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="clean_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\icons\clean-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="cloud_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\cloud-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -162,6 +165,12 @@
   </data>
   <data name="logout_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\logout-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="pause_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\icons\pause-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="play_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\icons\play-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="refresh_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\refresh-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

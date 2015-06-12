@@ -17,7 +17,7 @@ namespace FileExplorer
         {
             if (Uploading)
                 throw new Exception("Can't upload, since the previous upload is not complete.");
-            UploadedSize = 0;
+            DoneSize = 0;
             Success = false;
             IsCancelled = false;
             Error = null;
@@ -54,7 +54,7 @@ namespace FileExplorer
                 Error = ex;
             }
             Uploading = false;
-            fireOnCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
         }
 
     }

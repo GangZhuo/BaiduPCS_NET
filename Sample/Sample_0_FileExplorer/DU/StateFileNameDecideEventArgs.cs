@@ -2,7 +2,7 @@
 
 namespace FileExplorer
 {
-    public class SliceFileNameCreatedEventArgs : EventArgs
+    public class StateFileNameDecideEventArgs : EventArgs
     {
         public string SliceFileName { get; set; }
     }

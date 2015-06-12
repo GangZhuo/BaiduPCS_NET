@@ -113,6 +113,16 @@ namespace FileExplorer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap clean_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("clean_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap cloud_32x32 {
             get {
                 object obj = ResourceManager.GetObject("cloud_32x32", resourceCulture);
@@ -206,6 +216,26 @@ namespace FileExplorer.Properties {
         internal static System.Drawing.Bitmap logout_32x32 {
             get {
                 object obj = ResourceManager.GetObject("logout_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap pause_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("pause_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap play_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("play_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

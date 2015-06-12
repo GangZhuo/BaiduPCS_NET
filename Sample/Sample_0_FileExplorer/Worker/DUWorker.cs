@@ -18,16 +18,22 @@ namespace FileExplorer
         public DUWorkerPersister persister { get; private set; }
         public DUQueue queue { get; private set; }
 
+        public bool IsPause
+        {
+            get { return Interlocked.Read(ref pause) > 0; }
+        }
+
         public event EventHandler OnStart;
         public event EventHandler OnStop;
         public event EventHandler<DUWorkerEventArgs> OnProgress;
         public event EventHandler<DUWorkerEventArgs> OnCompleted;
 
-        private long sid = 0;
-        private long status = 0;
-        private long dirty = 0;
-
         public bool IsStart { get { return Interlocked.Read(ref status) > 0; } }
+
+        private long sid = 0; // 每次执行 Start() 时，都会增加此值，用于标记服务
+        private long status = 0; // 标记当前是否处于启动状态
+        private long dirty = 0; // 标记 queue 是否脏掉
+        private long pause = 1; // 标记是否暂停
 
         public DUWorker()
         {
@@ -55,6 +61,16 @@ namespace FileExplorer
             Interlocked.Increment(ref sid);
         }
 
+        public void Pause()
+        {
+            Interlocked.Exchange(ref pause, 1);
+        }
+
+        public void Resume()
+        {
+            Interlocked.Exchange(ref pause, 0);
+        }
+
         private void execTask()
         {
             long csid = Interlocked.Read(ref sid);
@@ -65,6 +81,14 @@ namespace FileExplorer
             fireOnStart();
             while (csid == Interlocked.Read(ref sid))
             {
+                #region 暂停
+                if (IsPause)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+                #endregion
+
                 #region 每 5 秒保存一次
                 ndirty = Interlocked.Read(ref dirty);
                 if (tick > 50 && ndirty > 0)
@@ -98,6 +122,7 @@ namespace FileExplorer
 
                 #region 处理 OperationInfo 对象
 
+                op.sid = csid;
                 op.status = OperationStatus.Processing;
                 queue.place(op);
                 //如果在进度处理程序中，改变了状态，则跳过继续处理
@@ -171,9 +196,9 @@ namespace FileExplorer
                         u = null; // op 的状态已经被改变，且不是 OperationStatus.Processing
                     if (u != null && op.status == OperationStatus.Processing)
                     {
-                        u.Progress += u_Progress;
-                        u.OnCompleted += u_OnCompleted;
-                        u.OnFileNameCreated += u_OnFileNameCreated;
+                        u.Progress += du_onProgress;
+                        u.Completed += du_onCompleted;
+                        u.StateFileNameDecide += du_onStateFileNameDecide;
                         u.State = op;
                         u.Upload();
                     }
@@ -184,42 +209,6 @@ namespace FileExplorer
                 op.status = OperationStatus.Fail;
                 op.errmsg = ex.Message;
             }
-        }
-
-        private void u_OnFileNameCreated(object sender, SliceFileNameCreatedEventArgs e)
-        {
-            Uploader u = (Uploader)sender;
-            OperationInfo op = (OperationInfo)u.State;
-            op.sliceFileName = e.SliceFileName;
-        }
-
-        private void u_OnCompleted(object sender, CompletedEventArgs e)
-        {
-            Uploader u = (Uploader)sender;
-            OperationInfo op = (OperationInfo)u.State;
-            if (e.Success)
-            {
-                op.to = u.Result.path;
-                op.status = OperationStatus.Success;
-            }
-            else if (e.Cancel)
-                op.status = OperationStatus.Cancel;
-            else
-            {
-                op.status = OperationStatus.Fail;
-                op.errmsg = e.Exception == null ? string.Empty : e.Exception.Message;
-            }
-        }
-
-        private void u_Progress(object sender, ProgressEventArgs e)
-        {
-            Uploader u = (Uploader)sender;
-            OperationInfo op = (OperationInfo)u.State;
-            op.totalSize = e.totalSize;
-            op.doneSize = e.doneSize;
-            fireOnProgress(op);
-            if (op.status != OperationStatus.Processing)
-                e.Cancel = true;
         }
 
         private void download(OperationInfo op)
@@ -251,9 +240,9 @@ namespace FileExplorer
                             d = new MultiThreadDownloader(pcs, from, op.to, workfolder, getDownloadMaxThreadCount());
                         else
                             d = new Downloader(pcs, from, op.to);
-                        d.OnCompleted += d_OnCompleted;
-                        d.Progress += d_Progress;
-                        d.OnFileNameCreated += d_OnFileNameCreated;
+                        d.Completed += du_onCompleted;
+                        d.Progress += du_onProgress;
+                        d.StateFileNameDecide += du_onStateFileNameDecide;
                         d.State = op;
                         d.Download();
                     }
@@ -266,36 +255,49 @@ namespace FileExplorer
             }
         }
 
-        private void d_OnFileNameCreated(object sender, SliceFileNameCreatedEventArgs e)
+        private void du_onStateFileNameDecide(object sender, StateFileNameDecideEventArgs e)
         {
-            Downloader d = (Downloader)sender;
+            IProgressable d = (IProgressable)sender;
             OperationInfo op = (OperationInfo)d.State;
             op.sliceFileName = e.SliceFileName;
         }
 
-        private void d_Progress(object sender, ProgressEventArgs e)
+        private void du_onProgress(object sender, ProgressEventArgs e)
         {
-            Downloader d = (Downloader)sender;
+            IProgressable d = (IProgressable)sender;
             OperationInfo op = (OperationInfo)d.State;
             op.totalSize = e.totalSize;
             op.doneSize = e.doneSize;
             fireOnProgress(op);
             if (op.status != OperationStatus.Processing)
                 e.Cancel = true;
+            else if (IsPause)
+            {
+                e.Cancel = true;
+                op.status = OperationStatus.Pending;
+            }
+            else if (op.sid != Interlocked.Read(ref sid))
+            {
+                e.Cancel = true;
+                op.status = OperationStatus.Pending;
+            }
         }
 
-        private void d_OnCompleted(object sender, CompletedEventArgs e)
+        private void du_onCompleted(object sender, CompletedEventArgs e)
         {
-            Downloader d = (Downloader)sender;
+            IProgressable d = (IProgressable)sender;
             OperationInfo op = (OperationInfo)d.State;
             if (e.Success)
                 op.status = OperationStatus.Success;
-            else if (e.Cancel)
-                op.status = OperationStatus.Cancel;
-            else
+            else if (op.status == OperationStatus.Processing)
             {
-                op.status = OperationStatus.Fail;
-                op.errmsg = e.Exception == null ? string.Empty : e.Exception.Message;
+                if (e.Cancel)
+                    op.status = OperationStatus.Cancel;
+                else
+                {
+                    op.status = OperationStatus.Fail;
+                    op.errmsg = e.Exception == null ? string.Empty : e.Exception.Message;
+                }
             }
         }
 

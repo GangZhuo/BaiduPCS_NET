@@ -19,6 +19,9 @@ namespace FileExplorer
         public event EventHandler<DUQueueEventArgs> OnDequeue;
         public event EventHandler<DUQueueEventArgs> OnRemove;
         public event EventHandler OnClear;
+        public event EventHandler OnClearSuccessItems;
+
+        private object locker = new object();
 
         public DUQueue(DUWorker worker)
         {
@@ -30,7 +33,7 @@ namespace FileExplorer
 
         public void Add(OperationInfo op)
         {
-            lock (this)
+            lock (locker)
             {
                 switch (op.status)
                 {
@@ -51,7 +54,7 @@ namespace FileExplorer
 
         public void Enqueue(OperationInfo op)
         {
-            lock (this)
+            lock (locker)
             {
                 pending.Add(op);
             }
@@ -62,7 +65,7 @@ namespace FileExplorer
         public OperationInfo Dequeue()
         {
             OperationInfo op = null;
-            lock (this)
+            lock (locker)
             {
                 if (pending.Count > 0)
                 {
@@ -78,7 +81,7 @@ namespace FileExplorer
         public bool Contains(OperationInfo op)
         {
             bool contains = false;
-            lock (this)
+            lock (locker)
             {
                 contains = pending.Contains(op);
                 if (!contains)
@@ -92,7 +95,7 @@ namespace FileExplorer
         public void Remove(OperationInfo op)
         {
             bool removed = false;
-            lock (this)
+            lock (locker)
             {
                 removed = pending.Remove(op);
                 if (!removed)
@@ -102,6 +105,16 @@ namespace FileExplorer
             }
             if (removed && OnRemove != null)
                 OnRemove(this, new DUQueueEventArgs(op));
+            try
+            {
+                if (!string.IsNullOrEmpty(op.sliceFileName))
+                {
+                    //删除分片数据
+                    if (System.IO.File.Exists(op.sliceFileName))
+                        System.IO.File.Delete(op.sliceFileName);
+                }
+            }
+            catch { }
         }
 
         public void Clear()
@@ -111,7 +124,7 @@ namespace FileExplorer
 
         public void Clear(bool fireOnClear)
         {
-            lock (this)
+            lock (locker)
             {
                 pending.Clear();
                 processing.Clear();
@@ -121,10 +134,35 @@ namespace FileExplorer
                 OnClear(this, new EventArgs());
         }
 
+        public void ClearSuccessItems()
+        {
+            ClearSuccessItems(true);
+        }
+
+        public void ClearSuccessItems(bool fireOnClearSuccessItems)
+        {
+            lock (locker)
+            {
+                for (int i = 0; i < completed.Count; )
+                {
+                    if (completed[i].status == OperationStatus.Success)
+                    {
+                        completed.RemoveAt(i);
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+            if (fireOnClearSuccessItems && OnClearSuccessItems != null)
+                OnClearSuccessItems(this, new EventArgs());
+        }
+
         public void place(OperationInfo op)
         {
             bool removed = false;
-            lock (this)
+            lock (locker)
             {
                 switch (op.status)
                 {
@@ -156,7 +194,7 @@ namespace FileExplorer
         public List<OperationInfo> list()
         {
             List<OperationInfo> list = new List<OperationInfo>();
-            lock (this)
+            lock (locker)
             {
                 list.AddRange(processing);
                 list.AddRange(pending);

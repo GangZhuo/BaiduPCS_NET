@@ -14,6 +14,9 @@ namespace FileExplorer
     {
         private DUWorker worker;
         private Hashtable updatedOp;
+        private ListViewItem contextItem = null;
+
+        private object locker = new object();
 
         public frmHistory(DUWorker worker)
         {
@@ -22,6 +25,7 @@ namespace FileExplorer
             worker.queue.OnEnqueue += queue_OnEnqueue;
             worker.queue.OnRemove += queue_OnRemove;
             worker.queue.OnClear += queue_OnClear;
+            worker.queue.OnClearSuccessItems += queue_OnClearSuccessItems;
 
             worker.OnProgress += worker_OnProgress;
             worker.OnCompleted += worker_OnCompleted;
@@ -32,6 +36,7 @@ namespace FileExplorer
         private void frmHistory_Load(object sender, EventArgs e)
         {
             Bind();
+            RefreshControls();
             timer1.Start();
         }
 
@@ -41,6 +46,7 @@ namespace FileExplorer
             worker.queue.OnEnqueue -= queue_OnEnqueue;
             worker.queue.OnRemove -= queue_OnRemove;
             worker.queue.OnClear -= queue_OnClear;
+            worker.queue.OnClearSuccessItems -= queue_OnClearSuccessItems;
 
             worker.OnProgress -= worker_OnProgress;
             worker.OnCompleted -= worker_OnCompleted;
@@ -51,25 +57,45 @@ namespace FileExplorer
         private void queue_OnClear(object sender, EventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { Bind(); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() { Bind(); RefreshControls(); }));
             else
+            {
                 Bind();
+                RefreshControls();
+            }
+        }
+
+        private void queue_OnClearSuccessItems(object sender, EventArgs e)
+        {
+            if (lvItems.InvokeRequired)
+                lvItems.Invoke(new AnonymousFunction(delegate() { Bind(); RefreshControls(); }));
+            else
+            {
+                Bind();
+                RefreshControls();
+            }
         }
 
         private void queue_OnRemove(object sender, DUQueueEventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { RemoveItem(e.op); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() { RemoveItem(e.op); RefreshControls(); }));
             else
+            {
                 RemoveItem(e.op);
+                RefreshControls();
+            }
         }
 
         private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { AddItem(e.op); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() { AddItem(e.op); RefreshControls(); }));
             else
+            {
                 AddItem(e.op, 0);
+                RefreshControls();
+            }
         }
 
         private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
@@ -79,6 +105,11 @@ namespace FileExplorer
             {
                 if (lvItems.InvokeRequired)
                 {
+                    lock(locker)
+                    {
+                        if (updatedOp.Contains(e.op))
+                            updatedOp.Remove(e.op);
+                    }
                     lvItems.Invoke(new AnonymousFunction(delegate()
                     {
                         progress.ShowProgress = false;
@@ -97,10 +128,134 @@ namespace FileExplorer
 
         private void worker_OnProgress(object sender, DUWorkerEventArgs e)
         {
-            lock (this)
+            if(e.op.status == OperationStatus.Processing)
             {
-                if (!updatedOp.Contains(e.op))
-                    updatedOp.Add(e.op, e.op);
+                lock (locker)
+                {
+                    if (!updatedOp.Contains(e.op))
+                        updatedOp.Add(e.op, e.op);
+                }
+            }
+        }
+
+        private void btnPlay_Click(object sender, EventArgs e)
+        {
+            worker.Resume();
+            RefreshControls();
+        }
+
+        private void btnPause_Click(object sender, EventArgs e)
+        {
+            worker.Pause();
+            RefreshControls();
+        }
+
+        private void btnClean_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure want to clear all successed items?", "Clean", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                worker.queue.ClearSuccessItems();
+                RefreshControls();
+            }
+        }
+
+        private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
+        {
+            Point point = lvItems.PointToClient(Cursor.Position);
+            ListViewItem item = lvItems.GetItemAt(point.X, point.Y);   //获得鼠标坐标处的ListViewItem
+            OperationInfo op = item != null ? item.Tag as OperationInfo : null;
+            contextItem = item;
+            if (op == null)   //当前位置没有ListViewItem
+            {
+                e.Cancel = true;
+            }
+            else    //有
+            {
+                resumeToolStripMenuItem.Visible =
+                    op.status == OperationStatus.Cancel
+                    || op.status == OperationStatus.Fail
+                    || op.status == OperationStatus.Pause;
+
+                pauseToolStripMenuItem.Visible =
+                    op.status == OperationStatus.Pending
+                    || op.status == OperationStatus.Processing;
+
+                cancelToolStripMenuItem.Visible =
+                    op.status == OperationStatus.Pending
+                    || op.status == OperationStatus.Processing
+                    || op.status == OperationStatus.Pause;
+
+                deleteToolStripMenuItem.Visible = op.status != OperationStatus.Processing;
+            }
+        }
+
+        private void resumeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
+            if (op == null)
+                return;
+            if (op.status == OperationStatus.Cancel
+                || op.status == OperationStatus.Fail
+                || op.status == OperationStatus.Pause)
+            {
+                ChangeOpStatus(op, OperationStatus.Pending);
+            }
+        }
+
+        private void pauseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
+            if (op == null)
+                return;
+            if (op.status == OperationStatus.Pending
+                || op.status == OperationStatus.Processing)
+            {
+                if (MessageBox.Show("Are you sure want to pause the items?", "Pause", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    ChangeOpStatus(op, OperationStatus.Pause);
+                }
+            }
+        }
+
+        private void cancelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
+            if (op == null)
+                return;
+            if (op.status == OperationStatus.Pending
+                || op.status == OperationStatus.Processing
+                || op.status == OperationStatus.Pause)
+            {
+                if (MessageBox.Show("Are you sure want to cancel the items?", "Cancel", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    ChangeOpStatus(op, OperationStatus.Cancel);
+                }
+            }
+        }
+
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
+            if (op == null)
+                return;
+            if (op.status != OperationStatus.Processing)
+            {
+                if (MessageBox.Show("Are you sure want to delete the items?", "Delete", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    worker.queue.Remove(op);
+                }
+            }
+        }
+
+        private void ChangeOpStatus(OperationInfo op, OperationStatus status)
+        {
+            op.status = status;
+            worker.queue.place(op);
+            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
+            if (progress != null)
+            {
+                progress.ForeColor = GetStatusColor(op);
+                progress.Text = GetStatusText(op);
             }
         }
 
@@ -123,6 +278,15 @@ namespace FileExplorer
                 }
                 progress.Text = string.Format("{0}%  {1}/{2}", percent.ToString("F2"), Utils.HumanReadableSize(op.doneSize), Utils.HumanReadableSize(op.totalSize));
             }
+        }
+
+        private void RefreshControls()
+        {
+            btnPlay.Enabled = worker.IsPause;
+            btnPause.Enabled = !btnPlay.Enabled;
+            btnClean.Enabled = lvItems.Items.Count > 0;
+            lblStatus.Text = btnPause.Enabled ? "The download/upload worker running..."
+                : "The download/upload worker stopped. Set auto start up on settings window.";
         }
 
         private void Bind()
@@ -176,6 +340,8 @@ namespace FileExplorer
                     return "Pending";
                 case OperationStatus.Processing:
                     return "Processing";
+                case OperationStatus.Pause:
+                    return "Pause";
                 case OperationStatus.Cancel:
                     return "Cancel";
                 case OperationStatus.Success:
@@ -195,6 +361,8 @@ namespace FileExplorer
                     return Color.Black;
                 case OperationStatus.Processing:
                     return Color.Blue;
+                case OperationStatus.Pause:
+                    return Color.Orange;
                 case OperationStatus.Cancel:
                     return Color.Gray;
                 case OperationStatus.Success:
@@ -212,7 +380,7 @@ namespace FileExplorer
             {
                 if (updatedOp.Count > 0)
                 {
-                    lock (this)
+                    lock (locker)
                     {
                         if (updatedOp.Count > 0)
                         {

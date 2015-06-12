@@ -19,6 +19,8 @@ namespace FileExplorer
 
         private void frmSettings_Load(object sender, EventArgs e)
         {
+            ckResumeDownloadAndUploadOnStartup.Checked = AppSettings.ResumeDownloadAndUploadOnStartup;
+
             numDownloadMaxThreadCount.Value = AppSettings.DownloadMaxThreadCount;
             ckAutomaticDownloadMaxThreadCount.Checked = AppSettings.AutomaticDownloadMaxThreadCount;
 
@@ -28,6 +30,8 @@ namespace FileExplorer
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            AppSettings.ResumeDownloadAndUploadOnStartup = ckResumeDownloadAndUploadOnStartup.Checked;
+
             AppSettings.DownloadMaxThreadCount = (int)numDownloadMaxThreadCount.Value;
             AppSettings.AutomaticDownloadMaxThreadCount = ckAutomaticDownloadMaxThreadCount.Checked;
 
