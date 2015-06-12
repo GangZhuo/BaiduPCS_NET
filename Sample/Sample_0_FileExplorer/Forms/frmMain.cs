@@ -640,15 +640,6 @@ namespace FileExplorer
             }
         }
 
-        private void ShowHistoryWindow(bool forUpload)
-        {
-            ShowHistoryWindow();
-            if (forUpload)
-                frmHistory.SelectedTabIndex = 2;
-            else
-                frmHistory.SelectedTabIndex = 0;
-        }
-
         private void frmHistory_FormClosed(object sender, FormClosedEventArgs e)
         {
             frmHistory = null;
@@ -858,17 +849,12 @@ namespace FileExplorer
                     status = OperationStatus.Pending
                 };
                 if (worker.queue.Contains(op))
-                {
-                    if (frmHistory != null)
-                        ShowHistoryWindow(false);
                     MessageBox.Show("The file have been in the queue.", "Download");
-                    return false;
-                }
-                worker.queue.Enqueue(op);
-                if (frmHistory != null)
-                    ShowHistoryWindow(false);
                 else
-                    MessageBox.Show("Add 1 items to the queue.", "Download");
+                {
+                    worker.queue.Enqueue(op);
+                    ShowHistoryWindow();
+                }
                 return true;
             }
             return false;
@@ -900,22 +886,18 @@ namespace FileExplorer
                 string errmsg = string.Empty;
                 if (addedCount > 0)
                 {
+                    ShowHistoryWindow();
                     if (addedCount != openFileDialog1.FileNames.Length)
+                    {
                         errmsg = "Add " + addedCount + " items to the queue, duplicated " + (openFileDialog1.FileNames.Length - addedCount) + " items.";
-                    else
-                        errmsg = "Add " + addedCount + " items to the queue.";
-                    if (frmHistory != null)
-                        ShowHistoryWindow(true);
-                    else
                         MessageBox.Show(errmsg, "Upload");
+                    }
                     return true;
                 }
                 else
                 {
                     errmsg = "Failed to add the files to the queue.";
                     MessageBox.Show(errmsg, "Upload");
-                    if (frmHistory != null)
-                        ShowHistoryWindow(true);
                     return false;
                 }
             }

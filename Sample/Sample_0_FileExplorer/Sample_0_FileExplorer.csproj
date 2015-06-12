@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EAC9410A-0903-431D-87ED-223BFB8653C4}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FileExplorer</RootNamespace>
     <AssemblyName>FileExplorer</AssemblyName>
@@ -174,8 +174,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="icons\download-lightblue-32x32.png" />
+    <Content Include="icons\download-lightblue.png" />
     <Content Include="icons\github.png" />
     <Content Include="icons\loading.gif" />
+    <Content Include="icons\upload-orange-32x32.png" />
+    <Content Include="icons\upload-orange.png" />
     <None Include="icons\wait_bg.png" />
     <None Include="icons\arrow-down-32x32.png" />
     <None Include="icons\arrow-left-32x32.png" />
@@ -195,6 +199,7 @@
     <None Include="icons\remove-32x32.png" />
     <None Include="icons\search-32x32.png" />
     <None Include="icons\user-32x32.png" />
+    <None Include="icons\upload-2-32x32.png" />
     <Content Include="icons\upload-32x32.png" />
   </ItemGroup>
   <ItemGroup>

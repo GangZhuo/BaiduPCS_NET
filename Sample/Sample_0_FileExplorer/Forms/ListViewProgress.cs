@@ -45,8 +45,8 @@ namespace FileExplorer
                     Size size = TextRenderer.MeasureText(percentText.ToString(), Font);
                     int x = (progressRect.Width - size.Width) / 2;
                     int y = (progressRect.Height - size.Height) / 2 + 3;
-                    if (x < 0) x = 0;
-                    if (y < 0) y = 0;
+                    if (x <= 0) x = 1;
+                    if (y <= 0) y = 1;
                     int w = size.Width;
                     int h = size.Height;
                     if (w > progressRect.Width) w = progressRect.Width;

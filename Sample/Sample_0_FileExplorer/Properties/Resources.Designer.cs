@@ -243,6 +243,16 @@ namespace FileExplorer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap upload_2_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("upload_2_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap upload_32x32 {
             get {
                 object obj = ResourceManager.GetObject("upload_32x32", resourceCulture);

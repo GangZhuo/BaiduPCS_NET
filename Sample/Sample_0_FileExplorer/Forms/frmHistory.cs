@@ -15,12 +15,6 @@ namespace FileExplorer
         private DUWorker worker;
         private Hashtable updatedOp;
 
-        public int SelectedTabIndex
-        {
-            get { return tabControl1.SelectedIndex; }
-            set { tabControl1.SelectedIndex = value; }
-        }
-
         public frmHistory(DUWorker worker)
         {
             InitializeComponent();
@@ -56,75 +50,57 @@ namespace FileExplorer
 
         private void queue_OnClear(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
-                this.Invoke(new AnonymousFunction(delegate() { Bind(); }));
+            if (lvItems.InvokeRequired)
+                lvItems.Invoke(new AnonymousFunction(delegate() { Bind(); }));
             else
                 Bind();
         }
 
         private void queue_OnRemove(object sender, DUQueueEventArgs e)
         {
-            if (this.InvokeRequired)
-                this.Invoke(new AnonymousFunction(delegate() { RemoveItem(e.op); }));
+            if (lvItems.InvokeRequired)
+                lvItems.Invoke(new AnonymousFunction(delegate() { RemoveItem(e.op); }));
             else
                 RemoveItem(e.op);
         }
 
         private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
         {
-            if (this.InvokeRequired)
-                this.Invoke(new AnonymousFunction(delegate() { AddItem(e.op); }));
+            if (lvItems.InvokeRequired)
+                lvItems.Invoke(new AnonymousFunction(delegate() { AddItem(e.op); }));
             else
-                AddItem(e.op);
+                AddItem(e.op, 0);
         }
 
         private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
         {
-            if (this.InvokeRequired)
+            ProgressListview.ProgressSubItem progress = e.op.Tag as ProgressListview.ProgressSubItem;
+            if (progress != null && progress.Owner != null)
             {
-                this.Invoke(new AnonymousFunction(delegate() { 
-                    RemoveItem(e.op);
-                    AddItem(e.op);
-                }));
-            }
-            else
-            {
-                RemoveItem(e.op);
-                AddItem(e.op);
+                if (lvItems.InvokeRequired)
+                {
+                    lvItems.Invoke(new AnonymousFunction(delegate()
+                    {
+                        progress.ShowProgress = false;
+                        progress.ForeColor = GetStatusColor(e.op);
+                        progress.Text = GetStatusText(e.op);
+                    }));
+                }
+                else
+                {
+                    progress.ShowProgress = false;
+                    progress.ForeColor = GetStatusColor(e.op);
+                    progress.Text = GetStatusText(e.op);
+                }
             }
         }
 
         private void worker_OnProgress(object sender, DUWorkerEventArgs e)
         {
-            ProgressListview.ProgressSubItem progress = e.op.Tag as ProgressListview.ProgressSubItem;
-            if (progress != null && progress.Owner != null)
-            {
-                progress.ShowProgress = true;
-            }
             lock (this)
             {
                 if (!updatedOp.Contains(e.op))
                     updatedOp.Add(e.op, e.op);
-            }
-        }
-
-        private void MoveToCompletedDownload(OperationInfo op)
-        {
-            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-            if (progress != null && progress.Owner != null)
-            {
-                lvDownloading.Items.Remove(progress.Owner);
-                AddCompletedDownloadItem(op);
-            }
-        }
-
-        private void MoveToCompletedUpload(OperationInfo op)
-        {
-            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-            if (progress != null && progress.Owner != null)
-            {
-                lvUploading.Items.Remove(progress.Owner);
-                AddCompletedUploadItem(op);
             }
         }
 
@@ -135,6 +111,8 @@ namespace FileExplorer
             {
                 progress.ProgressMaxValue = op.totalSize;
                 progress.ProgressValue = op.doneSize;
+                progress.ForeColor = GetStatusColor(op);
+                progress.ShowProgress = true;
 
                 double percent = 0;
                 if (op.totalSize > 0)
@@ -149,32 +127,36 @@ namespace FileExplorer
 
         private void Bind()
         {
-            lvDownloading.Items.Clear();
-            lvUploading.Items.Clear();
-            lvCompletedDownload.Items.Clear();
-            lvCompletedUpload.Items.Clear();
+            lvItems.Items.Clear();
             foreach (OperationInfo op in worker.queue.list())
             {
                 AddItem(op);
             }
         }
 
-        private void AddItem(OperationInfo op)
+        private void AddItem(OperationInfo op, int i = -1)
         {
-            if (op.status == OperationStatus.Success)
-            {
-                if (op.operation == Operation.Download)
-                    AddCompletedDownloadItem(op);
-                else if (op.operation == Operation.Upload)
-                    AddCompletedUploadItem(op);
-            }
+            ListViewItem item = new ListViewItem(op.from);
+            item.Tag = op;
+            if (op.operation == Operation.Download)
+                item.ImageIndex = 1;
             else
-            {
-                if (op.operation == Operation.Download)
-                    AddDownloadingItem(op);
-                else if (op.operation == Operation.Upload)
-                    AddUploadingItem(op);
-            }
+                item.ImageIndex = 0;
+            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
+            item.SubItems.Add(subitem);
+            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
+            progress.Owner = item;
+            progress.ProgressMaxValue = op.totalSize;
+            progress.ProgressValue = op.doneSize;
+            progress.ShowProgress = false;
+            progress.ForeColor = GetStatusColor(op);
+            progress.Tag = op;
+            op.Tag = progress;
+            item.SubItems.Add(progress);
+            if (i >= 0)
+                lvItems.Items.Insert(i, item);
+            else
+                lvItems.Items.Add(item);
         }
 
         private void RemoveItem(OperationInfo op)
@@ -182,69 +164,8 @@ namespace FileExplorer
             ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
             if (progress != null && progress.Owner != null)
             {
-                lvDownloading.Items.Remove(progress.Owner);
-                lvUploading.Items.Remove(progress.Owner);
-                lvCompletedDownload.Items.Remove(progress.Owner);
-                lvCompletedUpload.Items.Remove(progress.Owner);
+                lvItems.Items.Remove(progress.Owner);
             }
-        }
-
-        private void AddDownloadingItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
-            progress.Owner = item;
-            progress.ProgressMaxValue = op.totalSize;
-            progress.ProgressValue = op.doneSize;
-            progress.ShowProgress = false;
-            progress.Tag = op;
-            op.Tag = progress;
-            item.SubItems.Add(progress);
-            lvDownloading.Items.Add(item);
-        }
-
-        private void AddUploadingItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
-            progress.Owner = item;
-            progress.ProgressMaxValue = op.totalSize;
-            progress.ProgressValue = op.doneSize;
-            progress.ShowProgress = false;
-            progress.Tag = op;
-            op.Tag = progress;
-            item.SubItems.Add(progress);
-            lvUploading.Items.Add(item);
-        }
-
-        private void AddCompletedDownloadItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            subitem = new ListViewItem.ListViewSubItem(item, GetStatusText(op));
-            subitem.Tag = op;
-            item.SubItems.Add(subitem);
-            lvCompletedDownload.Items.Add(item);
-        }
-
-        private void AddCompletedUploadItem(OperationInfo op)
-        {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            subitem = new ListViewItem.ListViewSubItem(item, GetStatusText(op));
-            subitem.Tag = op;
-            item.SubItems.Add(subitem);
-            lvCompletedUpload.Items.Add(item);
         }
 
         private string GetStatusText(OperationInfo op)
@@ -266,27 +187,50 @@ namespace FileExplorer
             }
         }
 
+        private Color GetStatusColor(OperationInfo op)
+        {
+            switch (op.status)
+            {
+                case OperationStatus.Pending:
+                    return Color.Black;
+                case OperationStatus.Processing:
+                    return Color.Blue;
+                case OperationStatus.Cancel:
+                    return Color.Gray;
+                case OperationStatus.Success:
+                    return Color.Green;
+                case OperationStatus.Fail:
+                    return Color.Red;
+                default:
+                    return Color.Black;
+            }
+        }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             try
             {
-                lock(this)
+                if (updatedOp.Count > 0)
                 {
-                    lvDownloading.BeginUpdate();
-                    lvUploading.BeginUpdate();
-
-                    foreach(OperationInfo op in updatedOp.Keys)
+                    lock (this)
                     {
-                        if (this.InvokeRequired)
-                            this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(op); }));
-                        else
-                            UpdateProgress(op);
+                        if (updatedOp.Count > 0)
+                        {
+                            //lvItems.BeginUpdate();
+
+                            foreach (OperationInfo op in updatedOp.Keys)
+                            {
+                                if (this.InvokeRequired)
+                                    this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(op); }));
+                                else
+                                    UpdateProgress(op);
+                            }
+
+                            //lvItems.EndUpdate();
+
+                            updatedOp.Clear();
+                        }
                     }
-
-                    lvUploading.EndUpdate();
-                    lvDownloading.EndUpdate();
-
-                    updatedOp.Clear();
                 }
             }
             catch { }
