@@ -14,7 +14,6 @@ namespace FileExplorer
     {
         private DUWorker worker;
         private Hashtable updatedOp;
-        private ListViewItem contextItem = null;
 
         private object locker = new object();
 
@@ -114,9 +113,22 @@ namespace FileExplorer
         private void queue_OnRemove(object sender, DUQueueEventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { RemoveItem(e.op); RefreshControls(); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() {
+                    lock (locker)
+                    {
+                        if (updatedOp.Contains(e.op))
+                            updatedOp.Remove(e.op);
+                    }
+                    RemoveItem(e.op);
+                    RefreshControls();
+                }));
             else
             {
+                lock (locker)
+                {
+                    if (updatedOp.Contains(e.op))
+                        updatedOp.Remove(e.op);
+                }
                 RemoveItem(e.op);
                 RefreshControls();
             }
@@ -215,88 +227,98 @@ namespace FileExplorer
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            Point point = lvItems.PointToClient(Cursor.Position);
-            ListViewItem item = lvItems.GetItemAt(point.X, point.Y);   //获得鼠标坐标处的ListViewItem
-            OperationInfo op = item != null ? item.Tag as OperationInfo : null;
-            contextItem = item;
-            if (op == null)   //当前位置没有ListViewItem
+            bool resume = false;
+            bool pause = false;
+            bool cancel = false;
+            bool delete = false;
+            foreach(ListViewItem item in lvItems.SelectedItems)
+            {
+                OperationInfo op = item.Tag as OperationInfo;
+                if (op.status == OperationStatus.Cancel
+                    || op.status == OperationStatus.Fail
+                    || op.status == OperationStatus.Pause)
+                    resume = true;
+                if (op.status == OperationStatus.Pending
+                    || op.status == OperationStatus.Processing)
+                    pause = true;
+                if (op.status == OperationStatus.Pending
+                    || op.status == OperationStatus.Processing
+                    || op.status == OperationStatus.Pause)
+                    cancel = true;
+                if (op.status != OperationStatus.Processing)
+                    delete = true;
+                if (resume && pause && cancel && delete)
+                    break;
+            }
+            if(!resume && !pause && !cancel && !delete)
             {
                 e.Cancel = true;
+                return;
             }
-            else    //有
-            {
-                resumeToolStripMenuItem.Visible =
-                    op.status == OperationStatus.Cancel
-                    || op.status == OperationStatus.Fail
-                    || op.status == OperationStatus.Pause;
-
-                pauseToolStripMenuItem.Visible =
-                    op.status == OperationStatus.Pending
-                    || op.status == OperationStatus.Processing;
-
-                cancelToolStripMenuItem.Visible =
-                    op.status == OperationStatus.Pending
-                    || op.status == OperationStatus.Processing
-                    || op.status == OperationStatus.Pause;
-
-                deleteToolStripMenuItem.Visible = op.status != OperationStatus.Processing;
-            }
+            resumeToolStripMenuItem.Visible = resume;
+            pauseToolStripMenuItem.Visible = pause;
+            cancelToolStripMenuItem.Visible = cancel;
+            deleteToolStripMenuItem.Visible = delete;
         }
 
         private void resumeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
-            if (op == null)
-                return;
-            if (op.status == OperationStatus.Cancel
-                || op.status == OperationStatus.Fail
-                || op.status == OperationStatus.Pause)
+            foreach (ListViewItem item in lvItems.SelectedItems)
             {
-                ChangeOpStatus(op, OperationStatus.Pending);
+                OperationInfo op = item.Tag as OperationInfo;
+                if (op.status == OperationStatus.Cancel
+                    || op.status == OperationStatus.Fail
+                    || op.status == OperationStatus.Pause)
+                {
+                    ChangeOpStatus(op, OperationStatus.Pending);
+                }
             }
         }
 
         private void pauseToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
-            if (op == null)
-                return;
-            if (op.status == OperationStatus.Pending
-                || op.status == OperationStatus.Processing)
+            if (MessageBox.Show("Are you sure want to pause the items?", "Pause", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                if (MessageBox.Show("Are you sure want to pause the items?", "Pause", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                foreach (ListViewItem item in lvItems.SelectedItems)
                 {
-                    ChangeOpStatus(op, OperationStatus.Pause);
+                    OperationInfo op = item.Tag as OperationInfo;
+                    if (op.status == OperationStatus.Pending
+                        || op.status == OperationStatus.Processing)
+                    {
+                        ChangeOpStatus(op, OperationStatus.Pause);
+                    }
                 }
             }
         }
 
         private void cancelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
-            if (op == null)
-                return;
-            if (op.status == OperationStatus.Pending
-                || op.status == OperationStatus.Processing
-                || op.status == OperationStatus.Pause)
+            if (MessageBox.Show("Are you sure want to cancel the items?", "Cancel", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                if (MessageBox.Show("Are you sure want to cancel the items?", "Cancel", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                foreach (ListViewItem item in lvItems.SelectedItems)
                 {
-                    ChangeOpStatus(op, OperationStatus.Cancel);
+                    OperationInfo op = item.Tag as OperationInfo;
+                    if (op.status == OperationStatus.Pending
+                        || op.status == OperationStatus.Processing
+                        || op.status == OperationStatus.Pause)
+                    {
+                        ChangeOpStatus(op, OperationStatus.Cancel);
+                    }
                 }
             }
         }
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OperationInfo op = contextItem != null ? contextItem.Tag as OperationInfo : null;
-            if (op == null)
-                return;
-            if (op.status != OperationStatus.Processing)
+            if (MessageBox.Show("Are you sure want to delete the items?", "Delete", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                if (MessageBox.Show("Are you sure want to delete the items?", "Delete", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                foreach (ListViewItem item in lvItems.SelectedItems)
                 {
-                    worker.queue.Remove(op);
+                    OperationInfo op = item.Tag as OperationInfo;
+                    if (op.status != OperationStatus.Processing)
+                    {
+                        worker.queue.Remove(op);
+                    }
                 }
             }
         }
