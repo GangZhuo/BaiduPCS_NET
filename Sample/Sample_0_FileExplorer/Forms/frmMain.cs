@@ -323,7 +323,7 @@ namespace FileExplorer
             AppSettings.SettingsFileName = Path.Combine(GetWorkFolder(), "settings.xml");
             if (!AppSettings.Restore())
             {
-                AppSettings.ResumeDownloadAndUploadOnStartup = true;
+                AppSettings.ResumeDownloadAndUploadOnStartup = false;
                 AppSettings.AutomaticDownloadMaxThreadCount = true;
                 AppSettings.AutomaticUploadMaxThreadCount = true;
                 AppSettings.RetryWhenDownloadFailed = true;
