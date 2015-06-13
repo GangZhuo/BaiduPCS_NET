@@ -42,6 +42,7 @@ namespace FileExplorer
             {
                 BaiduPCS pcs = this.pcs.clone();
                 pcs.Write += onWrite;
+                CreateDirectory(to);
                 stream = new FileStream(to, FileMode.Create, FileAccess.Write);
                 pcs.WriteUserData = stream;
                 PcsRes rc = pcs.download(from.path, 0, 0);
@@ -98,6 +99,13 @@ namespace FileExplorer
                 return 0;
             }
             return (uint)data.Length;
+        }
+
+        protected virtual void CreateDirectory(string filename)
+        {
+            string dir = Path.GetDirectoryName(filename);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
         }
 
         protected virtual void fireProgress(ProgressEventArgs args)

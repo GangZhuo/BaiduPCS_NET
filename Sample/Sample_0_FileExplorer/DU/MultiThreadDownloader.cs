@@ -119,6 +119,7 @@ namespace FileExplorer
         {
             if (!File.Exists(to))
             {
+                CreateDirectory(to);
                 //预先创建一个大文件
                 using (FileStream fs = File.Create(to))
                 {

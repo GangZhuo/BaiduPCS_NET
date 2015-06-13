@@ -21,8 +21,7 @@ namespace FileExplorer
         private Stack<string> next = null;
         private string currentPath = string.Empty;
         private string lastSearchPath = string.Empty;
-        private ListViewItem contextItem = null;
-        private PcsFileInfo source;
+        private List<PcsFileInfo> sources;
         private bool isMove = false;
         private frmHistory frmHistory = null;
         private DUWorker worker = null;
@@ -41,7 +40,7 @@ namespace FileExplorer
 
             history = new Stack<string>();
             next = new Stack<string>();
-            source = new PcsFileInfo();
+            sources = new List<PcsFileInfo>();
 
             worker = new DUWorker();
             worker.workfolder = GetWorkFolder();
@@ -112,6 +111,8 @@ namespace FileExplorer
             worker.Stop();
             base.OnClosing(e);
         }
+
+        #region 事件
 
         private void txSearchKeyword_LostFocus(object sender, EventArgs e)
         {
@@ -276,10 +277,9 @@ namespace FileExplorer
                 history.Clear();
                 next.Clear();
                 currentPath = string.Empty;
-                source = new PcsFileInfo();
+                sources.Clear();
                 isMove = false;
                 lastSearchPath = string.Empty;
-                contextItem = null;
 
                 if(frmHistory != null)
                     frmHistory.Close();
@@ -313,6 +313,10 @@ namespace FileExplorer
                 MessageBox.Show(ex.Message);
             }
         }
+
+        #endregion
+
+        #region 私有方法
 
         private void ReadAppSettings()
         {
@@ -500,7 +504,7 @@ namespace FileExplorer
         {
             PcsFileInfo[] list = null;
             string errmsg = null;
-            ExecTask(new ThreadStart(delegate()
+            ExecTask("List", "List the directory...", new ThreadStart(delegate()
             {
                 try
                 {
@@ -684,66 +688,6 @@ namespace FileExplorer
             frm.ShowDialog();
         }
 
-        private bool MoveFile(PcsFileInfo from, PcsFileInfo to)
-        {
-            PcsPanApiRes ar = new PcsPanApiRes();
-            string errmsg = null;
-            SPair spair = new SPair(
-                        from.path,
-                        to.path + "/" + from.server_filename);
-            ExecTask(new ThreadStart(delegate()
-            {
-                try
-                {
-                    ar = pcs.move(new SPair[] { spair });
-                    if (ar.error != 0)
-                    {
-                        errmsg = pcs.getError();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errmsg = ex.Message;
-                }
-            }));
-            if (errmsg != null)
-            {
-                MessageBox.Show("Can't move the file (\"" + spair.str1 + "\" => \"" + spair.str2 + "\"): " + errmsg);
-                return false;
-            }
-            return true;
-        }
-
-        private bool CopyFile(PcsFileInfo from, PcsFileInfo to)
-        {
-            PcsPanApiRes ar = new PcsPanApiRes();
-            string errmsg = null;
-            SPair spair = new SPair(
-                        from.path,
-                        to.path + "/" + from.server_filename);
-            ExecTask(new ThreadStart(delegate()
-            {
-                try
-                {
-                    ar = pcs.copy(new SPair[] { spair });
-                    if (ar.error != 0)
-                    {
-                        errmsg = pcs.getError();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errmsg = ex.Message;
-                }
-            }));
-            if (errmsg != null)
-            {
-                MessageBox.Show("Can't copy the file (\"" + spair.str1 + "\" => \"" + spair.str2 + "\"): " + errmsg);
-                return false;
-            }
-            return true;
-        }
-
         private bool CreateNewFolder(string parentPath)
         {
             frmFileName frmFN = new frmFileName(string.Empty);
@@ -776,29 +720,120 @@ namespace FileExplorer
             return false;
         }
 
-        private bool DeleteFile(PcsFileInfo fileinfo)
+        private bool MoveFile(List<PcsFileInfo> sources, PcsFileInfo to)
         {
-            if(MessageBox.Show("Are you sure you want to delete " + fileinfo.path + "?", "Delete", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
+            PcsPanApiRes ar = new PcsPanApiRes();
+            StringBuilder errmsg = new StringBuilder();
+            ExecTask(new ThreadStart(delegate()
             {
-                string errmsg = null;
+                try
+                {
+                    List<SPair> spairList = new List<SPair>(sources.Count);
+                    foreach (PcsFileInfo fi in sources)
+                    {
+                        spairList.Add(new SPair(
+                        fi.path,
+                        to.path + "/" + fi.server_filename));
+                    }
+                    ar = pcs.move(spairList.ToArray());
+                    if (ar.error != 0)
+                    {
+                        foreach (PcsPanApiResInfo ri in ar.info_list)
+                        {
+                            if (ri.error != 0)
+                            {
+                                errmsg.AppendLine("Can't move \"" + ri.path + "\": error=" + ri.error);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errmsg.Append(ex.Message);
+                }
+            }));
+            if (errmsg.Length > 0)
+            {
+                MessageBox.Show(errmsg.ToString());
+                return false;
+            }
+            return true;
+        }
+
+        private bool CopyFile(List<PcsFileInfo> sources, PcsFileInfo to)
+        {
+            PcsPanApiRes ar = new PcsPanApiRes();
+            StringBuilder errmsg = new StringBuilder();
+            ExecTask(new ThreadStart(delegate()
+            {
+                try
+                {
+                    List<SPair> spairList = new List<SPair>(sources.Count);
+                    foreach (PcsFileInfo fi in sources)
+                    {
+                        spairList.Add(new SPair(
+                        fi.path,
+                        to.path + "/" + fi.server_filename));
+                    }
+                    ar = pcs.copy(spairList.ToArray());
+                    if (ar.error != 0)
+                    {
+                        foreach (PcsPanApiResInfo ri in ar.info_list)
+                        {
+                            if (ri.error != 0)
+                            {
+                                errmsg.AppendLine("Can't copy \"" + ri.path + "\": error=" + ri.error);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errmsg.Append(ex.Message);
+                }
+            }));
+            if (errmsg.Length > 0)
+            {
+                MessageBox.Show(errmsg.ToString());
+                return false;
+            }
+            return true;
+        }
+
+        private bool DeleteFile(List<PcsFileInfo> sources)
+        {
+            if (MessageBox.Show("Are you sure you want to delete selected directories or files?", "Delete", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
+            {
+                StringBuilder errmsg = new StringBuilder();
                 ExecTask(new ThreadStart(delegate()
                 {
                     try
                     {
-                        PcsPanApiRes rc = pcs.delete(new string[] { fileinfo.path });
+                        List<string> pathList = new List<string>(sources.Count);
+                        foreach (PcsFileInfo fi in sources)
+                        {
+                            pathList.Add(fi.path);
+                        }
+                        PcsPanApiRes rc = pcs.delete(pathList.ToArray());
                         if (rc.error != 0)
                         {
-                            errmsg = pcs.getError();
+                            foreach (PcsPanApiResInfo ri in rc.info_list)
+                            {
+                                if (ri.error != 0)
+                                {
+                                    errmsg.AppendLine("Can't delete \"" + ri.path + "\": error=" + ri.error);
+                                }
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
-                        errmsg = ex.Message;
+                        errmsg.Append(ex.Message);
                     }
                 }));
-                if (errmsg != null)
+                if (errmsg.Length > 0)
                 {
-                    MessageBox.Show("Can't delete \"" + fileinfo.path + "\": " + errmsg);
+                    MessageBox.Show(errmsg.ToString());
                     return false;
                 }
                 return true;
@@ -842,29 +877,62 @@ namespace FileExplorer
             return false;
         }
 
-        private bool DownloadFile(PcsFileInfo fileinfo)
+        private bool DownloadFile(List<PcsFileInfo> sources)
         {
-            saveFileDialog1.FileName = fileinfo.server_filename;
-            if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                int addedCount = 0;
+                string uid = pcs.getUID();
+                ShowHistoryWindow();
+                ExecTask("Download", "Add files to download queue...", new ThreadStart(delegate()
+                {
+                    foreach (PcsFileInfo fi in sources)
+                    {
+                        AddFilesToDownloadQueue(fi, folderBrowserDialog1.SelectedPath, uid, ref addedCount, OperationStatus.Pending);
+                    }
+                }));
+                if (addedCount > 0)
+                    return true;
+                string errmsg = string.Empty;
+                errmsg = "Failed to add the files to the queue.";
+                MessageBox.Show(errmsg, "Download");
+                return false;
+            }
+            return false;
+        }
+
+        private void AddFilesToDownloadQueue(PcsFileInfo from, string toFolder, string uid, ref int addedCount, OperationStatus status = OperationStatus.Pending)
+        {
+            if (from.isdir)
+            {
+                int pageIndex = 1;
+                int pageSize = 20;
+                PcsFileInfo[] fis;
+                do
+                {
+                    fis = pcs.list(from.path, pageIndex, pageSize);
+                    foreach (PcsFileInfo fi in fis)
+                    {
+                        AddFilesToDownloadQueue(fi, Path.Combine(toFolder, from.server_filename), uid, ref addedCount, OperationStatus.Pending);
+                    }
+                }
+                while (fis != null && fis.Length == pageSize);
+            }
+            else
             {
                 OperationInfo op = new OperationInfo()
                 {
-                    uid = pcs.getUID(),
+                    uid = uid,
                     operation = Operation.Download,
-                    from = fileinfo.path,
-                    to = saveFileDialog1.FileName,
+                    from = from.path,
+                    to = Path.Combine(toFolder, from.server_filename),
                     status = OperationStatus.Pending
                 };
                 if (worker.queue.Contains(op))
-                    MessageBox.Show("The file have been in the queue.", "Download");
-                else
-                {
-                    worker.queue.Enqueue(op);
-                    ShowHistoryWindow();
-                }
-                return true;
+                    return;
+                worker.queue.Enqueue(op);
+                addedCount++;
             }
-            return false;
         }
 
         private bool UploadFile(PcsFileInfo to)
@@ -873,6 +941,7 @@ namespace FileExplorer
             {
                 string uid = pcs.getUID();
                 int addedCount = 0;
+                ShowHistoryWindow();
                 foreach (string filename in openFileDialog1.FileNames)
                 {
                     OperationInfo op = new OperationInfo()
@@ -893,7 +962,6 @@ namespace FileExplorer
                 string errmsg = string.Empty;
                 if (addedCount > 0)
                 {
-                    ShowHistoryWindow();
                     if (addedCount != openFileDialog1.FileNames.Length)
                     {
                         errmsg = "Add " + addedCount + " items to the queue, duplicated " + (openFileDialog1.FileNames.Length - addedCount) + " items.";
@@ -911,113 +979,178 @@ namespace FileExplorer
             return false;
         }
 
+        private bool UploadDirectory(PcsFileInfo to)
+        {
+            if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                int addedCount = 0;
+                string uid = pcs.getUID();
+                ShowHistoryWindow();
+                ExecTask("Upload", "Add files to upload queue...", new ThreadStart(delegate()
+                {
+                    AddFilesToUploadQueue(folderBrowserDialog1.SelectedPath, to.path + "/" + Path.GetFileName(folderBrowserDialog1.SelectedPath), uid, ref addedCount, OperationStatus.Pending);
+                }));
+                if (addedCount > 0)
+                    return true;
+                string errmsg = string.Empty;
+                errmsg = "Failed to add the files to the queue.";
+                MessageBox.Show(errmsg, "Upload");
+                return false;
+            }
+            return false;
+        }
+
+        private void AddFilesToUploadQueue(string from, string toFolder, string uid, ref int addedCount, OperationStatus status = OperationStatus.Pending)
+        {
+            FileInfo fi = new FileInfo(from);
+
+            if ((fi.Attributes & FileAttributes.Directory) != 0)
+            {
+                string[] files = Directory.GetFiles(from);
+                foreach(string f in files)
+                {
+                    AddFilesToUploadQueue(f, toFolder + "/" + Path.GetFileName(f), uid, ref addedCount, status);
+                }
+            }
+            else
+            {
+                OperationInfo op = new OperationInfo()
+                {
+                    uid = uid,
+                    operation = Operation.Upload,
+                    from = fi.FullName,
+                    to = toFolder + "/" + Path.GetFileName(fi.FullName),
+                    status = OperationStatus.Pending
+                };
+                if (worker.queue.Contains(op))
+                    return;
+                worker.queue.Enqueue(op);
+                addedCount++;
+            }
+        }
+
+        #endregion
+
         #region 上下文菜单代码
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            Point point = lvFileList.PointToClient(Cursor.Position);
-            ListViewItem item = lvFileList.GetItemAt(point.X, point.Y);   //获得鼠标坐标处的ListViewItem
-            contextItem = item;
-            if (item == null)   //当前位置没有ListViewItem
+            if (lvFileList.SelectedItems.Count == 0)   //当前位置没有ListViewItem
             {
-                if(!currentPath.StartsWith("/"))
-                {
-                    openToolStripMenuItem1.Visible = false;
-                    uploadFileToolStripMenuItem.Visible = false;
-                    viewToolStripMenuItem1.Visible = true;
-                    refreshToolStripMenuItem1.Visible = false;
-                    renameToolStripMenuItem.Visible = false;
-                    cutToolStripMenuItem1.Visible = false;
-                    copyToolStripMenuItem1.Visible = false;
-                    deleteToolStripMenuItem1.Visible = false;
-                    parseToolStripMenuItem1.Visible = false;
-                    mkdirToolStripMenuItem1.Visible = false;
-                    attributesToolStripMenuItem1.Visible = false;
+                bool isdir = currentPath.StartsWith("/");
 
-                    toolStripMenuItem3.Visible = false;
-                    toolStripMenuItem4.Visible = false;
-                }
-                else
-                {
-                    openToolStripMenuItem1.Visible = false;
-                    uploadFileToolStripMenuItem.Visible = true;
-                    viewToolStripMenuItem1.Visible = true;
-                    refreshToolStripMenuItem1.Visible = true;
-                    renameToolStripMenuItem.Visible = false;
-                    cutToolStripMenuItem1.Visible = false;
-                    copyToolStripMenuItem1.Visible = false;
-                    deleteToolStripMenuItem1.Visible = false;
-                    parseToolStripMenuItem1.Visible = !source.IsEmpty;
-                    mkdirToolStripMenuItem1.Visible = true;
-                    attributesToolStripMenuItem1.Visible = true;
+                openToolStripMenuItem1.Visible = false;
+                downloadToolStripMenuItem.Visible = false;
+                uploadFileToolStripMenuItem.Visible = isdir;
+                uploadDirectoryToolStripMenuItem.Visible = isdir;
+                viewToolStripMenuItem1.Visible = true;
+                refreshToolStripMenuItem1.Visible = isdir;
 
-                    toolStripMenuItem3.Visible = true;
-                    toolStripMenuItem4.Visible = true;
-                }
+                toolStripMenuItem3.Visible = isdir;
+
+                renameToolStripMenuItem.Visible = false;
+                cutToolStripMenuItem1.Visible = false;
+                copyToolStripMenuItem1.Visible = false;
+                deleteToolStripMenuItem1.Visible = false;
+                parseToolStripMenuItem1.Visible = isdir && sources.Count > 0;
+                mkdirToolStripMenuItem1.Visible = isdir;
+
+                toolStripMenuItem4.Visible = isdir;
+
+                attributesToolStripMenuItem1.Visible = isdir;
+
             }
             else    //有
             {
-                PcsFileInfo fileinfo = (PcsFileInfo)item.Tag;
-                if (fileinfo.isdir)
+                bool isdir = false;
+                bool isfile = false;
+                if (lvFileList.SelectedItems.Count == 1)
                 {
-                    openToolStripMenuItem1.Text = "Open Directory";
-                    uploadFileToolStripMenuItem.Visible = true;
+                    PcsFileInfo fileinfo = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
+                    if (fileinfo.isdir)
+                        isdir = true;
+                    else
+                        isfile = true;
                 }
-                else
-                {
-                    openToolStripMenuItem1.Text = "Download file";
-                    uploadFileToolStripMenuItem.Visible = false;
-                }
-                openToolStripMenuItem1.Visible = true;
+                openToolStripMenuItem1.Visible = isdir;
+                downloadToolStripMenuItem.Visible = true;
+                uploadFileToolStripMenuItem.Visible = isdir;
+                uploadDirectoryToolStripMenuItem.Visible = isdir;
                 viewToolStripMenuItem1.Visible = false;
                 refreshToolStripMenuItem1.Visible = false;
-                renameToolStripMenuItem.Visible = true;
+
+                toolStripMenuItem3.Visible = true;
+
+                renameToolStripMenuItem.Visible = isdir || isfile;
                 cutToolStripMenuItem1.Visible = true;
                 copyToolStripMenuItem1.Visible = true;
                 deleteToolStripMenuItem1.Visible = true;
-                parseToolStripMenuItem1.Visible = !source.IsEmpty && fileinfo.isdir;
+                parseToolStripMenuItem1.Visible = isdir && sources.Count > 0;
                 mkdirToolStripMenuItem1.Visible = false;
-                attributesToolStripMenuItem1.Visible = true;
 
-                toolStripMenuItem3.Visible = true;
-                toolStripMenuItem4.Visible = true;
+                toolStripMenuItem4.Visible = isdir || isfile;
+
+                attributesToolStripMenuItem1.Visible = isdir || isfile;
+
             }
         }
 
         private void openToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            if (contextItem == null)
-                return;
-            PcsFileInfo fileinfo = (PcsFileInfo)contextItem.Tag;
-            if(fileinfo.isdir)
+            if (lvFileList.SelectedItems.Count > 0)
             {
-                Go(fileinfo.path);
+                PcsFileInfo fileinfo = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
+                if (fileinfo.isdir)
+                {
+                    Go(fileinfo.path);
+                }
             }
-            else
+        }
+
+        private void downloadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (lvFileList.SelectedItems.Count > 0)
             {
-                DownloadFile(fileinfo);
+                List<PcsFileInfo> sources = new List<PcsFileInfo>(lvFileList.SelectedItems.Count);
+                foreach (ListViewItem item in lvFileList.SelectedItems)
+                {
+                    sources.Add((PcsFileInfo)item.Tag);
+                }
+                DownloadFile(sources);
             }
         }
 
         private void uploadFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            PcsFileInfo fileinfo;
-            if (contextItem != null)
+            if (lvFileList.SelectedItems.Count > 0)
             {
-                fileinfo = (PcsFileInfo)contextItem.Tag;
+                PcsFileInfo fileinfo = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
+                if (fileinfo.isdir)
+                    UploadFile(fileinfo);
             }
-            else
+            else if (currentPath.StartsWith("/"))
             {
-                fileinfo = new PcsFileInfo();
+                PcsFileInfo fileinfo = new PcsFileInfo();
                 fileinfo.path = currentPath;
                 fileinfo.isdir = true;
+                UploadFile(fileinfo);
             }
-            if (!fileinfo.isdir)
-                return;
-            if(UploadFile(fileinfo))
+        }
+
+        private void uploadDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (lvFileList.SelectedItems.Count > 0)
             {
-                //if (string.Equals(fileinfo.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
-                //    RefreshFileList();
+                PcsFileInfo fileinfo = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
+                if (fileinfo.isdir)
+                    UploadDirectory(fileinfo);
+            }
+            else if (currentPath.StartsWith("/"))
+            {
+                PcsFileInfo fileinfo = new PcsFileInfo();
+                fileinfo.path = currentPath;
+                fileinfo.isdir = true;
+                UploadDirectory(fileinfo);
             }
         }
 
@@ -1037,71 +1170,100 @@ namespace FileExplorer
 
         private void cutToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (contextItem == null)
-                return;
-            PcsFileInfo fileinfo = (PcsFileInfo)contextItem.Tag;
-            source = fileinfo;
-            isMove = true;
-            lblStatus2.Text = "Copied";
+            if (lvFileList.SelectedItems.Count > 0)
+            {
+                sources.Clear();
+                foreach (ListViewItem item in lvFileList.SelectedItems)
+                {
+                    sources.Add((PcsFileInfo)item.Tag);
+                }
+                isMove = true;
+                lblStatus2.Text = "Cut";
+            }
         }
 
         private void copyToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (contextItem == null)
-                return;
-            PcsFileInfo fileinfo = (PcsFileInfo)contextItem.Tag;
-            source = fileinfo;
-            lblStatus2.Text = "Copied";
+            if (lvFileList.SelectedItems.Count > 0)
+            {
+                sources.Clear();
+                foreach (ListViewItem item in lvFileList.SelectedItems)
+                {
+                    sources.Add((PcsFileInfo)item.Tag);
+                }
+                isMove = false;
+                lblStatus2.Text = "Copied";
+            }
         }
 
         private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (contextItem == null)
-                return;
-            PcsFileInfo fileinfo = (PcsFileInfo)contextItem.Tag;
-            if (fileinfo.IsEmpty)
-                return;
-            if(DeleteFile(fileinfo))
+            if (lvFileList.SelectedItems.Count > 0)
             {
-                RefreshFileList();
+                List<PcsFileInfo> sources = new List<PcsFileInfo>(lvFileList.SelectedItems.Count);
+                foreach (ListViewItem item in lvFileList.SelectedItems)
+                {
+                    sources.Add((PcsFileInfo)item.Tag);
+                }
+                if (DeleteFile(sources))
+                {
+                    RefreshFileList();
+                }
             }
         }
 
         private void parseToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            if (source.IsEmpty)
-                return;
-            PcsFileInfo to;
-            if (contextItem != null)
+            if (sources.Count > 0)
             {
-                to = (PcsFileInfo)contextItem.Tag;
-                if (!to.isdir)
+                PcsFileInfo to;
+                if (lvFileList.SelectedItems.Count > 0)
+                {
+                    to = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
+                }
+                else if (currentPath.StartsWith("/"))
+                {
+                    to = new PcsFileInfo();
+                    to.path = currentPath;
+                    to.isdir = true;
+                }
+                else
                     return;
-            }
-            else
-            {
-                to = new PcsFileInfo();
-                to.path = currentPath;
-                to.isdir = true;
-            }
-            bool succ;
-            if (isMove)
-                succ = MoveFile(source, to);
-            else
-                succ = CopyFile(source, to);
-            if (succ)
-            {
-                source = new PcsFileInfo();
-                lblStatus2.Text = string.Empty;
-                if (string.Equals(source.path, currentPath, StringComparison.InvariantCultureIgnoreCase)
-                    || string.Equals(to.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
-                    RefreshFileList();
+                if (to.isdir)
+                {
+                    bool succ;
+                    if (isMove)
+                        succ = MoveFile(sources, to);
+                    else
+                        succ = CopyFile(sources, to);
+                    if (succ)
+                    {
+                        if (string.Equals(to.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
+                            RefreshFileList();
+                        else if (isMove)
+                        {
+                            bool refresh = false;
+                            foreach (PcsFileInfo fi in sources)
+                            {
+                                if (fi.path.StartsWith(currentPath + "/", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    refresh = true;
+                                    break;
+                                }
+                            }
+                            if (refresh)
+                                RefreshFileList();
+                        }
+                        sources.Clear();
+                        lblStatus2.Text = string.Empty;
+                    }
+                }
             }
         }
 
         private void mkdirToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (contextItem != null)
+            if (lvFileList.SelectedItems.Count > 0 || !currentPath.StartsWith("/"))
                 return;
             if (CreateNewFolder(currentPath))
             {
@@ -1111,27 +1273,27 @@ namespace FileExplorer
 
         private void metaInformationToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            PcsFileInfo fileinfo = new PcsFileInfo();
-            if (contextItem != null)
-                fileinfo = (PcsFileInfo)contextItem.Tag;
-            else
+            PcsFileInfo fileinfo;
+            if (lvFileList.SelectedItems.Count == 0 && currentPath.StartsWith("/"))
                 fileinfo = GetFileMetaInformation(currentPath);
-            if (!fileinfo.IsEmpty)
-                ShowFileMetaInformation(fileinfo);
+            else if (lvFileList.SelectedItems.Count == 1)
+                fileinfo = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
+            else
+                return;
+            ShowFileMetaInformation(fileinfo);
         }
 
         private void refreshToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            RefreshFileList();
+            if (lvFileList.SelectedItems.Count == 0 && currentPath.StartsWith("/"))
+                RefreshFileList();
         }
 
         private void renameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (contextItem == null)
+            if (lvFileList.SelectedItems.Count != 1)
                 return;
-            PcsFileInfo fileinfo = (PcsFileInfo)contextItem.Tag;
-            if (fileinfo.IsEmpty)
-                return;
+            PcsFileInfo fileinfo = (PcsFileInfo)lvFileList.SelectedItems[0].Tag;
             if (RenameFile(fileinfo))
             {
                 RefreshFileList();
