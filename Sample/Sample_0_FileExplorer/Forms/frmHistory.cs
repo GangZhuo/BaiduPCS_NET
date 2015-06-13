@@ -401,6 +401,7 @@ namespace FileExplorer
             btnClean.Enabled = lvItems.Items.Count > 0;
             lblStatus.Text = btnPause.Enabled ? "The download/upload worker running..."
                 : "The download/upload worker stopped. Set auto start up on settings window.";
+            lblStatusST.Text = lvItems.Items.Count.ToString() + " items";
         }
 
         private void Bind()

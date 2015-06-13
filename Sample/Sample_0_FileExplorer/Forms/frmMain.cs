@@ -1026,12 +1026,16 @@ namespace FileExplorer
                 do
                 {
                     fis = pcs.list(from.path, pageIndex, pageSize);
-                    foreach (PcsFileInfo fi in fis)
+                    if (fis != null)
                     {
-                        AddFilesToDownloadQueue(fi, Path.Combine(toFolder, from.server_filename), uid, ref addedCount, OperationStatus.Pending);
+                        foreach (PcsFileInfo fi in fis)
+                        {
+                            AddFilesToDownloadQueue(fi, Path.Combine(toFolder, from.server_filename), uid, ref addedCount, OperationStatus.Pending);
+                        }
                     }
+                    pageIndex++;
                 }
-                while (fis != null && fis.Length == pageSize);
+                while (fis != null && fis.Length >= pageSize);
             }
             else
             {
