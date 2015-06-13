@@ -83,7 +83,7 @@ namespace BaiduPCS_NET.Native
                 item = new NativePcsSList();
                 item.str = str_ptr(list[i]);
                 if (i < list.Length - 1) /*不是最后一个*/
-                    item.next = IntPtr.Add(p, Marshal.SizeOf(typeof(NativePcsSList)));
+                    item.next = IntPtrAdd(p, Marshal.SizeOf(typeof(NativePcsSList)));
                 else
                     item.next = IntPtr.Zero;
                 bytes = StructToBytes(item);
@@ -130,7 +130,7 @@ namespace BaiduPCS_NET.Native
                 item.str1 = str_ptr(list[i].str1);
                 item.str2 = str_ptr(list[i].str2);
                 if (i < list.Length - 1) /*不是最后一个*/
-                    item.next = IntPtr.Add(p, Marshal.SizeOf(typeof(NativePcsSList2)));
+                    item.next = IntPtrAdd(p, Marshal.SizeOf(typeof(NativePcsSList2)));
                 else
                     item.next = IntPtr.Zero;
                 bytes = StructToBytes(item);
@@ -169,7 +169,7 @@ namespace BaiduPCS_NET.Native
             byte[] bytes = Encoding.UTF8.GetBytes(s);
             IntPtr ptr = Marshal.AllocHGlobal(bytes.Length + 1);
             Marshal.Copy(bytes, 0, ptr, bytes.Length);
-            Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, IntPtr.Add(ptr, bytes.Length), 1);
+            Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, IntPtrAdd(ptr, bytes.Length), 1);
             return ptr;
         }
 
@@ -276,6 +276,11 @@ namespace BaiduPCS_NET.Native
             //Free alloced memory
             Marshal.FreeHGlobal(structPtr);
             return obj;
+        }
+
+        public static IntPtr IntPtrAdd(IntPtr ptr, int offset)
+        {
+            return new IntPtr(ptr.ToInt64() + offset);
         }
 
     }

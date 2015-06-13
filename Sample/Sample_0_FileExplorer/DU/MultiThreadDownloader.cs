@@ -58,7 +58,7 @@ namespace FileExplorer
             try
             {
                 SliceFileName = "download-" + from.md5 + ".slice";
-                SliceFileName = Path.Combine(WorkFolder, pcs.getUID(), SliceFileName);
+                SliceFileName = Path.Combine(Path.Combine(WorkFolder, pcs.getUID()), SliceFileName);
                 StateFileNameDecideEventArgs args = new StateFileNameDecideEventArgs()
                 {
                     SliceFileName = SliceFileName

@@ -228,7 +228,7 @@ namespace BaiduPCS_NET
                 {
                     byte[] captchaBytes = Encoding.UTF8.GetBytes(captchaStr);
                     Marshal.Copy(captchaBytes, 0, captcha, captchaBytes.Length < captchaSize ? captchaBytes.Length : (int)captchaSize);
-                    Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, IntPtr.Add(captcha, captchaBytes.Length), 1);
+                    Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, NativeUtils.IntPtrAdd(captcha, captchaBytes.Length), 1);
                     return NativeConst.True;
                 }
             }
@@ -952,7 +952,7 @@ namespace BaiduPCS_NET
                 case PcsOption.PCS_OPTION_PROGRESS:
                     {
                         pcs._ProgressEnabled = (bool)value;
-                        IntPtr v = ((bool)value) ? IntPtr.Add(IntPtr.Zero, 1) : IntPtr.Zero;
+                        IntPtr v = ((bool)value) ? NativeUtils.IntPtrAdd(IntPtr.Zero, 1) : IntPtr.Zero;
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                     }
                     break;
@@ -970,7 +970,7 @@ namespace BaiduPCS_NET
                 /*设置整个请求的超时时间，值为int类型*/
                 case PcsOption.PCS_OPTION_TIMEOUT:
                     {
-                        IntPtr v = IntPtr.Add(IntPtr.Zero, (int)value);
+                        IntPtr v = NativeUtils.IntPtrAdd(IntPtr.Zero, (int)value);
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                     }
                     break;
@@ -978,7 +978,7 @@ namespace BaiduPCS_NET
                 /*设置连接前的等待时间，值为int类型*/
                 case PcsOption.PCS_OPTION_CONNECTTIMEOUT:
                     {
-                        IntPtr v = IntPtr.Add(IntPtr.Zero, (int)value);
+                        IntPtr v = NativeUtils.IntPtrAdd(IntPtr.Zero, (int)value);
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                     }
                     break;
