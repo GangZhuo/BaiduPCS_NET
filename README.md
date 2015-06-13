@@ -1,5 +1,6 @@
 # BaiduPCS_NET
-The C# wrap for BaiduPCS. See https://github.com/GangZhuo/BaiduPCS .
+百度网盘下载和上传工具。BaiduPCS 项目的 .net 4.0 封装。 See https://github.com/GangZhuo/BaiduPCS .
+
 功能：
 * 图形界面，
 * 多线程上传和下载，
