@@ -1045,7 +1045,8 @@ namespace FileExplorer
                     operation = Operation.Download,
                     from = from.path,
                     to = Path.Combine(toFolder, from.server_filename),
-                    status = OperationStatus.Pending
+                    status = OperationStatus.Pending,
+                    totalSize = from.size
                 };
                 if (worker.queue.Contains(op))
                     return;
@@ -1063,13 +1064,15 @@ namespace FileExplorer
                 ShowHistoryWindow();
                 foreach (string filename in openFileDialog1.FileNames)
                 {
+                    FileInfo fi = new FileInfo(filename);
                     OperationInfo op = new OperationInfo()
                     {
                         uid = uid,
                         operation = Operation.Upload,
                         from = filename,
                         to = to.path + "/" + Path.GetFileName(filename),
-                        status = OperationStatus.Pending
+                        status = OperationStatus.Pending,
+                        totalSize = fi.Length
                     };
                     if (worker.queue.Contains(op))
                     {
@@ -1139,7 +1142,8 @@ namespace FileExplorer
                     operation = Operation.Upload,
                     from = fi.FullName,
                     to = toFolder + "/" + Path.GetFileName(fi.FullName),
-                    status = OperationStatus.Pending
+                    status = OperationStatus.Pending,
+                    totalSize = fi.Length
                 };
                 if (worker.queue.Contains(op))
                     return;

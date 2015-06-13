@@ -48,6 +48,7 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.statusStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -60,7 +61,7 @@
             this.lblStatusST});
             this.statusStrip1.Location = new System.Drawing.Point(0, 452);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(437, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(636, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -69,7 +70,7 @@
             this.lblStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.lblStatus.Size = new System.Drawing.Size(410, 17);
+            this.lblStatus.Size = new System.Drawing.Size(609, 17);
             this.lblStatus.Spring = true;
             this.lblStatus.Text = " ";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -142,7 +143,7 @@
             this.btnClean});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(437, 32);
+            this.toolStrip1.Size = new System.Drawing.Size(636, 32);
             this.toolStrip1.TabIndex = 1;
             // 
             // btnPlay
@@ -184,6 +185,7 @@
             this.lvItems.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
             this.columnHeader2,
+            this.columnHeader4,
             this.columnHeader3});
             this.lvItems.ContextMenuStrip = this.contextMenuStrip1;
             this.lvItems.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -193,7 +195,7 @@
             this.lvItems.Name = "lvItems";
             this.lvItems.OwnerDraw = true;
             this.lvItems.ShowItemToolTips = true;
-            this.lvItems.Size = new System.Drawing.Size(437, 420);
+            this.lvItems.Size = new System.Drawing.Size(636, 420);
             this.lvItems.SmallImageList = this.imageList1;
             this.lvItems.TabIndex = 2;
             this.lvItems.UseCompatibleStateImageBehavior = false;
@@ -202,24 +204,29 @@
             // columnHeader1
             // 
             this.columnHeader1.Text = "From";
-            this.columnHeader1.Width = 150;
+            this.columnHeader1.Width = 180;
             // 
             // columnHeader2
             // 
             this.columnHeader2.Text = "To";
-            this.columnHeader2.Width = 150;
+            this.columnHeader2.Width = 180;
             // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "Status";
-            this.columnHeader3.Width = 80;
+            this.columnHeader3.Width = 150;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "Total Size";
+            this.columnHeader4.Width = 88;
             // 
             // frmHistory
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(437, 474);
+            this.ClientSize = new System.Drawing.Size(636, 474);
             this.Controls.Add(this.lvItems);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -256,5 +263,6 @@
         private System.Windows.Forms.ToolStripButton btnClean;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.ToolStripStatusLabel lblStatusST;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
     }
 }

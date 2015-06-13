@@ -423,6 +423,8 @@ namespace FileExplorer
                 item.ImageIndex = 0;
             ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
             item.SubItems.Add(subitem);
+            subitem = new ListViewItem.ListViewSubItem(item, Utils.HumanReadableSize(op.totalSize));
+            item.SubItems.Add(subitem);
             ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
             progress.Owner = item;
             progress.ProgressMaxValue = op.totalSize;
