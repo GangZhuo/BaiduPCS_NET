@@ -31,6 +31,7 @@ namespace FileExplorer
             InitializeComponent();
 
             lvFileList.DoubleClick += lvFileList_DoubleClick;
+            lvFileList.KeyDown += lvFileList_KeyDown;
 
             txSearchKeyword.GotFocus += txSearchKeyword_GotFocus;
             txSearchKeyword.LostFocus += txSearchKeyword_LostFocus;
@@ -159,6 +160,43 @@ namespace FileExplorer
             if(fileInfo.isdir)
             {
                 Go(fileInfo.path);
+            }
+        }
+
+        private void lvFileList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.A && e.Control)
+            {
+                foreach (ListViewItem item in lvFileList.Items)
+                {
+                    item.Selected = true;
+                }
+            }
+            else if (e.KeyCode == Keys.C && e.Control)
+            {
+                Copy();
+            }
+            else if (e.KeyCode == Keys.X && e.Control)
+            {
+                Cut();
+            }
+            else if (e.KeyCode == Keys.V && e.Control)
+            {
+                if (sources.Count > 0)
+                {
+                    PcsFileInfo to;
+                    if (currentPath.StartsWith("/"))
+                    {
+                        to = new PcsFileInfo();
+                        to.path = currentPath;
+                        to.isdir = true;
+                        ParseTo(to);
+                    }
+                }
+            }
+            else if (e.KeyCode == Keys.Delete)
+            {
+                Delete();
             }
         }
 
@@ -720,6 +758,83 @@ namespace FileExplorer
             return false;
         }
 
+        private void Copy()
+        {
+            if (lvFileList.SelectedItems.Count > 0)
+            {
+                sources.Clear();
+                foreach (ListViewItem item in lvFileList.SelectedItems)
+                {
+                    sources.Add((PcsFileInfo)item.Tag);
+                }
+                isMove = false;
+                lblStatus2.Text = "Copied";
+            }
+        }
+
+        private void Cut()
+        {
+            if (lvFileList.SelectedItems.Count > 0)
+            {
+                sources.Clear();
+                foreach (ListViewItem item in lvFileList.SelectedItems)
+                {
+                    sources.Add((PcsFileInfo)item.Tag);
+                }
+                isMove = true;
+                lblStatus2.Text = "Cut";
+            }
+        }
+
+        private void Delete()
+        {
+            if(MessageBox.Show("Are you sure want to delete selected items?", "Delete", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                if (lvFileList.SelectedItems.Count > 0)
+                {
+                    List<PcsFileInfo> sources = new List<PcsFileInfo>(lvFileList.SelectedItems.Count);
+                    foreach (ListViewItem item in lvFileList.SelectedItems)
+                    {
+                        sources.Add((PcsFileInfo)item.Tag);
+                    }
+                    if (DeleteFile(sources))
+                    {
+                        RefreshFileList();
+                    }
+                }
+            }
+        }
+
+        private void ParseTo(PcsFileInfo to)
+        {
+            bool succ;
+            if (isMove)
+                succ = MoveFile(sources, to);
+            else
+                succ = CopyFile(sources, to);
+            if (succ)
+            {
+                if (string.Equals(to.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
+                    RefreshFileList();
+                else if (isMove)
+                {
+                    bool refresh = false;
+                    foreach (PcsFileInfo fi in sources)
+                    {
+                        if (fi.path.StartsWith(currentPath + "/", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            refresh = true;
+                            break;
+                        }
+                    }
+                    if (refresh)
+                        RefreshFileList();
+                }
+                sources.Clear();
+                lblStatus2.Text = string.Empty;
+            }
+        }
+
         private bool MoveFile(List<PcsFileInfo> sources, PcsFileInfo to)
         {
             PcsPanApiRes ar = new PcsPanApiRes();
@@ -1170,46 +1285,17 @@ namespace FileExplorer
 
         private void cutToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (lvFileList.SelectedItems.Count > 0)
-            {
-                sources.Clear();
-                foreach (ListViewItem item in lvFileList.SelectedItems)
-                {
-                    sources.Add((PcsFileInfo)item.Tag);
-                }
-                isMove = true;
-                lblStatus2.Text = "Cut";
-            }
+            Cut();
         }
 
         private void copyToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (lvFileList.SelectedItems.Count > 0)
-            {
-                sources.Clear();
-                foreach (ListViewItem item in lvFileList.SelectedItems)
-                {
-                    sources.Add((PcsFileInfo)item.Tag);
-                }
-                isMove = false;
-                lblStatus2.Text = "Copied";
-            }
+            Copy();
         }
 
         private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (lvFileList.SelectedItems.Count > 0)
-            {
-                List<PcsFileInfo> sources = new List<PcsFileInfo>(lvFileList.SelectedItems.Count);
-                foreach (ListViewItem item in lvFileList.SelectedItems)
-                {
-                    sources.Add((PcsFileInfo)item.Tag);
-                }
-                if (DeleteFile(sources))
-                {
-                    RefreshFileList();
-                }
-            }
+            Delete();
         }
 
         private void parseToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -1231,32 +1317,7 @@ namespace FileExplorer
                     return;
                 if (to.isdir)
                 {
-                    bool succ;
-                    if (isMove)
-                        succ = MoveFile(sources, to);
-                    else
-                        succ = CopyFile(sources, to);
-                    if (succ)
-                    {
-                        if (string.Equals(to.path, currentPath, StringComparison.InvariantCultureIgnoreCase))
-                            RefreshFileList();
-                        else if (isMove)
-                        {
-                            bool refresh = false;
-                            foreach (PcsFileInfo fi in sources)
-                            {
-                                if (fi.path.StartsWith(currentPath + "/", StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    refresh = true;
-                                    break;
-                                }
-                            }
-                            if (refresh)
-                                RefreshFileList();
-                        }
-                        sources.Clear();
-                        lblStatus2.Text = string.Empty;
-                    }
+                    ParseTo(to);
                 }
             }
         }

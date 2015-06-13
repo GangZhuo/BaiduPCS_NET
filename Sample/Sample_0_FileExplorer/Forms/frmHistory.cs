@@ -22,6 +22,7 @@ namespace FileExplorer
             InitializeComponent();
 
             lvItems.DoubleClick += lvItems_DoubleClick;
+            lvItems.KeyDown += lvItems_KeyDown;
 
             this.worker = worker;
             worker.queue.OnEnqueue += queue_OnEnqueue;
@@ -85,6 +86,21 @@ namespace FileExplorer
                     }
                     catch { }
                 }
+            }
+        }
+
+        private void lvItems_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.A && e.Control)
+            {
+                foreach (ListViewItem item in lvItems.Items)
+                {
+                    item.Selected = true;
+                }
+            }
+            else if (e.KeyCode == Keys.Delete)
+            {
+                Delete();
             }
         }
 
@@ -310,17 +326,39 @@ namespace FileExplorer
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure want to delete the items?", "Delete", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            Delete();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            try
             {
-                foreach (ListViewItem item in lvItems.SelectedItems)
+                lblStatusST.Text = lvItems.Items.Count.ToString() + " items";
+                if (updatedOp.Count > 0)
                 {
-                    OperationInfo op = item.Tag as OperationInfo;
-                    if (op.status != OperationStatus.Processing)
+                    lock (locker)
                     {
-                        worker.queue.Remove(op);
+                        if (updatedOp.Count > 0)
+                        {
+                            //lvItems.BeginUpdate();
+
+                            foreach (OperationInfo op in updatedOp.Keys)
+                            {
+                                if (this.InvokeRequired)
+                                    this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(op); }));
+                                else
+                                    UpdateProgress(op);
+                            }
+
+                            //lvItems.EndUpdate();
+
+                            updatedOp.Clear();
+                        }
                     }
                 }
             }
+            catch { }
+
         }
 
         private void ChangeOpStatus(OperationInfo op, OperationStatus status)
@@ -450,37 +488,19 @@ namespace FileExplorer
             }
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Delete()
         {
-            try
+            if (MessageBox.Show("Are you sure want to delete the items?", "Delete", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                lblStatusST.Text = lvItems.Items.Count.ToString() + " items";
-                if (updatedOp.Count > 0)
+                foreach (ListViewItem item in lvItems.SelectedItems)
                 {
-                    lock (locker)
+                    OperationInfo op = item.Tag as OperationInfo;
+                    if (op.status != OperationStatus.Processing)
                     {
-                        if (updatedOp.Count > 0)
-                        {
-                            //lvItems.BeginUpdate();
-
-                            foreach (OperationInfo op in updatedOp.Keys)
-                            {
-                                if (this.InvokeRequired)
-                                    this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(op); }));
-                                else
-                                    UpdateProgress(op);
-                            }
-
-                            //lvItems.EndUpdate();
-
-                            updatedOp.Clear();
-                        }
+                        worker.queue.Remove(op);
                     }
                 }
             }
-            catch { }
-
         }
-
     }
 }
