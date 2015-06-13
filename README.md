@@ -1,5 +1,11 @@
 # BaiduPCS_NET
 The C# wrap for BaiduPCS. See https://github.com/GangZhuo/BaiduPCS .
+功能：
+* 图形界面，
+* 多线程上传和下载，
+* 断点续传(上传和下载都支持)，
+* 上传目录，
+* 下载目录。
 
 ## 编译 (Windows)：
     1. git clone https://github.com/GangZhuo/BaiduPCS.git
