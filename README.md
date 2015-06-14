@@ -25,8 +25,14 @@
     4. 打开 BaiduPCS_NET 目录下的 BaiduPCS_NET.sln。
 	   然后，先编译 BaiduPCS_DLL 项目, 然后编译其他项目。
 
+## 使用
+* 1. 下载：软件中鼠标选中需要下载的文件或目录（可多选），然后右击，在弹出的菜单中选择 "Download"。
+* 2. 上传：软件中打开上传的目标目录，在空白处右击，在弹出的菜单中选择 "Upload file" 或者 "Upload Directory"。
+* 3. 无论是上传还是下载必须在弹出的队列窗口中，启动工作进程。
+
 #### 下载 .net 4.0 预编译文件: [BaiduCloudDisk for .Net 4.0] 。
-![BaiduCloudDisk for .Net 4.0](https://raw.githubusercontent.com/GangZhuo/BaiduPCS_NET/master/Sample/Sample_0_FileExplorer/main-window.png)
+![Main Window](https://raw.githubusercontent.com/GangZhuo/BaiduPCS_NET/master/Sample/Sample_0_FileExplorer/main-window.png)
+![History Window](https://raw.githubusercontent.com/GangZhuo/BaiduPCS_NET/master/Sample/Sample_0_FileExplorer/history-window.png)
 
 [BaiduPCS]: https://github.com/GangZhuo/BaiduPCS
 [BaiduCloudDisk for .Net 4.0]: https://sourceforge.net/projects/baidupcs/files/Windows/
