@@ -538,10 +538,11 @@ namespace BaiduPCS_NET
         /// <param name="path">待下载的文件，地址需写全，如/temp/file.txt</param>
         /// <param name="max_speed">下载时的最大速度，0 表示不限速</param>
         /// <param name="resume_from">从文件的哪一个位置开始下载，断点续传时，已经下载的部分不需要再次下载。</param>
+        /// <param name="max_length">从 resume_from 位置开始，一共下载多少字节的数据。0 表示下载到结尾。</param>
         /// <returns>成功后返回PCS_OK，失败则返回错误编号</returns>
-        public PcsRes download(string path, long max_speed, long resume_from)
+        public PcsRes download(string path, long max_speed, long resume_from, long max_length)
         {
-            return pcs_download(this, path, max_speed, resume_from);
+            return pcs_download(this, path, max_speed, resume_from, max_length);
         }
 
         /// <summary>
@@ -1240,11 +1241,12 @@ namespace BaiduPCS_NET
         /// <param name="path">待下载的文件，地址需写全，如/temp/file.txt</param>
         /// <param name="max_speed">下载时的最大速度，0 表示不限速</param>
         /// <param name="resume_from">从文件的哪一个位置开始下载，断点续传时，已经下载的部分不需要再次下载。</param>
+        /// <param name="max_length">从 resume_from 位置开始，一共下载多少字节的数据。0 表示下载到结尾。</param>
         /// <returns>成功后返回PCS_OK，失败则返回错误编号</returns>
-        public static PcsRes pcs_download(BaiduPCS pcs, string path, long max_speed, long resume_from)
+        public static PcsRes pcs_download(BaiduPCS pcs, string path, long max_speed, long resume_from, long max_length)
         {
             IntPtr pathPtr = NativeUtils.str_ptr(path);
-            PcsRes r = (PcsRes)NativeMethods.pcs_download(pcs.Handle, pathPtr, max_speed, resume_from);
+            PcsRes r = (PcsRes)NativeMethods.pcs_download(pcs.Handle, pathPtr, max_speed, resume_from, max_length);
             NativeUtils.free_str_ptr(pathPtr);
             return r;
         }

@@ -68,7 +68,7 @@ namespace BaiduPCS_NET.Native
         public extern static IntPtr pcs_cat(IntPtr handle, IntPtr path, ref uint dstsz);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static int pcs_download(IntPtr handle, IntPtr path, long max_speed, long resume_from);
+        public extern static int pcs_download(IntPtr handle, IntPtr path, long max_speed, long resume_from, long max_length);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static long pcs_get_download_filesize(IntPtr handle, IntPtr path);

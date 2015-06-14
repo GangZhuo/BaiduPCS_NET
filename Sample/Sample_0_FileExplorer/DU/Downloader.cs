@@ -45,7 +45,7 @@ namespace FileExplorer
                 CreateDirectory(to);
                 stream = new FileStream(to, FileMode.Create, FileAccess.Write);
                 pcs.WriteUserData = stream;
-                PcsRes rc = pcs.download(from.path, 0, 0);
+                PcsRes rc = pcs.download(from.path, 0, 0, 0);
                 if (rc == PcsRes.PCS_OK)
                 {
                     Success = true;

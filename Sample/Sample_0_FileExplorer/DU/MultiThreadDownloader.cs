@@ -192,7 +192,7 @@ namespace FileExplorer
                         break;
                     slice.tid = tid;
                     pcs.WriteUserData = slice;
-                    rc = pcs.download(from.path, 0, slice.start);
+                    rc = pcs.download(from.path, 0, slice.start + slice.doneSize, slice.totalSize - slice.doneSize);
                     if (rc == PcsRes.PCS_OK || slice.status == SliceStatus.Successed)
                         slice.status = SliceStatus.Successed;
                     else if (slice.status == SliceStatus.Cancelled)
