@@ -11,7 +11,8 @@ namespace FileExplorer
 
         public BigFileHelper(string filename)
         {
-            mmf = MemoryMappedFile.CreateFromFile(FileName, FileMode.Open, Utils.md5(filename), 0, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
+            FileName = filename;
+            mmf = MemoryMappedFile.CreateFromFile(FileName, FileMode.Open, Utils.md5(FileName), 0, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
         }
 
         ~BigFileHelper()
