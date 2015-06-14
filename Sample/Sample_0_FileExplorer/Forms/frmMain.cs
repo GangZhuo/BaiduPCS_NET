@@ -392,7 +392,6 @@ namespace FileExplorer
             pcs = BaiduPCS.pcs_create(cookiefilename);
             if (pcs == null)
                 return false;
-            Thread.Sleep(100);
             if (pcs.isLogin() != PcsRes.PCS_LOGIN)
             {
                 if (!Login())
