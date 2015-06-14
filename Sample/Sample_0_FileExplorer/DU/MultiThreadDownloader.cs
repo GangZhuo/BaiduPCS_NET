@@ -30,7 +30,7 @@ namespace FileExplorer
         public string SliceFileName { get; private set; }
         public List<Slice> SliceList { get; private set; }
 
-        private MemoryMappedFile mmf;
+        private IBigFileHelper bigfile;
         private long taskId = 0; //本地下载任务的 ID
         private long runningThreadCount = 0; //正在运行的线程数
         private object locker = new object();
@@ -56,7 +56,7 @@ namespace FileExplorer
             Downloading = true;
             SliceFileName = null;
             SliceList = null;
-            mmf = null;
+            bigfile = null;
             try
             {
                 SliceFileName = "download-" + from.md5 + ".slice";
@@ -69,7 +69,7 @@ namespace FileExplorer
                 SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
                 CreateLocalFile(); // 如果需要则创建本地文件
-                mmf = MemoryMappedFile.CreateFromFile(to, FileMode.Open, Utils.md5(SliceFileName), 0, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
+                bigfile = new BigFileHelper(to); //映射文件到内存
                 foreach (Slice slice in SliceList)
                 {
                     if (slice.status != SliceStatus.Successed)
@@ -92,10 +92,10 @@ namespace FileExplorer
                 IsCancelled = false;
                 Error = ex;
             }
-            if (mmf != null)
+            if (bigfile != null)
             {
-                mmf.Dispose();
-                mmf = null;
+                bigfile.Dispose();
+                bigfile = null;
             }
             if (Success)
                 SliceHelper.DeleteSliceFile(SliceFileName);
@@ -263,10 +263,7 @@ namespace FileExplorer
                 size = slice.totalSize - slice.doneSize;
             if (size > 0)
             {
-                using (MemoryMappedViewAccessor accessor = mmf.CreateViewAccessor(slice.start + slice.doneSize, size))
-                {
-                    accessor.WriteArray<byte>(0, data, 0, (int)size);
-                }
+                bigfile.Update(slice.start + slice.doneSize, data, 0, (int)size);
             }
             slice.doneSize += size;
             lock (locker) DoneSize += size;
