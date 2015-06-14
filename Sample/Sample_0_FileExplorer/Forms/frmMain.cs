@@ -365,6 +365,9 @@ namespace FileExplorer
                 AppSettings.AutomaticUploadMaxThreadCount = true;
                 AppSettings.RetryWhenDownloadFailed = true;
                 AppSettings.RetryWhenUploadFailed = true;
+
+                AppSettings.DownloadMaxThreadCount = 1;
+                AppSettings.UploadMaxThreadCount = 1;
             }
         }
 

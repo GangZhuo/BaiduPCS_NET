@@ -382,6 +382,9 @@ namespace FileExplorer
                 progress.ForeColor = GetStatusColor(op);
                 progress.ShowProgress = true;
 
+                ListViewItem item = progress.Owner;
+                if (item != null)
+                    item.SubItems[2].Text = GetSizeText(op);
                 double percent = 0;
                 if (op.totalSize > 0)
                 {
@@ -389,7 +392,7 @@ namespace FileExplorer
                     if (percent > 1.0f)
                         percent = 1.0f;
                 }
-                progress.Text = string.Format("{0}%  {1}/{2}", percent.ToString("F2"), Utils.HumanReadableSize(op.doneSize), Utils.HumanReadableSize(op.totalSize));
+                progress.Text = string.Format("{0}%", percent.ToString("F2"));
             }
         }
 
@@ -422,7 +425,7 @@ namespace FileExplorer
                 item.ImageIndex = 0;
             ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
             item.SubItems.Add(subitem);
-            subitem = new ListViewItem.ListViewSubItem(item, Utils.HumanReadableSize(op.totalSize));
+            subitem = new ListViewItem.ListViewSubItem(item, GetSizeText(op));
             item.SubItems.Add(subitem);
             ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
             progress.Owner = item;
@@ -487,6 +490,27 @@ namespace FileExplorer
                     return Color.Red;
                 default:
                     return Color.Black;
+            }
+        }
+
+        private string GetSizeText(OperationInfo op)
+        {
+            switch (op.status)
+            {
+                case OperationStatus.Pending:
+                    return Utils.HumanReadableSize(op.doneSize) + "/" + Utils.HumanReadableSize(op.totalSize);
+                case OperationStatus.Processing:
+                    return Utils.HumanReadableSize(op.doneSize) + "/" + Utils.HumanReadableSize(op.totalSize);
+                case OperationStatus.Pause:
+                    return Utils.HumanReadableSize(op.doneSize) + "/" + Utils.HumanReadableSize(op.totalSize);
+                case OperationStatus.Cancel:
+                    return Utils.HumanReadableSize(op.doneSize) + "/" + Utils.HumanReadableSize(op.totalSize);
+                case OperationStatus.Success:
+                    return Utils.HumanReadableSize(op.totalSize);
+                case OperationStatus.Fail:
+                    return Utils.HumanReadableSize(op.doneSize) + "/" + Utils.HumanReadableSize(op.totalSize);
+                default:
+                    return string.Empty;
             }
         }
 

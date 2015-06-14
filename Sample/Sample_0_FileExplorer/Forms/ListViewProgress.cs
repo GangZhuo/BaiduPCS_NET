@@ -41,7 +41,7 @@ namespace FileExplorer
                 {
                     //绘制进度百分比
                     percent *= 100;
-                    string percentText = string.Format("{0}%  {1}/{2}", percent.ToString("F2"), Utils.HumanReadableSize(item.ProgressValue), Utils.HumanReadableSize(item.ProgressMaxValue));
+                    string percentText = string.Format("{0}% ", percent.ToString("F2"));
                     Size size = TextRenderer.MeasureText(percentText.ToString(), Font);
                     int x = (progressRect.Width - size.Width) / 2;
                     int y = (progressRect.Height - size.Height) / 2 + 3;

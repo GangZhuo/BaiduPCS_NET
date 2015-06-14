@@ -67,7 +67,7 @@ namespace FileExplorer
                 SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
                 CreateLocalFile(); // 如果需要则创建本地文件
-                mmf = MemoryMappedFile.CreateFromFile(to, FileMode.Open); //映射文件到内存
+                mmf = MemoryMappedFile.CreateFromFile(to, FileMode.Open, Utils.md5(SliceFileName), 0, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
                 foreach (Slice slice in SliceList)
                 {
                     DoneSize += slice.doneSize;
@@ -192,7 +192,7 @@ namespace FileExplorer
                         break;
                     slice.tid = tid;
                     pcs.WriteUserData = slice;
-                    rc = pcs.download(from.path, 0, slice.start, slice.totalSize);
+                    rc = pcs.download(from.path, 0, slice.start + slice.doneSize, slice.totalSize - slice.doneSize);
                     if (rc == PcsRes.PCS_OK || slice.status == SliceStatus.Successed)
                         slice.status = SliceStatus.Successed;
                     else if (slice.status == SliceStatus.Cancelled)
@@ -239,6 +239,17 @@ namespace FileExplorer
         private uint onWrite(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
         {
             Slice slice = (Slice)userdata;
+            if (slice.tid != Interlocked.Read(ref taskId))//本次任务被取消
+            {
+                lock (locker)
+                {
+                    if (IsCancelled)
+                        slice.status = SliceStatus.Cancelled;
+                    else
+                        slice.status = SliceStatus.Failed;
+                }
+                return 0;
+            }
             long size = data.Length;
             if (size > slice.totalSize - slice.doneSize)
                 size = slice.totalSize - slice.doneSize;
@@ -257,11 +268,6 @@ namespace FileExplorer
                 size = 0;
             }
             lock (sliceFileLocker) SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
-            if (slice.tid != Interlocked.Read(ref taskId))//本次任务被取消
-            {
-                slice.status = SliceStatus.Cancelled;
-                return 0;
-            }
             long downloadedSize = 0;
             lock (locker) downloadedSize = DoneSize;
             ProgressEventArgs args = new ProgressEventArgs(downloadedSize, from.size);

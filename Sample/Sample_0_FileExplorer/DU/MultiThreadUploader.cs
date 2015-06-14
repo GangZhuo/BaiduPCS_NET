@@ -277,7 +277,13 @@ namespace FileExplorer
             buf = null;
             if (slice.tid != Interlocked.Read(ref taskId))//本次任务被取消
             {
-                slice.status = SliceStatus.Cancelled;
+                lock (locker)
+                {
+                    if (IsCancelled)
+                        slice.status = SliceStatus.Cancelled;
+                    else
+                        slice.status = SliceStatus.Failed;
+                }
                 return NativeConst.CURL_READFUNC_ABORT;
             }
             int sz = (int)(size * nmemb);
