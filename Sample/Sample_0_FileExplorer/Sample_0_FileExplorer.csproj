@@ -47,6 +47,8 @@
   <ItemGroup>
     <Compile Include="Common\AppSettings.cs" />
     <Compile Include="Common\AnonymousFunction.cs" />
+    <Compile Include="DU\BigFileHelper.cs" />
+    <Compile Include="DU\IBigFileHelper.cs" />
     <Compile Include="DU\MultiThreadUploader.cs" />
     <Compile Include="DU\Slice.cs" />
     <Compile Include="DU\SliceHelper.cs" />
