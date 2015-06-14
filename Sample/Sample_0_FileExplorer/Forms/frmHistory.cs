@@ -196,6 +196,9 @@ namespace FileExplorer
                         progress.ShowProgress = false;
                         progress.ForeColor = GetStatusColor(e.op);
                         progress.Text = GetStatusText(e.op);
+                        ListViewItem item = progress.Owner;
+                        if (item != null)
+                            item.SubItems[2].Text = GetSizeText(e.op);
                     }));
                 }
                 else
@@ -203,6 +206,9 @@ namespace FileExplorer
                     progress.ShowProgress = false;
                     progress.ForeColor = GetStatusColor(e.op);
                     progress.Text = GetStatusText(e.op);
+                    ListViewItem item = progress.Owner;
+                    if (item != null)
+                        item.SubItems[2].Text = GetSizeText(e.op);
                 }
             }
         }
