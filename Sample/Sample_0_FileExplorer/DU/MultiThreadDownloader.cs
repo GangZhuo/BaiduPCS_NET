@@ -26,6 +26,7 @@ namespace FileExplorer
 
         public string WorkFolder { get; private set; }
         public int ThreadCount { get; private set; }
+        public int MinSliceSize { get; private set; }
         public string SliceFileName { get; private set; }
         public List<Slice> SliceList { get; private set; }
 
@@ -36,11 +37,12 @@ namespace FileExplorer
         private object sliceFileLocker = new object();
 
         public MultiThreadDownloader(BaiduPCS pcs, PcsFileInfo from, string to,
-            string workfolder, int threadCount)
+            string workfolder, int threadCount, int minSliceSize = MIN_SLICE_SIZE)
             : base(pcs, from, to)
         {
             this.WorkFolder = workfolder;
             this.ThreadCount = threadCount;
+            this.MinSliceSize = minSliceSize;
         }
 
         public override void Download()
@@ -116,7 +118,7 @@ namespace FileExplorer
                 return;
             }
             // 新建分片
-            SliceList = SliceHelper.CreateSliceList(from.size, MIN_SLICE_SIZE);
+            SliceList = SliceHelper.CreateSliceList(from.size, MinSliceSize);
             //保存一次新创建的分片列表
             SliceHelper.SaveSliceList(SliceFileName, SliceList);
         }

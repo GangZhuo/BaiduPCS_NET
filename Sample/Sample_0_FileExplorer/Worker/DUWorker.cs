@@ -237,7 +237,7 @@ namespace FileExplorer
                     if (op.status == OperationStatus.Processing)
                     {
                         if (from.size > MultiThreadDownloader.MIN_SLICE_SIZE)
-                            d = new MultiThreadDownloader(pcs, from, op.to, workfolder, getDownloadMaxThreadCount());
+                            d = new MultiThreadDownloader(pcs, from, op.to, workfolder, getDownloadMaxThreadCount(), getMinDownloadSliceSize());
                         else
                             d = new Downloader(pcs, from, op.to);
                         d.Completed += du_onCompleted;
@@ -355,6 +355,13 @@ namespace FileExplorer
                 co = AppSettings.UploadMaxThreadCount;
             if (co < 1) co = 1;
             return co;
+        }
+
+        private int getMinDownloadSliceSize()
+        {
+            if (AppSettings.MinDownloasSliceSize >= MultiThreadDownloader.MIN_SLICE_SIZE / Utils.KB && AppSettings.MinDownloasSliceSize <= MultiThreadDownloader.MAX_SLICE_SIZE / Utils.KB)
+                return AppSettings.MinDownloasSliceSize * Utils.KB;
+            return MultiThreadDownloader.MIN_SLICE_SIZE;
         }
     }
 

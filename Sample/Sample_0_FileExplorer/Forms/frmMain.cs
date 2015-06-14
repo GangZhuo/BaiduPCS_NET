@@ -361,12 +361,14 @@ namespace FileExplorer
             if (!AppSettings.Restore())
             {
                 AppSettings.ResumeDownloadAndUploadOnStartup = false;
-                AppSettings.AutomaticDownloadMaxThreadCount = true;
-                AppSettings.AutomaticUploadMaxThreadCount = true;
-                AppSettings.RetryWhenDownloadFailed = true;
-                AppSettings.RetryWhenUploadFailed = true;
 
+                AppSettings.AutomaticDownloadMaxThreadCount = true;
                 AppSettings.DownloadMaxThreadCount = 1;
+                AppSettings.RetryWhenDownloadFailed = true;
+                AppSettings.MinDownloasSliceSize = MultiThreadDownloader.MIN_SLICE_SIZE / Utils.KB;
+
+                AppSettings.AutomaticUploadMaxThreadCount = true;
+                AppSettings.RetryWhenUploadFailed = true;
                 AppSettings.UploadMaxThreadCount = 1;
             }
         }
