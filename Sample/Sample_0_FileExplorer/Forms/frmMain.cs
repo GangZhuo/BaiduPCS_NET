@@ -394,8 +394,11 @@ namespace FileExplorer
                 return false;
             if (pcs.isLogin() != PcsRes.PCS_LOGIN)
             {
-                if (!Login())
-                    return false;
+                if (pcs.isLogin() != PcsRes.PCS_LOGIN)
+                {
+                    if (!Login())
+                        return false;
+                }
             }
             long quota, used;
             pcs.quota(out quota, out used);
