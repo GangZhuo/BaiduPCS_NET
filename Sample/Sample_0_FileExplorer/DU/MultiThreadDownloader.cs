@@ -70,9 +70,15 @@ namespace FileExplorer
                 mmf = MemoryMappedFile.CreateFromFile(to, FileMode.Open, Utils.md5(SliceFileName), 0, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
                 foreach (Slice slice in SliceList)
                 {
-                    DoneSize += slice.doneSize;
                     if (slice.status != SliceStatus.Successed)
+                    {
                         slice.status = SliceStatus.Pending; //重新下载未成功的分片
+                        slice.doneSize = 0;
+                    }
+                    else
+                    {
+                        DoneSize += slice.doneSize;
+                    }
                 }
                 DownloadSliceList(); // 启动线程来下载分片
                 Wait(); // 等待所有线程退出
