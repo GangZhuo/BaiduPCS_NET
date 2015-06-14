@@ -28,7 +28,7 @@
 ## 使用
 * 1. 下载：软件中鼠标选中需要下载的文件或目录（可多选），然后右击，在弹出的菜单中选择 "Download"。
 * 2. 上传：软件中打开上传的目标目录，在空白处右击，在弹出的菜单中选择 "Upload file" 或者 "Upload Directory"。
-* 3. 无论是上传还是下载必须在弹出的队列窗口中，启动工作进程。
+* 3. 无论是上传还是下载必须启动其工作线程，可能在弹出的队列窗口中启动工作进程。
 
 #### 下载 .net 4.0 预编译文件: [BaiduCloudDisk for .Net 4.0] 。
 ![Main Window](https://raw.githubusercontent.com/GangZhuo/BaiduPCS_NET/master/Sample/Sample_0_FileExplorer/main-window.png)
