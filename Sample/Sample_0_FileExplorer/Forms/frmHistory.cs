@@ -27,7 +27,6 @@ namespace FileExplorer
             worker.queue.OnEnqueue += queue_OnEnqueue;
             worker.queue.OnRemove += queue_OnRemove;
             worker.queue.OnClear += queue_OnClear;
-            worker.queue.OnClearSuccessItems += queue_OnClearSuccessItems;
 
             worker.OnProgress += worker_OnProgress;
             worker.OnCompleted += worker_OnCompleted;
@@ -48,7 +47,6 @@ namespace FileExplorer
             worker.queue.OnEnqueue -= queue_OnEnqueue;
             worker.queue.OnRemove -= queue_OnRemove;
             worker.queue.OnClear -= queue_OnClear;
-            worker.queue.OnClearSuccessItems -= queue_OnClearSuccessItems;
 
             worker.OnProgress -= worker_OnProgress;
             worker.OnCompleted -= worker_OnCompleted;
@@ -114,37 +112,28 @@ namespace FileExplorer
             }
         }
 
-        private void queue_OnClearSuccessItems(object sender, EventArgs e)
-        {
-            if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { Bind(); RefreshControls(); }));
-            else
-            {
-                Bind();
-                RefreshControls();
-            }
-        }
-
         private void queue_OnRemove(object sender, DUQueueEventArgs e)
         {
-            if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() {
+            foreach (OperationInfo op in e.Operations)
+            {
+                if (updatedOp.Contains(op))
+                {
                     lock (locker)
                     {
-                        if (updatedOp.Contains(e.op))
-                            updatedOp.Remove(e.op);
+                        if (updatedOp.Contains(op))
+                            updatedOp.Remove(op);
                     }
-                    RemoveItem(e.op);
+                }
+            }
+            if (lvItems.InvokeRequired)
+                lvItems.Invoke(new AnonymousFunction(delegate()
+                {
+                    RemoveItem(e.Operations);
                     RefreshControls();
                 }));
             else
             {
-                lock (locker)
-                {
-                    if (updatedOp.Contains(e.op))
-                        updatedOp.Remove(e.op);
-                }
-                RemoveItem(e.op);
+                RemoveItem(e.Operations);
                 RefreshControls();
             }
         }
@@ -152,10 +141,10 @@ namespace FileExplorer
         private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { AddItem(e.op); RefreshControls(); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() { AddItem(e.Operations, 0); RefreshControls(); }));
             else
             {
-                AddItem(e.op, 0);
+                AddItem(e.Operations, 0);
                 RefreshControls();
             }
         }
@@ -345,18 +334,26 @@ namespace FileExplorer
                     {
                         if (updatedOp.Count > 0)
                         {
-                            //lvItems.BeginUpdate();
-
-                            foreach (OperationInfo op in updatedOp.Keys)
+                            if (lvItems.InvokeRequired)
                             {
-                                if (this.InvokeRequired)
-                                    this.Invoke(new AnonymousFunction(delegate() { UpdateProgress(op); }));
-                                else
-                                    UpdateProgress(op);
+                                lvItems.Invoke(new AnonymousFunction(delegate() {
+                                    lvItems.BeginUpdate();
+                                    foreach (OperationInfo op in updatedOp.Keys)
+                                    {
+                                        UpdateProgress(op);
+                                    }
+                                    lvItems.EndUpdate();
+                                }));
                             }
-
-                            //lvItems.EndUpdate();
-
+                            else
+                            {
+                                lvItems.BeginUpdate();
+                                foreach (OperationInfo op in updatedOp.Keys)
+                                {
+                                    UpdateProgress(op);
+                                }
+                                lvItems.EndUpdate();
+                            }
                             updatedOp.Clear();
                         }
                     }
@@ -399,6 +396,7 @@ namespace FileExplorer
                         percent = 1.0f;
                 }
                 progress.Text = string.Format("{0}%", percent.ToString("F2"));
+                item.EnsureVisible();
             }
         }
 
@@ -415,46 +413,53 @@ namespace FileExplorer
         private void Bind()
         {
             lvItems.Items.Clear();
-            foreach (OperationInfo op in worker.queue.list())
-            {
-                AddItem(op);
-            }
+            AddItem(worker.queue.list().ToArray());
         }
 
-        private void AddItem(OperationInfo op, int i = -1)
+        private void AddItem(OperationInfo[] ops, int i = -1)
         {
-            ListViewItem item = new ListViewItem(op.from);
-            item.Tag = op;
-            if (op.operation == Operation.Download)
-                item.ImageIndex = 1;
-            else
-                item.ImageIndex = 0;
-            ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
-            item.SubItems.Add(subitem);
-            subitem = new ListViewItem.ListViewSubItem(item, GetSizeText(op));
-            item.SubItems.Add(subitem);
-            ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
-            progress.Owner = item;
-            progress.ProgressMaxValue = op.totalSize;
-            progress.ProgressValue = op.doneSize;
-            progress.ShowProgress = false;
-            progress.ForeColor = GetStatusColor(op);
-            progress.Tag = op;
-            op.Tag = progress;
-            item.SubItems.Add(progress);
-            if (i >= 0)
-                lvItems.Items.Insert(i, item);
-            else
-                lvItems.Items.Add(item);
+            lvItems.BeginUpdate();
+            foreach(OperationInfo op in ops)
+            {
+                ListViewItem item = new ListViewItem(op.from);
+                item.Tag = op;
+                if (op.operation == Operation.Download)
+                    item.ImageIndex = 1;
+                else
+                    item.ImageIndex = 0;
+                ListViewItem.ListViewSubItem subitem = new ListViewItem.ListViewSubItem(item, op.to);
+                item.SubItems.Add(subitem);
+                subitem = new ListViewItem.ListViewSubItem(item, GetSizeText(op));
+                item.SubItems.Add(subitem);
+                ProgressListview.ProgressSubItem progress = new ProgressListview.ProgressSubItem(item, GetStatusText(op));
+                progress.Owner = item;
+                progress.ProgressMaxValue = op.totalSize;
+                progress.ProgressValue = op.doneSize;
+                progress.ShowProgress = false;
+                progress.ForeColor = GetStatusColor(op);
+                progress.Tag = op;
+                op.Tag = progress;
+                item.SubItems.Add(progress);
+                if (i >= 0)
+                    lvItems.Items.Insert(i, item);
+                else
+                    lvItems.Items.Add(item);
+            }
+            lvItems.EndUpdate();
         }
 
-        private void RemoveItem(OperationInfo op)
+        private void RemoveItem(OperationInfo[] ops)
         {
-            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-            if (progress != null && progress.Owner != null)
+            lvItems.BeginUpdate();
+            foreach(OperationInfo op in ops)
             {
-                lvItems.Items.Remove(progress.Owner);
+                ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
+                if (progress != null && progress.Owner != null)
+                {
+                    lvItems.Items.Remove(progress.Owner);
+                }
             }
+            lvItems.EndUpdate();
         }
 
         private string GetStatusText(OperationInfo op)

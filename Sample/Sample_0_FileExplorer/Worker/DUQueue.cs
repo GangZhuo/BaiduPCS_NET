@@ -19,7 +19,6 @@ namespace FileExplorer
         public event EventHandler<DUQueueEventArgs> OnDequeue;
         public event EventHandler<DUQueueEventArgs> OnRemove;
         public event EventHandler OnClear;
-        public event EventHandler OnClearSuccessItems;
 
         private object locker = new object();
 
@@ -31,35 +30,47 @@ namespace FileExplorer
             completed = new List<OperationInfo>();
         }
 
-        public void Add(OperationInfo op)
+        public void Add(OperationInfo[] ops)
         {
-            lock (locker)
+            List<OperationInfo> pending_list = new List<OperationInfo>();
+            List<OperationInfo> processing_list = new List<OperationInfo>();
+            List<OperationInfo> completed_list = new List<OperationInfo>();
+
+            foreach(OperationInfo op in ops)
             {
                 switch (op.status)
                 {
                     case OperationStatus.Pending:
-                        pending.Add(op);
+                        pending_list.Add(op);
                         break;
                     case OperationStatus.Processing:
-                        processing.Add(op);
+                        processing_list.Add(op);
                         break;
                     default:
-                        completed.Add(op);
+                        completed_list.Add(op);
                         break;
                 }
             }
+
+            lock (locker)
+            {
+                pending.AddRange(pending_list);
+                processing.AddRange(processing_list);
+                completed.AddRange(completed_list);
+
+            }
             if (OnAdd != null)
-                OnAdd(this, new DUQueueEventArgs(op));
+                OnAdd(this, new DUQueueEventArgs(ops));
         }
 
-        public void Enqueue(OperationInfo op)
+        public void Enqueue(OperationInfo[] ops)
         {
             lock (locker)
             {
-                pending.Add(op);
+                pending.AddRange(ops);
             }
             if (OnEnqueue != null)
-                OnEnqueue(this, new DUQueueEventArgs(op));
+                OnEnqueue(this, new DUQueueEventArgs(ops));
         }
 
         public OperationInfo Dequeue()
@@ -74,7 +85,7 @@ namespace FileExplorer
                 }
             }
             if (op != null && OnDequeue != null)
-                OnDequeue(this, new DUQueueEventArgs(op));
+                OnDequeue(this, new DUQueueEventArgs(new OperationInfo[] { op }));
             return op;
         }
 
@@ -104,7 +115,7 @@ namespace FileExplorer
                     removed = completed.Remove(op);
             }
             if (removed && OnRemove != null)
-                OnRemove(this, new DUQueueEventArgs(op));
+                OnRemove(this, new DUQueueEventArgs(new OperationInfo[] { op }));
             try
             {
                 if (!string.IsNullOrEmpty(op.sliceFileName))
@@ -139,14 +150,16 @@ namespace FileExplorer
             ClearSuccessItems(true);
         }
 
-        public void ClearSuccessItems(bool fireOnClearSuccessItems)
+        public void ClearSuccessItems(bool fireOnRemove)
         {
+            List<OperationInfo> removedList = new List<OperationInfo>();
             lock (locker)
             {
                 for (int i = 0; i < completed.Count; )
                 {
                     if (completed[i].status == OperationStatus.Success)
                     {
+                        removedList.Add(completed[i]);
                         completed.RemoveAt(i);
                     }
                     else
@@ -155,8 +168,8 @@ namespace FileExplorer
                     }
                 }
             }
-            if (fireOnClearSuccessItems && OnClearSuccessItems != null)
-                OnClearSuccessItems(this, new EventArgs());
+            if (removedList.Count > 0 && fireOnRemove && OnRemove != null)
+                OnRemove(this, new DUQueueEventArgs(removedList.ToArray()));
         }
 
         public void place(OperationInfo op)
@@ -206,11 +219,11 @@ namespace FileExplorer
 
     public class DUQueueEventArgs : EventArgs
     {
-        public OperationInfo op { get; private set; }
+        public OperationInfo[] Operations { get; private set; }
 
-        public DUQueueEventArgs(OperationInfo op)
+        public DUQueueEventArgs(OperationInfo[] ops)
         {
-            this.op = op;
+            this.Operations = ops;
         }
     }
 }

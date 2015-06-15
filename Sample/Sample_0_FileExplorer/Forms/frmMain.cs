@@ -1003,17 +1003,20 @@ namespace FileExplorer
         {
             if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                int addedCount = 0;
+                int totalCount = 0;
+                List<OperationInfo> list = new List<OperationInfo>();
                 string uid = pcs.getUID();
                 ShowHistoryWindow();
                 ExecTask("Download", "Add files to download queue...", new ThreadStart(delegate()
                 {
                     foreach (PcsFileInfo fi in sources)
                     {
-                        AddFilesToDownloadQueue(fi, folderBrowserDialog1.SelectedPath, uid, ref addedCount, OperationStatus.Pending);
+                        AddFilesToDownloadQueue(fi, folderBrowserDialog1.SelectedPath, uid, list, OperationStatus.Pending, ref totalCount);
                     }
                 }));
-                if (addedCount > 0)
+                if (list.Count > 0)
+                    worker.queue.Enqueue(list.ToArray());
+                if (totalCount > 0)
                     return true;
                 string errmsg = string.Empty;
                 errmsg = "Failed to add the files to the queue.";
@@ -1023,7 +1026,10 @@ namespace FileExplorer
             return false;
         }
 
-        private void AddFilesToDownloadQueue(PcsFileInfo from, string toFolder, string uid, ref int addedCount, OperationStatus status = OperationStatus.Pending)
+        private void AddFilesToDownloadQueue(PcsFileInfo from, string toFolder, string uid,
+            List<OperationInfo> list,
+            OperationStatus status,
+            ref int totalCount)
         {
             if (from.isdir)
             {
@@ -1037,7 +1043,8 @@ namespace FileExplorer
                     {
                         foreach (PcsFileInfo fi in fis)
                         {
-                            AddFilesToDownloadQueue(fi, Path.Combine(toFolder, from.server_filename), uid, ref addedCount, OperationStatus.Pending);
+                            AddFilesToDownloadQueue(fi, Path.Combine(toFolder, from.server_filename), uid,
+                                list, OperationStatus.Pending, ref totalCount);
                         }
                     }
                     pageIndex++;
@@ -1057,8 +1064,13 @@ namespace FileExplorer
                 };
                 if (worker.queue.Contains(op))
                     return;
-                worker.queue.Enqueue(op);
-                addedCount++;
+                list.Add(op);
+                totalCount++;
+                if (list.Count >= 100)
+                {
+                    worker.queue.Enqueue(list.ToArray());
+                    list.Clear();
+                }
             }
         }
 
@@ -1067,7 +1079,8 @@ namespace FileExplorer
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string uid = pcs.getUID();
-                int addedCount = 0;
+                int totalCount = 0;
+                List<OperationInfo> list = new List<OperationInfo>();
                 ShowHistoryWindow();
                 foreach (string filename in openFileDialog1.FileNames)
                 {
@@ -1082,18 +1095,23 @@ namespace FileExplorer
                         totalSize = fi.Length
                     };
                     if (worker.queue.Contains(op))
-                    {
                         continue;
+                    list.Add(op);
+                    totalCount++;
+                    if(list.Count >= 100)
+                    {
+                        worker.queue.Enqueue(list.ToArray());
+                        list.Clear();
                     }
-                    worker.queue.Enqueue(op);
-                    addedCount++;
                 }
                 string errmsg = string.Empty;
-                if (addedCount > 0)
+                if (list.Count > 0)
+                    worker.queue.Enqueue(list.ToArray());
+                if (totalCount > 0)
                 {
-                    if (addedCount != openFileDialog1.FileNames.Length)
+                    if (totalCount != openFileDialog1.FileNames.Length)
                     {
-                        errmsg = "Add " + addedCount + " items to the queue, duplicated " + (openFileDialog1.FileNames.Length - addedCount) + " items.";
+                        errmsg = "Add " + totalCount + " items to the queue, duplicated " + (openFileDialog1.FileNames.Length - totalCount) + " items.";
                         MessageBox.Show(errmsg, "Upload");
                     }
                     return true;
@@ -1112,14 +1130,19 @@ namespace FileExplorer
         {
             if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                int addedCount = 0;
+                int totalCount = 0;
+                List<OperationInfo> list = new List<OperationInfo>();
                 string uid = pcs.getUID();
                 ShowHistoryWindow();
                 ExecTask("Upload", "Add files to upload queue...", new ThreadStart(delegate()
                 {
-                    AddFilesToUploadQueue(folderBrowserDialog1.SelectedPath, to.path + "/" + Path.GetFileName(folderBrowserDialog1.SelectedPath), uid, ref addedCount, OperationStatus.Pending);
+                    AddFilesToUploadQueue(folderBrowserDialog1.SelectedPath, 
+                        to.path + "/" + Path.GetFileName(folderBrowserDialog1.SelectedPath),
+                        uid, list, OperationStatus.Pending, ref totalCount);
                 }));
-                if (addedCount > 0)
+                if (list.Count > 0)
+                    worker.queue.Enqueue(list.ToArray());
+                if (totalCount > 0)
                     return true;
                 string errmsg = string.Empty;
                 errmsg = "Failed to add the files to the queue.";
@@ -1129,7 +1152,9 @@ namespace FileExplorer
             return false;
         }
 
-        private void AddFilesToUploadQueue(string from, string toFolder, string uid, ref int addedCount, OperationStatus status = OperationStatus.Pending)
+        private void AddFilesToUploadQueue(string from, string toFolder, string uid,
+            List<OperationInfo> list, OperationStatus status,
+            ref int totalCount)
         {
             FileInfo fi = new FileInfo(from);
 
@@ -1138,7 +1163,7 @@ namespace FileExplorer
                 string[] files = Directory.GetFiles(from);
                 foreach(string f in files)
                 {
-                    AddFilesToUploadQueue(f, toFolder + "/" + Path.GetFileName(f), uid, ref addedCount, status);
+                    AddFilesToUploadQueue(f, toFolder + "/" + Path.GetFileName(f), uid, list, status, ref totalCount);
                 }
             }
             else
@@ -1154,8 +1179,13 @@ namespace FileExplorer
                 };
                 if (worker.queue.Contains(op))
                     return;
-                worker.queue.Enqueue(op);
-                addedCount++;
+                list.Add(op);
+                totalCount++;
+                if (list.Count >= 100)
+                {
+                    worker.queue.Enqueue(list.ToArray());
+                    list.Clear();
+                }
             }
         }
 

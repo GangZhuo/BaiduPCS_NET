@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.IO;
 using System.Text;
@@ -44,6 +45,7 @@ namespace FileExplorer
             XmlDocument xml = new XmlDocument();
             xml.Load(reader);
             XmlNodeList nodes = xml.SelectNodes("/items/item");
+            List<OperationInfo> list = new List<OperationInfo>(nodes.Count);
             foreach (XmlNode n in nodes)
             {
                 OperationInfo op = new OperationInfo();
@@ -76,8 +78,9 @@ namespace FileExplorer
                 attr = n.Attributes["sliceFileName"];
                 op.sliceFileName = attr != null ? attr.Value : "";
 
-                worker.queue.Add(op);
+                list.Add(op);
             }
+            worker.queue.Add(list.ToArray());
             return true;
         }
 

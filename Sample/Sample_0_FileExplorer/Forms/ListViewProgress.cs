@@ -6,6 +6,12 @@ namespace FileExplorer
 {
     public class ProgressListview : ListView
     {
+        public ProgressListview()
+        {
+            SetStyle(ControlStyles.DoubleBuffer | ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            UpdateStyles(); 
+        }
+
         protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
         {
             e.DrawDefault = true;
