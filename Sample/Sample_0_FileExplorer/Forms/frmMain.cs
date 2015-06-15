@@ -1066,7 +1066,7 @@ namespace FileExplorer
                     return;
                 list.Add(op);
                 totalCount++;
-                if (list.Count >= 100)
+                if (list.Count >= 20)
                 {
                     worker.queue.Enqueue(list.ToArray());
                     list.Clear();
