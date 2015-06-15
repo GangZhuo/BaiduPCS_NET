@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace FileExplorer
 {
@@ -13,6 +14,12 @@ namespace FileExplorer
     {
         private DUWorker worker;
         private Hashtable updatedOp;
+
+        private long cancelCount = 0;
+        private long failedCount = 0;
+        private long pauseCount = 0;
+        private long pendingCount = 0;
+        private long successCount = 0;
 
         private object locker = new object();
 
@@ -104,7 +111,10 @@ namespace FileExplorer
         private void queue_OnClear(object sender, EventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { Bind(); RefreshControls(); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() {
+                    Bind();
+                    RefreshControls();
+                }));
             else
             {
                 Bind();
@@ -128,12 +138,12 @@ namespace FileExplorer
             if (lvItems.InvokeRequired)
                 lvItems.Invoke(new AnonymousFunction(delegate()
                 {
-                    RemoveItem(e.Operations);
+                    RemoveItems(e.Operations);
                     RefreshControls();
                 }));
             else
             {
-                RemoveItem(e.Operations);
+                RemoveItems(e.Operations);
                 RefreshControls();
             }
         }
@@ -141,22 +151,29 @@ namespace FileExplorer
         private void queue_OnEnqueue(object sender, DUQueueEventArgs e)
         {
             if (lvItems.InvokeRequired)
-                lvItems.Invoke(new AnonymousFunction(delegate() { AddItem(e.Operations, 0); RefreshControls(); }));
+                lvItems.Invoke(new AnonymousFunction(delegate() {
+                    AddItems(e.Operations, 0);
+                    RefreshControls();
+                }));
             else
             {
-                AddItem(e.Operations, 0);
+                AddItems(e.Operations, 0);
                 RefreshControls();
             }
         }
 
         private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
         {
+            Interlocked.Add(ref pendingCount, -1);
+            Statistics(e.op, 1);
             if (e.op.status == OperationStatus.Fail)
             {
                 if (AppSettings.RetryWhenDownloadFailed && e.op.operation == Operation.Download)
                 {
                     if (lvItems.InvokeRequired)
-                        lvItems.Invoke(new AnonymousFunction(delegate() { ChangeOpStatus(e.op, OperationStatus.Pending); }));
+                        lvItems.Invoke(new AnonymousFunction(delegate() {
+                            ChangeOpStatus(e.op, OperationStatus.Pending);
+                        }));
                     else
                         ChangeOpStatus(e.op, OperationStatus.Pending);
                     return;
@@ -164,7 +181,9 @@ namespace FileExplorer
                 else if (AppSettings.RetryWhenUploadFailed && e.op.operation == Operation.Upload)
                 {
                     if (lvItems.InvokeRequired)
-                        lvItems.Invoke(new AnonymousFunction(delegate() { ChangeOpStatus(e.op, OperationStatus.Pending); }));
+                        lvItems.Invoke(new AnonymousFunction(delegate() {
+                            ChangeOpStatus(e.op, OperationStatus.Pending);
+                        }));
                     else
                         ChangeOpStatus(e.op, OperationStatus.Pending);
                     return;
@@ -327,7 +346,7 @@ namespace FileExplorer
         {
             try
             {
-                lblStatusST.Text = lvItems.Items.Count.ToString() + " items";
+                RefreshST();
                 if (updatedOp.Count > 0)
                 {
                     lock (locker)
@@ -363,43 +382,6 @@ namespace FileExplorer
 
         }
 
-        private void ChangeOpStatus(OperationInfo op, OperationStatus status)
-        {
-            op.status = status;
-            worker.queue.place(op);
-            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-            if (progress != null)
-            {
-                progress.ForeColor = GetStatusColor(op);
-                progress.Text = GetStatusText(op);
-            }
-        }
-
-        private void UpdateProgress(OperationInfo op)
-        {
-            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
-            if (progress != null)
-            {
-                progress.ProgressMaxValue = op.totalSize;
-                progress.ProgressValue = op.doneSize;
-                progress.ForeColor = GetStatusColor(op);
-                progress.ShowProgress = true;
-
-                ListViewItem item = progress.Owner;
-                if (item != null)
-                    item.SubItems[2].Text = GetSizeText(op);
-                double percent = 0;
-                if (op.totalSize > 0)
-                {
-                    percent = (double)op.doneSize / (double)op.totalSize;
-                    if (percent > 1.0f)
-                        percent = 1.0f;
-                }
-                progress.Text = string.Format("{0}%", percent.ToString("F2"));
-                item.EnsureVisible();
-            }
-        }
-
         private void RefreshControls()
         {
             btnPlay.Enabled = worker.IsPause;
@@ -407,16 +389,32 @@ namespace FileExplorer
             btnClean.Enabled = lvItems.Items.Count > 0;
             lblStatus.Text = btnPause.Enabled ? "The download/upload worker running..."
                 : "The download/upload worker stopped. Set auto start up on settings window.";
-            lblStatusST.Text = lvItems.Items.Count.ToString() + " items";
+            RefreshST();
+        }
+
+        private void RefreshST()
+        {
+            lblStatusST.Text = lvItems.Items.Count.ToString() + " items, "
+                + Interlocked.Read(ref pendingCount).ToString() + " pending, "
+                + Interlocked.Read(ref successCount).ToString() + " succeed, "
+                + Interlocked.Read(ref failedCount).ToString() + " failed, "
+                + Interlocked.Read(ref cancelCount).ToString() + " cancelled, "
+                + Interlocked.Read(ref pauseCount).ToString() + " paused"
+                ;
         }
 
         private void Bind()
         {
             lvItems.Items.Clear();
-            AddItem(worker.queue.list().ToArray());
+            Interlocked.Exchange(ref cancelCount, 0);
+            Interlocked.Exchange(ref failedCount, 0);
+            Interlocked.Exchange(ref pauseCount, 0);
+            Interlocked.Exchange(ref pendingCount, 0);
+            Interlocked.Exchange(ref successCount, 0);
+            AddItems(worker.queue.list().ToArray());
         }
 
-        private void AddItem(OperationInfo[] ops, int i = -1)
+        private void AddItems(OperationInfo[] ops, int i = -1)
         {
             lvItems.BeginUpdate();
             foreach(OperationInfo op in ops)
@@ -444,11 +442,12 @@ namespace FileExplorer
                     lvItems.Items.Insert(i, item);
                 else
                     lvItems.Items.Add(item);
+                Statistics(op, 1);
             }
             lvItems.EndUpdate();
         }
 
-        private void RemoveItem(OperationInfo[] ops)
+        private void RemoveItems(OperationInfo[] ops)
         {
             lvItems.BeginUpdate();
             foreach(OperationInfo op in ops)
@@ -458,8 +457,71 @@ namespace FileExplorer
                 {
                     lvItems.Items.Remove(progress.Owner);
                 }
+                Statistics(op, -1);
             }
             lvItems.EndUpdate();
+        }
+
+        private void UpdateProgress(OperationInfo op)
+        {
+            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
+            if (progress != null)
+            {
+                progress.ProgressMaxValue = op.totalSize;
+                progress.ProgressValue = op.doneSize;
+                progress.ForeColor = GetStatusColor(op);
+                progress.ShowProgress = true;
+
+                ListViewItem item = progress.Owner;
+                if (item != null)
+                    item.SubItems[2].Text = GetSizeText(op);
+                double percent = 0;
+                if (op.totalSize > 0)
+                {
+                    percent = (double)op.doneSize / (double)op.totalSize;
+                    if (percent > 1.0f)
+                        percent = 1.0f;
+                }
+                progress.Text = string.Format("{0}%", percent.ToString("F2"));
+                item.EnsureVisible();
+            }
+        }
+
+        private void ChangeOpStatus(OperationInfo op, OperationStatus status)
+        {
+            Statistics(op, -1);
+            op.status = status;
+            Statistics(op, 1);
+            worker.queue.place(op);
+            ProgressListview.ProgressSubItem progress = op.Tag as ProgressListview.ProgressSubItem;
+            if (progress != null)
+            {
+                progress.ForeColor = GetStatusColor(op);
+                progress.Text = GetStatusText(op);
+            }
+        }
+
+        private void Statistics(OperationInfo op, int i = 1)
+        {
+            switch (op.status)
+            {
+                case OperationStatus.Cancel:
+                    Interlocked.Add(ref cancelCount, i);
+                    break;
+                case OperationStatus.Fail:
+                    Interlocked.Add(ref failedCount, i);
+                    break;
+                case OperationStatus.Pause:
+                    Interlocked.Add(ref pauseCount, i);
+                    break;
+                case OperationStatus.Pending:
+                case OperationStatus.Processing:
+                    Interlocked.Add(ref pendingCount, i);
+                    break;
+                case OperationStatus.Success:
+                    Interlocked.Add(ref successCount, i);
+                    break;
+            }
         }
 
         private string GetStatusText(OperationInfo op)
