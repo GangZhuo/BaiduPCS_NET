@@ -196,6 +196,7 @@ namespace FileExplorer
                         u = null; // op 的状态已经被改变，且不是 OperationStatus.Processing
                     if (u != null && op.status == OperationStatus.Processing)
                     {
+                        u.IsOverWrite = AppSettings.OverWriteWhenUploadFile;
                         u.Progress += du_onProgress;
                         u.Completed += du_onCompleted;
                         u.StateFileNameDecide += du_onStateFileNameDecide;

@@ -49,6 +49,11 @@ namespace FileExplorer
         /// </summary>
         public static bool RetryWhenUploadFailed { get; set; }
 
+        /// <summary>
+        /// 上传时，覆写已经存在的文件
+        /// </summary>
+        public static bool OverWriteWhenUploadFile { get; set; }
+
         public static bool Restore()
         {
             string filename = SettingsFileName;
@@ -106,6 +111,9 @@ namespace FileExplorer
                     case "RetryWhenUploadFailed":
                         RetryWhenUploadFailed = Convert.ToBoolean(value);
                         break;
+                    case "OverWriteWhenUploadFile":
+                        OverWriteWhenUploadFile = Convert.ToBoolean(value);
+                        break;
 
                 }
             }
@@ -151,6 +159,7 @@ namespace FileExplorer
                 WriteItem(writer, "UploadMaxThreadCount", UploadMaxThreadCount.ToString());
                 WriteItem(writer, "AutomaticUploadMaxThreadCount", AutomaticUploadMaxThreadCount.ToString());
                 WriteItem(writer, "RetryWhenUploadFailed", RetryWhenUploadFailed.ToString());
+                WriteItem(writer, "OverWriteWhenUploadFile", OverWriteWhenUploadFile.ToString());
 
                 #endregion
 
