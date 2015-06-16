@@ -1082,6 +1082,9 @@ namespace FileExplorer
                 int totalCount = 0;
                 List<OperationInfo> list = new List<OperationInfo>();
                 ShowHistoryWindow();
+                string rootPath = to.path;
+                if (rootPath.EndsWith("/"))
+                    rootPath = rootPath.Substring(1);
                 foreach (string filename in openFileDialog1.FileNames)
                 {
                     FileInfo fi = new FileInfo(filename);
@@ -1090,7 +1093,7 @@ namespace FileExplorer
                         uid = uid,
                         operation = Operation.Upload,
                         from = filename,
-                        to = to.path + "/" + Path.GetFileName(filename),
+                        to = rootPath + "/" + Path.GetFileName(filename),
                         status = OperationStatus.Pending,
                         totalSize = fi.Length
                     };
@@ -1168,6 +1171,8 @@ namespace FileExplorer
             }
             else
             {
+                if (toFolder.EndsWith("/"))
+                    toFolder = toFolder.Substring(1);
                 OperationInfo op = new OperationInfo()
                 {
                     uid = uid,
