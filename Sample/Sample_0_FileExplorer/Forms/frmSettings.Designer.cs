@@ -32,6 +32,9 @@
             this.tabGeneral = new System.Windows.Forms.TabPage();
             this.ckResumeDownloadAndUploadOnStartup = new System.Windows.Forms.CheckBox();
             this.tabDownloadOptions = new System.Windows.Forms.TabPage();
+            this.label4 = new System.Windows.Forms.Label();
+            this.numMinDownloadSliceSize = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
             this.ckRetryWhenDownloadFail = new System.Windows.Forms.CheckBox();
             this.ckAutomaticDownloadMaxThreadCount = new System.Windows.Forms.CheckBox();
             this.numDownloadMaxThreadCount = new System.Windows.Forms.NumericUpDown();
@@ -44,17 +47,15 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.numMinDownloadSliceSize = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
+            this.ckOverwriteIfExists = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabDownloadOptions.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinDownloadSliceSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDownloadMaxThreadCount)).BeginInit();
             this.tabUploadOptions.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numUploadMaxThreadCount)).BeginInit();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numMinDownloadSliceSize)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -107,6 +108,46 @@
             this.tabDownloadOptions.Text = "Download Options";
             this.tabDownloadOptions.UseVisualStyleBackColor = true;
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(270, 103);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(17, 12);
+            this.label4.TabIndex = 5;
+            this.label4.Text = "KB";
+            // 
+            // numMinDownloadSliceSize
+            // 
+            this.numMinDownloadSliceSize.Location = new System.Drawing.Point(139, 101);
+            this.numMinDownloadSliceSize.Maximum = new decimal(new int[] {
+            512,
+            0,
+            0,
+            0});
+            this.numMinDownloadSliceSize.Minimum = new decimal(new int[] {
+            512,
+            0,
+            0,
+            0});
+            this.numMinDownloadSliceSize.Name = "numMinDownloadSliceSize";
+            this.numMinDownloadSliceSize.Size = new System.Drawing.Size(120, 21);
+            this.numMinDownloadSliceSize.TabIndex = 4;
+            this.numMinDownloadSliceSize.Value = new decimal(new int[] {
+            512,
+            0,
+            0,
+            0});
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(20, 103);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(101, 12);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Min slice size: ";
+            // 
             // ckRetryWhenDownloadFail
             // 
             this.ckRetryWhenDownloadFail.AutoSize = true;
@@ -155,6 +196,7 @@
             // 
             // tabUploadOptions
             // 
+            this.tabUploadOptions.Controls.Add(this.ckOverwriteIfExists);
             this.tabUploadOptions.Controls.Add(this.ckRetryWhenUploadFail);
             this.tabUploadOptions.Controls.Add(this.ckAutomaticUploadMaxThreadCount);
             this.tabUploadOptions.Controls.Add(this.numUploadMaxThreadCount);
@@ -243,45 +285,15 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // numMinDownloadSliceSize
+            // ckOverwriteIfExists
             // 
-            this.numMinDownloadSliceSize.Location = new System.Drawing.Point(139, 101);
-            this.numMinDownloadSliceSize.Maximum = new decimal(new int[] {
-            512,
-            0,
-            0,
-            0});
-            this.numMinDownloadSliceSize.Minimum = new decimal(new int[] {
-            512,
-            0,
-            0,
-            0});
-            this.numMinDownloadSliceSize.Name = "numMinDownloadSliceSize";
-            this.numMinDownloadSliceSize.Size = new System.Drawing.Size(120, 21);
-            this.numMinDownloadSliceSize.TabIndex = 4;
-            this.numMinDownloadSliceSize.Value = new decimal(new int[] {
-            512,
-            0,
-            0,
-            0});
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(20, 103);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(101, 12);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Min slice size: ";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(270, 103);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(17, 12);
-            this.label4.TabIndex = 5;
-            this.label4.Text = "KB";
+            this.ckOverwriteIfExists.AutoSize = true;
+            this.ckOverwriteIfExists.Location = new System.Drawing.Point(49, 89);
+            this.ckOverwriteIfExists.Name = "ckOverwriteIfExists";
+            this.ckOverwriteIfExists.Size = new System.Drawing.Size(138, 16);
+            this.ckOverwriteIfExists.TabIndex = 5;
+            this.ckOverwriteIfExists.Text = "Overwrite if exists";
+            this.ckOverwriteIfExists.UseVisualStyleBackColor = true;
             // 
             // frmSettings
             // 
@@ -302,12 +314,12 @@
             this.tabGeneral.PerformLayout();
             this.tabDownloadOptions.ResumeLayout(false);
             this.tabDownloadOptions.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinDownloadSliceSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDownloadMaxThreadCount)).EndInit();
             this.tabUploadOptions.ResumeLayout(false);
             this.tabUploadOptions.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numUploadMaxThreadCount)).EndInit();
             this.panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.numMinDownloadSliceSize)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -333,5 +345,6 @@
         private System.Windows.Forms.NumericUpDown numMinDownloadSliceSize;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox ckOverwriteIfExists;
     }
 }

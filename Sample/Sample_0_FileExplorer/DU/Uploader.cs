@@ -11,6 +11,10 @@ namespace FileExplorer
         public BaiduPCS pcs { get; protected set; }
         public string from { get; set; }
         public string to { get; set; }
+        /// <summary>
+        /// 设置或获取是否覆盖同名文件
+        /// </summary>
+        public bool IsOverWrite { get; set; }
         public long DoneSize { get; protected set; }
         public bool Success { get; protected set; }
         public bool IsCancelled { get; protected set; }
@@ -43,7 +47,7 @@ namespace FileExplorer
             {
                 BaiduPCS pcs = this.pcs.clone();
                 pcs.Progress += onProgress;
-                Result = pcs.upload(to, from, false);
+                Result = pcs.upload(to, from, IsOverWrite);
                 if (!Result.IsEmpty)
                 {
                     Success = true;

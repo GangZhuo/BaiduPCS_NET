@@ -27,7 +27,7 @@ namespace FileExplorer
                 BaiduPCS pcs = this.pcs.clone();
                 string filemd5 = null;
                 string slicemd5 = null;
-                Result = pcs.rapid_upload(to, from, ref filemd5, ref slicemd5, false);
+                Result = pcs.rapid_upload(to, from, ref filemd5, ref slicemd5, IsOverWrite);
                 FileMD5 = filemd5;
                 if (!Result.IsEmpty)
                 {

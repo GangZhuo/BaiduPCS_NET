@@ -33,6 +33,7 @@ namespace FileExplorer
                 numUploadMaxThreadCount.Value = AppSettings.UploadMaxThreadCount;
             ckAutomaticUploadMaxThreadCount.Checked = AppSettings.AutomaticUploadMaxThreadCount;
             ckRetryWhenUploadFail.Checked = AppSettings.RetryWhenUploadFailed;
+            ckOverwriteIfExists.Checked = AppSettings.OverWriteWhenUploadFile;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -47,6 +48,7 @@ namespace FileExplorer
             AppSettings.UploadMaxThreadCount = (int)numUploadMaxThreadCount.Value;
             AppSettings.AutomaticUploadMaxThreadCount = ckAutomaticUploadMaxThreadCount.Checked;
             AppSettings.RetryWhenUploadFailed = ckRetryWhenUploadFail.Checked;
+            AppSettings.OverWriteWhenUploadFile = ckOverwriteIfExists.Checked;
 
             AppSettings.Save();
 

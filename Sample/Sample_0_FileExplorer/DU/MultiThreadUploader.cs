@@ -103,7 +103,7 @@ namespace FileExplorer
                 List<string> md5list = new List<string>();
                 if (CheckResult(md5list)) // 检查下载结果
                 {
-                    Result = pcs.create_superfile(to, md5list.ToArray(), false);
+                    Result = pcs.create_superfile(to, md5list.ToArray(), IsOverWrite);
                     if (!Result.IsEmpty)
                     {
                         Success = true;
