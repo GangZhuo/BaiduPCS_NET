@@ -146,8 +146,12 @@ namespace FileExplorer
             slice.totalSize = br.ReadInt64();
             slice.doneSize = br.ReadInt64();
             slice.status = (SliceStatus)br.ReadInt32();
-            bs = br.ReadBytes(32);
-            slice.md5 = Encoding.UTF8.GetString(bs).Trim('\0').Trim();
+            int len = br.ReadInt32();
+            if (len > 0)
+            {
+                bs = br.ReadBytes(len);
+                slice.md5 = Encoding.UTF8.GetString(bs).Trim('\0').Trim();
+            }
             return slice;
         }
 
@@ -158,7 +162,7 @@ namespace FileExplorer
         /// <param name="slice">待写入的分片</param>
         public static void WriteSlice(BinaryWriter br, Slice slice)
         {
-            byte[] bs = new byte[32];
+            byte[] bs;
             br.Write(slice.index);
             br.Write(slice.start);
             br.Write(slice.totalSize);
@@ -166,19 +170,14 @@ namespace FileExplorer
             br.Write((int)slice.status);
             if (!string.IsNullOrEmpty(slice.md5))
             {
-                for (int i = 0; i < 32; i++)
-                {
-                    bs[i] = (byte)slice.md5[i];
-                }
+                bs = Encoding.UTF8.GetBytes(slice.md5);
+                br.Write(bs.Length);
+                br.Write(bs);
             }
             else
             {
-                for (int i = 0; i < 32; i++)
-                {
-                    bs[i] = 0;
-                }
+                br.Write((int)0);
             }
-            br.Write(bs);
         }
 
     }
