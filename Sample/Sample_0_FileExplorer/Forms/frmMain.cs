@@ -24,6 +24,7 @@ namespace FileExplorer
         private bool isMove = false;
         private frmHistory frmHistory = null;
         private DUWorker worker = null;
+        private string tempFileName = null;
 
         public frmMain()
         {
@@ -47,6 +48,7 @@ namespace FileExplorer
             worker.OnCompleted += worker_OnCompleted;
 
             ReadAppSettings();
+            tempFileName = System.IO.Path.GetTempFileName();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -109,6 +111,11 @@ namespace FileExplorer
             if (frmHistory != null)
                 frmHistory.Close();
             worker.Stop();
+            if (File.Exists(tempFileName))
+            {
+                try { File.Delete(tempFileName); }
+                catch { }
+            }
             base.OnClosing(e);
         }
 
@@ -159,6 +166,37 @@ namespace FileExplorer
             if(fileInfo.isdir)
             {
                 Go(fileInfo.path);
+            }
+            else
+            {
+                string mime = MimeMapping.GetMimeMapping(fileInfo.server_filename);
+                if (mime.StartsWith("text/"))
+                {
+                    if (fileInfo.size >= Utils.MB)
+                    {
+                        MessageBox.Show("File too big.");
+                    }
+                    else
+                    {
+                        string content = cat(fileInfo.path);
+                        if (content != null)
+                        {
+                            try
+                            {
+                                File.WriteAllText(tempFileName, content);
+                                System.Diagnostics.Process.Start("notepad.exe", "\"" + tempFileName + "\"");
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Not support mime type.");
+                }
             }
         }
 
@@ -733,26 +771,6 @@ namespace FileExplorer
             frm.ShowDialog();
         }
 
-        private string BuildCloudPath(string parentPath, params string[] args)
-        {
-            System.Text.StringBuilder sb = new StringBuilder();
-            if (parentPath != "/")
-            {
-                if (parentPath.EndsWith("/"))
-                    sb.Append(parentPath.Substring(0, parentPath.Length - 1));
-                else
-                    sb.Append(parentPath);
-            }
-            foreach (string s in args)
-            {
-                if (string.IsNullOrEmpty(s))
-                    continue;
-                sb.Append("/");
-                sb.Append(s);
-            }
-            return sb.ToString();
-        }
-
         private bool CreateNewFolder(string parentPath)
         {
             frmFileName frmFN = new frmFileName(string.Empty);
@@ -764,7 +782,7 @@ namespace FileExplorer
                 {
                     try
                     {
-                        PcsRes rc = pcs.mkdir(BuildCloudPath(parentPath, filename));
+                        PcsRes rc = pcs.mkdir(BaiduPCS.build_path(parentPath, filename));
                         if (rc != PcsRes.PCS_OK)
                         {
                             errmsg = pcs.getError();
@@ -777,12 +795,39 @@ namespace FileExplorer
                 }));
                 if (errmsg != null)
                 {
-                    MessageBox.Show("Can't create the directory \"" + BuildCloudPath(parentPath, filename) + "\": " + errmsg);
+                    MessageBox.Show("Can't create the directory \"" + BaiduPCS.build_path(parentPath, filename) + "\": " + errmsg);
                     return false;
                 }
                 return true;
             }
             return false;
+        }
+
+        private string cat(string path)
+        {
+            string content = string.Empty;
+            string errmsg = null;
+            ExecTask("cat", "get file content...", new ThreadStart(delegate()
+            {
+                try
+                {
+                    content = pcs.cat(path);
+                    if (content == null)
+                    {
+                        errmsg = "Can't get file content. " + pcs.getError();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errmsg = ex.Message;
+                }
+            }));
+            if (errmsg != null)
+            {
+                MessageBox.Show(errmsg.ToString());
+                return content;
+            }
+            return content;
         }
 
         private void Copy()
@@ -875,7 +920,7 @@ namespace FileExplorer
                     {
                         spairList.Add(new SPair(
                         fi.path,
-                        BuildCloudPath(to.path, fi.server_filename)));
+                        BaiduPCS.build_path(to.path, fi.server_filename)));
                     }
                     ar = pcs.move(spairList.ToArray());
                     if (ar.error != 0)
@@ -915,7 +960,7 @@ namespace FileExplorer
                     {
                         spairList.Add(new SPair(
                         fi.path,
-                        BuildCloudPath(to.path, fi.server_filename)));
+                        BaiduPCS.build_path(to.path, fi.server_filename)));
                     }
                     ar = pcs.copy(spairList.ToArray());
                     if (ar.error != 0)
@@ -1113,7 +1158,7 @@ namespace FileExplorer
                         uid = uid,
                         operation = Operation.Upload,
                         from = filename,
-                        to = BuildCloudPath(rootPath, Path.GetFileName(filename)),
+                        to = BaiduPCS.build_path(rootPath, Path.GetFileName(filename)),
                         status = OperationStatus.Pending,
                         totalSize = fi.Length
                     };
@@ -1159,8 +1204,8 @@ namespace FileExplorer
                 ShowHistoryWindow();
                 ExecTask("Upload", "Add files to upload queue...", new ThreadStart(delegate()
                 {
-                    AddFilesToUploadQueue(folderBrowserDialog1.SelectedPath, 
-                        BuildCloudPath(to.path, Path.GetFileName(folderBrowserDialog1.SelectedPath)),
+                    AddFilesToUploadQueue(folderBrowserDialog1.SelectedPath,
+                        BaiduPCS.build_path(to.path, Path.GetFileName(folderBrowserDialog1.SelectedPath)),
                         uid, list, OperationStatus.Pending, ref totalCount);
                 }));
                 if (list.Count > 0)
@@ -1186,7 +1231,7 @@ namespace FileExplorer
                 string[] files = Directory.GetFiles(from);
                 foreach(string f in files)
                 {
-                    AddFilesToUploadQueue(f, BuildCloudPath(toFolder, Path.GetFileName(f)), uid, list, status, ref totalCount);
+                    AddFilesToUploadQueue(f, BaiduPCS.build_path(toFolder, Path.GetFileName(f)), uid, list, status, ref totalCount);
                 }
             }
             else
@@ -1198,7 +1243,7 @@ namespace FileExplorer
                     uid = uid,
                     operation = Operation.Upload,
                     from = fi.FullName,
-                    to = BuildCloudPath(toFolder, Path.GetFileName(fi.FullName)),
+                    to = BaiduPCS.build_path(toFolder, Path.GetFileName(fi.FullName)),
                     status = OperationStatus.Pending,
                     totalSize = fi.Length
                 };

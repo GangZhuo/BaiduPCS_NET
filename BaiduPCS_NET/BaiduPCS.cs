@@ -753,6 +753,26 @@ namespace BaiduPCS_NET
 
         #region Static Methods
 
+        public static string build_path(string parent_path, params string[] args)
+        {
+            System.Text.StringBuilder sb = new StringBuilder();
+            if (parent_path != "/")
+            {
+                if (parent_path.EndsWith("/"))
+                    sb.Append(parent_path.Substring(0, parent_path.Length - 1));
+                else
+                    sb.Append(parent_path);
+            }
+            foreach (string s in args)
+            {
+                if (string.IsNullOrEmpty(s))
+                    continue;
+                sb.Append("/");
+                sb.Append(s);
+            }
+            return sb.ToString();
+        }
+
         /// <summary>
         /// 获取 PCS SDK 的版本
         /// </summary>
