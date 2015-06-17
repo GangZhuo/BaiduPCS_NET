@@ -733,6 +733,26 @@ namespace FileExplorer
             frm.ShowDialog();
         }
 
+        private string BuildCloudPath(string parentPath, params string[] args)
+        {
+            System.Text.StringBuilder sb = new StringBuilder();
+            if (parentPath != "/")
+            {
+                if (parentPath.EndsWith("/"))
+                    sb.Append(parentPath.Substring(0, parentPath.Length - 1));
+                else
+                    sb.Append(parentPath);
+            }
+            foreach (string s in args)
+            {
+                if (string.IsNullOrEmpty(s))
+                    continue;
+                sb.Append("/");
+                sb.Append(s);
+            }
+            return sb.ToString();
+        }
+
         private bool CreateNewFolder(string parentPath)
         {
             frmFileName frmFN = new frmFileName(string.Empty);
@@ -744,7 +764,7 @@ namespace FileExplorer
                 {
                     try
                     {
-                        PcsRes rc = pcs.mkdir(parentPath + "/" + filename);
+                        PcsRes rc = pcs.mkdir(BuildCloudPath(parentPath, filename));
                         if (rc != PcsRes.PCS_OK)
                         {
                             errmsg = pcs.getError();
@@ -757,7 +777,7 @@ namespace FileExplorer
                 }));
                 if (errmsg != null)
                 {
-                    MessageBox.Show("Can't create the directory \"" + parentPath + "/" + filename + "\": " + errmsg);
+                    MessageBox.Show("Can't create the directory \"" + BuildCloudPath(parentPath, filename) + "\": " + errmsg);
                     return false;
                 }
                 return true;
@@ -855,7 +875,7 @@ namespace FileExplorer
                     {
                         spairList.Add(new SPair(
                         fi.path,
-                        to.path + "/" + fi.server_filename));
+                        BuildCloudPath(to.path, fi.server_filename)));
                     }
                     ar = pcs.move(spairList.ToArray());
                     if (ar.error != 0)
@@ -895,7 +915,7 @@ namespace FileExplorer
                     {
                         spairList.Add(new SPair(
                         fi.path,
-                        to.path + "/" + fi.server_filename));
+                        BuildCloudPath(to.path, fi.server_filename)));
                     }
                     ar = pcs.copy(spairList.ToArray());
                     if (ar.error != 0)
@@ -1093,7 +1113,7 @@ namespace FileExplorer
                         uid = uid,
                         operation = Operation.Upload,
                         from = filename,
-                        to = rootPath + "/" + Path.GetFileName(filename),
+                        to = BuildCloudPath(rootPath, Path.GetFileName(filename)),
                         status = OperationStatus.Pending,
                         totalSize = fi.Length
                     };
@@ -1140,7 +1160,7 @@ namespace FileExplorer
                 ExecTask("Upload", "Add files to upload queue...", new ThreadStart(delegate()
                 {
                     AddFilesToUploadQueue(folderBrowserDialog1.SelectedPath, 
-                        to.path + "/" + Path.GetFileName(folderBrowserDialog1.SelectedPath),
+                        BuildCloudPath(to.path, Path.GetFileName(folderBrowserDialog1.SelectedPath)),
                         uid, list, OperationStatus.Pending, ref totalCount);
                 }));
                 if (list.Count > 0)
@@ -1166,7 +1186,7 @@ namespace FileExplorer
                 string[] files = Directory.GetFiles(from);
                 foreach(string f in files)
                 {
-                    AddFilesToUploadQueue(f, toFolder + "/" + Path.GetFileName(f), uid, list, status, ref totalCount);
+                    AddFilesToUploadQueue(f, BuildCloudPath(toFolder, Path.GetFileName(f)), uid, list, status, ref totalCount);
                 }
             }
             else
@@ -1178,7 +1198,7 @@ namespace FileExplorer
                     uid = uid,
                     operation = Operation.Upload,
                     from = fi.FullName,
-                    to = toFolder + "/" + Path.GetFileName(fi.FullName),
+                    to = BuildCloudPath(toFolder, Path.GetFileName(fi.FullName)),
                     status = OperationStatus.Pending,
                     totalSize = fi.Length
                 };
