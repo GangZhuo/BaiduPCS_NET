@@ -401,11 +401,11 @@ namespace FileExplorer
 
                 AppSettings.AutomaticDownloadMaxThreadCount = true;
                 AppSettings.DownloadMaxThreadCount = 1;
-                AppSettings.RetryWhenDownloadFailed = true;
+                AppSettings.RetryWhenDownloadFailed = false;
                 AppSettings.MinDownloasSliceSize = MultiThreadDownloader.MIN_SLICE_SIZE / Utils.KB;
 
                 AppSettings.AutomaticUploadMaxThreadCount = true;
-                AppSettings.RetryWhenUploadFailed = true;
+                AppSettings.RetryWhenUploadFailed = false;
                 AppSettings.UploadMaxThreadCount = 1;
             }
         }
