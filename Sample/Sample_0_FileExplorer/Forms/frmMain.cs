@@ -346,6 +346,10 @@ namespace FileExplorer
         {
             if (MessageBox.Show("Are you sure logout?", "Logout", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
             {
+                worker.Stop();
+                if(frmHistory != null)
+                    frmHistory.Close();
+
                 Logout();
 
                 BindFileList(null);
@@ -355,11 +359,6 @@ namespace FileExplorer
                 sources.Clear();
                 isMove = false;
                 lastSearchPath = string.Empty;
-
-                if(frmHistory != null)
-                    frmHistory.Close();
-
-                worker.Stop();
 
                 if (Login())
                 {
