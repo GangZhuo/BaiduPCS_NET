@@ -30,10 +30,10 @@
 * 2. 上传：软件中打开上传的目标目录，在空白处右击，在弹出的菜单中选择 "Upload file" 或者 "Upload Directory"。
 * 3. 无论是上传还是下载必须启动其工作线程，可能在弹出的队列窗口中启动工作进程。
 
-#### 下载 .net 4.0 预编译文件: [BaiduCloudDisk for .Net 4.0] 。
+#### 下载 .net 4.0 预编译文件: [BaiduCloudDisk-v0.1-alpha.net4.rar] 。
 ![Main Window](https://raw.githubusercontent.com/GangZhuo/BaiduPCS_NET/master/Sample/Sample_0_FileExplorer/main-window.png)
 ![History Window](https://raw.githubusercontent.com/GangZhuo/BaiduPCS_NET/master/Sample/Sample_0_FileExplorer/history-window.png)
 
 [BaiduPCS]: https://github.com/GangZhuo/BaiduPCS
-[BaiduCloudDisk for .Net 4.0]: https://sourceforge.net/projects/baidupcs/files/Windows/
+[BaiduCloudDisk-v0.1-alpha.net4.rar]: https://github.com/GangZhuo/BaiduPCS_NET/releases
 [编译-windows]:   https://github.com/GangZhuo/BaiduPCS/blob/master/README.md#编译-windows
