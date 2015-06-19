@@ -226,9 +226,7 @@ namespace BaiduPCS_NET
                 string captchaStr;
                 if (this._OnGetCaptcha(this, imgBytes, out captchaStr, this.GetCaptchaUserData))
                 {
-                    byte[] captchaBytes = Encoding.UTF8.GetBytes(captchaStr);
-                    Marshal.Copy(captchaBytes, 0, captcha, captchaBytes.Length < captchaSize ? captchaBytes.Length : (int)captchaSize);
-                    Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, NativeUtils.IntPtrAdd(captcha, captchaBytes.Length), 1);
+                    NativeUtils.str_set(captcha, captchaStr, (int)captchaSize - 1, true);
                     return NativeConst.True;
                 }
             }
@@ -270,7 +268,7 @@ namespace BaiduPCS_NET
         {
             string key = null;
             if (userdata != IntPtr.Zero)
-                key = NativeUtils.str(userdata);
+                key = NativeUtils.str(userdata); //因为使用系统默认编码送入的，因此使用同样的编码读入。
             UserState state = null;
             if (!string.IsNullOrEmpty(key))
                 state = getState(key);
@@ -780,7 +778,7 @@ namespace BaiduPCS_NET
         public static string pcs_version()
         {
             IntPtr r = NativeMethods.pcs_version();
-            return NativeUtils.str(r);
+            return NativeUtils.utf8_str(r);
         }
 
         /// <summary>
@@ -834,7 +832,7 @@ namespace BaiduPCS_NET
         {
             IntPtr r = NativeMethods.pcs_sysUID(pcs.Handle);
             if (r != IntPtr.Zero)
-                return NativeUtils.str(r);
+                return NativeUtils.utf8_str(r);
             return null;
         }
 
@@ -847,7 +845,7 @@ namespace BaiduPCS_NET
         {
             IntPtr r = NativeMethods.pcs_strerror(pcs.Handle);
             if (r != IntPtr.Zero)
-                return NativeUtils.str(r);
+                return NativeUtils.utf8_str(r);
             return null;
         }
 
@@ -866,7 +864,7 @@ namespace BaiduPCS_NET
                 /* 值为以0结尾的C格式字符串 */
                 case PcsOption.PCS_OPTION_USERNAME:
                     {
-                        IntPtr v = NativeUtils.str_ptr((string)value);
+                        IntPtr v = NativeUtils.utf8_str_ptr((string)value);
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                         NativeUtils.free_str_ptr(v);
                     }
@@ -875,7 +873,7 @@ namespace BaiduPCS_NET
                 /* 值为以0结尾的C格式字符串 */
                 case PcsOption.PCS_OPTION_PASSWORD:
                     {
-                        IntPtr v = NativeUtils.str_ptr((string)value);
+                        IntPtr v = NativeUtils.utf8_str_ptr((string)value);
                         r = (PcsRes)NativeMethods.pcs_setopt(pcs.Handle, (int)opt, v);
                         NativeUtils.free_str_ptr(v);
                     }
@@ -1078,7 +1076,7 @@ namespace BaiduPCS_NET
         /// <returns>成功后返回PCS_OK，失败则返回错误编号</returns>
         public static PcsRes pcs_mkdir(BaiduPCS pcs, string path)
         {
-            IntPtr pathPtr = NativeUtils.str_ptr(path);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             PcsRes r = (PcsRes)NativeMethods.pcs_mkdir(pcs.Handle, pathPtr);
             NativeUtils.free_str_ptr(pathPtr);
             return r;
@@ -1096,8 +1094,8 @@ namespace BaiduPCS_NET
         /// <returns>返回文件列表</returns>
         public static PcsFileInfo[] pcs_list(BaiduPCS pcs, string dir, int pageindex, int pagesize, string order = "name", bool desc = false)
         {
-            IntPtr dirPtr = NativeUtils.str_ptr(dir);
-            IntPtr orderPtr = NativeUtils.str_ptr(order);
+            IntPtr dirPtr = NativeUtils.utf8_str_ptr(dir);
+            IntPtr orderPtr = NativeUtils.utf8_str_ptr(order);
             IntPtr listPtr = NativeMethods.pcs_list(pcs.Handle, dirPtr, pageindex, pagesize, orderPtr, desc ? NativeConst.True : NativeConst.False);
             NativeUtils.free_str_ptr(dirPtr);
             NativeUtils.free_str_ptr(orderPtr);
@@ -1117,8 +1115,8 @@ namespace BaiduPCS_NET
         /// <returns>返回文件列表。可根据 pcs_strerror() 的返回值判断是否出错。</returns>
         public static PcsFileInfo[] pcs_search(BaiduPCS pcs, string dir, string key, bool recursion = false)
         {
-            IntPtr dirPtr = NativeUtils.str_ptr(dir);
-            IntPtr keyPtr = NativeUtils.str_ptr(key);
+            IntPtr dirPtr = NativeUtils.utf8_str_ptr(dir);
+            IntPtr keyPtr = NativeUtils.utf8_str_ptr(key);
             IntPtr listPtr = NativeMethods.pcs_search(pcs.Handle, dirPtr, keyPtr, recursion ? NativeConst.True : NativeConst.False);
             NativeUtils.free_str_ptr(dirPtr);
             NativeUtils.free_str_ptr(keyPtr);
@@ -1136,7 +1134,7 @@ namespace BaiduPCS_NET
         /// <returns>返回文件元数据</returns>
         public static PcsFileInfo pcs_meta(BaiduPCS pcs, string path)
         {
-            IntPtr pathPtr = NativeUtils.str_ptr(path);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             IntPtr fiptr = NativeMethods.pcs_meta(pcs.Handle, pathPtr);
             NativeUtils.free_str_ptr(pathPtr);
             if (fiptr == IntPtr.Zero)
@@ -1244,7 +1242,7 @@ namespace BaiduPCS_NET
         public static string pcs_cat(BaiduPCS pcs, string path)
         {
             uint sz = 0;
-            IntPtr pathPtr = NativeUtils.str_ptr(path);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             IntPtr sp = NativeMethods.pcs_cat(pcs.Handle, pathPtr, ref sz);
             NativeUtils.free_str_ptr(pathPtr);
             if (sp == IntPtr.Zero)
@@ -1265,7 +1263,7 @@ namespace BaiduPCS_NET
         /// <returns>成功后返回PCS_OK，失败则返回错误编号</returns>
         public static PcsRes pcs_download(BaiduPCS pcs, string path, long max_speed, long resume_from, long max_length)
         {
-            IntPtr pathPtr = NativeUtils.str_ptr(path);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             PcsRes r = (PcsRes)NativeMethods.pcs_download(pcs.Handle, pathPtr, max_speed, resume_from, max_length);
             NativeUtils.free_str_ptr(pathPtr);
             return r;
@@ -1279,7 +1277,7 @@ namespace BaiduPCS_NET
         /// <returns>返回文件的大小</returns>
         public static long pcs_get_download_filesize(BaiduPCS pcs, string path)
         {
-            IntPtr pathPtr = NativeUtils.str_ptr(path);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             long r = NativeMethods.pcs_get_download_filesize(pcs.Handle, pathPtr);
             NativeUtils.free_str_ptr(pathPtr);
             return r;
@@ -1295,7 +1293,7 @@ namespace BaiduPCS_NET
         /// <returns>返回上传的文件的元数据 </returns>
         public static PcsFileInfo pcs_upload_buffer(BaiduPCS pcs, string path, byte[] buffer, bool overwrite = false)
         {
-            IntPtr pathPtr = NativeUtils.str_ptr(path);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             IntPtr bufptr = Marshal.AllocHGlobal(buffer.Length);
             Marshal.Copy(buffer, 0, bufptr, buffer.Length);
             IntPtr fiptr = NativeMethods.pcs_upload_buffer(pcs.Handle, pathPtr, overwrite ? NativeConst.True : NativeConst.False, bufptr, (uint)buffer.Length);
@@ -1367,7 +1365,7 @@ namespace BaiduPCS_NET
         /// <returns>返回合并后的文件的元数据</returns>
         public static PcsFileInfo pcs_create_superfile(BaiduPCS pcs, string topath, string[] block_list, bool overwrite = false)
         {
-            IntPtr pathPtr = NativeUtils.str_ptr(topath);
+            IntPtr pathPtr = NativeUtils.utf8_str_ptr(topath);
             IntPtr slPtr = NativeUtils.slist_ptr(block_list);
             IntPtr fiptr = NativeMethods.pcs_create_superfile(pcs.Handle, pathPtr, overwrite ? NativeConst.True : NativeConst.False, slPtr);
             NativeUtils.free_str_ptr(pathPtr);
@@ -1392,7 +1390,7 @@ namespace BaiduPCS_NET
         /// <returns>返回文件的元数据</returns>
         public static PcsFileInfo pcs_upload(BaiduPCS pcs, string topath, string local_filename, bool overwrite = false)
         {
-            IntPtr remotePtr = NativeUtils.str_ptr(topath);
+            IntPtr remotePtr = NativeUtils.utf8_str_ptr(topath);
             IntPtr localPtr = NativeUtils.str_ptr(local_filename);
             IntPtr fiptr = NativeMethods.pcs_upload(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False, localPtr);
             NativeUtils.free_str_ptr(remotePtr);
@@ -1422,7 +1420,7 @@ namespace BaiduPCS_NET
                 onReadSlice = read_func,
                 userData = userdata
             };
-            IntPtr remotePtr = NativeUtils.str_ptr(to_path);
+            IntPtr remotePtr = NativeUtils.utf8_str_ptr(to_path);
             string key = saveState(state);
             IntPtr keyPtr = NativeUtils.str_ptr(key);
             IntPtr fiptr = NativeMethods.pcs_upload_s(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False,
@@ -1467,7 +1465,7 @@ namespace BaiduPCS_NET
             bool r = NativeMethods.pcs_md5_file(pcs.Handle, localPtr, md5Ptr) != NativeConst.False;
             NativeUtils.free_str_ptr(localPtr);
             if (r)
-                md5 = NativeUtils.str(md5Ptr);
+                md5 = NativeUtils.utf8_str(md5Ptr);
             else
                 md5 = string.Empty;
             Marshal.FreeHGlobal(md5Ptr);
@@ -1497,7 +1495,7 @@ namespace BaiduPCS_NET
             NativeUtils.free_str_ptr(keyPtr);
             removeState(key);
             if (r)
-                md5 = NativeUtils.str(md5Ptr);
+                md5 = NativeUtils.utf8_str(md5Ptr);
             else
                 md5 = string.Empty;
             Marshal.FreeHGlobal(md5Ptr);
@@ -1521,7 +1519,7 @@ namespace BaiduPCS_NET
             bool r = NativeMethods.pcs_md5_file_slice(pcs.Handle, localPtr, offset, length, md5Ptr) != NativeConst.False;
             NativeUtils.free_str_ptr(localPtr);
             if (r)
-                md5 = NativeUtils.str(md5Ptr);
+                md5 = NativeUtils.utf8_str(md5Ptr);
             else
                 md5 = string.Empty;
             Marshal.FreeHGlobal(md5Ptr);
@@ -1540,31 +1538,21 @@ namespace BaiduPCS_NET
         /// <returns>返回上传的文件的元数据</returns>
         public static PcsFileInfo pcs_rapid_upload(BaiduPCS pcs, string topath, string local_filename, ref string file_md5, ref string slice_md5, bool overwrite = false)
         {
-            IntPtr remotePtr = NativeUtils.str_ptr(topath);
+            IntPtr remotePtr = NativeUtils.utf8_str_ptr(topath);
             IntPtr localPtr = NativeUtils.str_ptr(local_filename);
             IntPtr fileMd5Ptr = Marshal.AllocHGlobal(36);
             IntPtr sliceMd5Ptr = Marshal.AllocHGlobal(36);
             if (!string.IsNullOrEmpty(file_md5) && file_md5.Length == 32)
-            {
-                byte[] bytes = Encoding.UTF8.GetBytes(file_md5);
-                Marshal.Copy(bytes, 0, fileMd5Ptr, bytes.Length);
-            }
+                NativeUtils.str_set(fileMd5Ptr, file_md5);
             else
-            {
                 Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, fileMd5Ptr, 36); /* need fix? */
-            }
             if (!string.IsNullOrEmpty(slice_md5) && slice_md5.Length == 32)
-            {
-                byte[] bytes = Encoding.UTF8.GetBytes(slice_md5);
-                Marshal.Copy(bytes, 0, sliceMd5Ptr, bytes.Length);
-            }
+                NativeUtils.str_set(sliceMd5Ptr, slice_md5);
             else
-            {
                 Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, sliceMd5Ptr, 36); /* need fix? */
-            }
             IntPtr fiptr = NativeMethods.pcs_rapid_upload(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False, localPtr, fileMd5Ptr, sliceMd5Ptr);
-            file_md5 = NativeUtils.str(fileMd5Ptr);
-            slice_md5 = NativeUtils.str(sliceMd5Ptr);
+            file_md5 = NativeUtils.utf8_str(fileMd5Ptr);
+            slice_md5 = NativeUtils.utf8_str(sliceMd5Ptr);
             NativeUtils.free_str_ptr(remotePtr);
             NativeUtils.free_str_ptr(localPtr);
             Marshal.FreeHGlobal(fileMd5Ptr);
@@ -1589,17 +1577,15 @@ namespace BaiduPCS_NET
         /// <returns>返回上传的文件的元数据</returns>
         public static PcsFileInfo pcs_rapid_upload_r(BaiduPCS pcs, string topath, long filesize, string file_md5, string slice_md5, bool overwrite = false)
         {
-            IntPtr remotePtr = NativeUtils.str_ptr(topath);
+            IntPtr remotePtr = NativeUtils.utf8_str_ptr(topath);
             IntPtr fileMd5Ptr = Marshal.AllocHGlobal(36);
             IntPtr sliceMd5Ptr = Marshal.AllocHGlobal(36);
-            byte[] bytes = Encoding.UTF8.GetBytes(file_md5);
-            Marshal.Copy(bytes, 0, fileMd5Ptr, bytes.Length);
-            bytes = Encoding.UTF8.GetBytes(slice_md5);
-            Marshal.Copy(bytes, 0, sliceMd5Ptr, bytes.Length);
+            NativeUtils.str_set(fileMd5Ptr, file_md5);
+            NativeUtils.str_set(sliceMd5Ptr, slice_md5);
             IntPtr fiptr = NativeMethods.pcs_rapid_upload_r(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False,
                 filesize, fileMd5Ptr, sliceMd5Ptr);
-            file_md5 = NativeUtils.str(fileMd5Ptr);
-            slice_md5 = NativeUtils.str(sliceMd5Ptr);
+            file_md5 = NativeUtils.utf8_str(fileMd5Ptr);
+            slice_md5 = NativeUtils.utf8_str(sliceMd5Ptr);
             NativeUtils.free_str_ptr(remotePtr);
             Marshal.FreeHGlobal(fileMd5Ptr);
             Marshal.FreeHGlobal(sliceMd5Ptr);
@@ -1654,7 +1640,7 @@ namespace BaiduPCS_NET
             IntPtr sPtr = NativeMethods.pcs_req_rawdata(pcs.Handle, sizePtr, encodePtrPtr);
             string html = null;
             if (sPtr != IntPtr.Zero)
-                html = NativeUtils.str(sPtr);
+                html = NativeUtils.utf8_str(sPtr);
             size = Marshal.ReadInt32(sizePtr);
             IntPtr encodePtr = Marshal.ReadIntPtr(encodePtrPtr);
             if (encodePtr != IntPtr.Zero)
@@ -1680,7 +1666,7 @@ namespace BaiduPCS_NET
         /// <param name="errmsg">错误消息</param>
         public static void pcs_set_serrmsg(BaiduPCS pcs, string errmsg)
         {
-            IntPtr errmsgPtr = NativeUtils.str_ptr(errmsg);
+            IntPtr errmsgPtr = NativeUtils.utf8_str_ptr(errmsg);
             NativeMethods.pcs_set_serrmsg(pcs.Handle, errmsgPtr);
             NativeUtils.free_str_ptr(errmsgPtr);
         }
@@ -1692,7 +1678,7 @@ namespace BaiduPCS_NET
         /// <param name="errmsg">错误消息</param>
         public static void pcs_cat_serrmsg(BaiduPCS pcs, string errmsg)
         {
-            IntPtr errmsgPtr = NativeUtils.str_ptr(errmsg);
+            IntPtr errmsgPtr = NativeUtils.utf8_str_ptr(errmsg);
             NativeMethods.pcs_cat_serrmsg(pcs.Handle, errmsgPtr);
             NativeUtils.free_str_ptr(errmsgPtr);
         }

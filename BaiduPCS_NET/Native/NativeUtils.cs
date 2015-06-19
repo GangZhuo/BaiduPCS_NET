@@ -31,7 +31,7 @@ namespace BaiduPCS_NET.Native
         public static string pcs_time2str(long time)
         {
             IntPtr r = NativeMethods.pcs_time2str(time);
-            string s = str(r);
+            string s = utf8_str(r);
             return s;
         }
 
@@ -44,7 +44,7 @@ namespace BaiduPCS_NET.Native
         {
             IntPtr src = str_ptr(s);
             IntPtr r = NativeMethods.pcs_md5_string(src);
-            string md5 = str(r);
+            string md5 = utf8_str(r);
             free_str_ptr(src);
             return md5;
         }
@@ -60,7 +60,7 @@ namespace BaiduPCS_NET.Native
             Marshal.Copy(bytes, 0, src, bytes.Length);
             IntPtr r = NativeMethods.pcs_md5_bytes(src, bytes.Length);
             Marshal.FreeHGlobal(src);
-            string md5 = str(r);
+            string md5 = utf8_str(r);
             return md5;
         }
 
@@ -81,7 +81,7 @@ namespace BaiduPCS_NET.Native
             for (int i = 0; i < list.Length; i++)
             {
                 item = new NativePcsSList();
-                item.str = str_ptr(list[i]);
+                item.str = utf8_str_ptr(list[i]);
                 if (i < list.Length - 1) /*不是最后一个*/
                     item.next = IntPtrAdd(p, Marshal.SizeOf(typeof(NativePcsSList)));
                 else
@@ -127,8 +127,8 @@ namespace BaiduPCS_NET.Native
             for (int i = 0; i < list.Length; i++)
             {
                 item = new NativePcsSList2();
-                item.str1 = str_ptr(list[i].str1);
-                item.str2 = str_ptr(list[i].str2);
+                item.str1 = utf8_str_ptr(list[i].str1);
+                item.str2 = utf8_str_ptr(list[i].str2);
                 if (i < list.Length - 1) /*不是最后一个*/
                     item.next = IntPtrAdd(p, Marshal.SizeOf(typeof(NativePcsSList2)));
                 else
@@ -160,16 +160,81 @@ namespace BaiduPCS_NET.Native
         }
 
         /// <summary>
-        /// 复制 s 到非托管空间
+        /// 复制 s 到非托管空间。
+        /// 使用系统默认编码送入数据。
         /// </summary>
         /// <param name="s">待复制的字符串</param>
         /// <returns>返回非托管空间的指针</returns>
         public static IntPtr str_ptr(string s)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(s);
+            return str_ptr(s, Encoding.Default);
+        }
+
+        /// <summary>
+        /// 复制 s 到非托管空间。
+        /// 使用 UTF-8 编码。
+        /// </summary>
+        /// <param name="s">待复制的字符串</param>
+        /// <returns>返回非托管空间的指针</returns>
+        public static IntPtr utf8_str_ptr(string s)
+        {
+            return str_ptr(s, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 复制 s 到非托管空间。
+        /// 使用 encoding 指定的编码。
+        /// </summary>
+        /// <param name="s">待复制的字符串</param>
+        /// <param name="encoding">非托管空间的字符编码</param>
+        /// <returns>返回非托管空间的指针</returns>
+        public static IntPtr str_ptr(string s, Encoding encoding)
+        {
+            byte[] bytes = encoding.GetBytes(s); // 非托管空间
             IntPtr ptr = Marshal.AllocHGlobal(bytes.Length + 1);
             Marshal.Copy(bytes, 0, ptr, bytes.Length);
             Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, IntPtrAdd(ptr, bytes.Length), 1);
+            return ptr;
+        }
+
+        /// <summary>
+        /// 复制 s 到 ptr 指定的非托管空间。
+        /// </summary>
+        /// <param name="ptr">非托管空间的指针</param>
+        /// <param name="s">待复制的字符串</param>
+        /// <returns>返回非托管空间的指针</returns>
+        public static IntPtr str_set(IntPtr ptr, string s, int maxSize = -1, bool setTerminal = true)
+        {
+            // 非托管空间的字节编码是操作系统的ASCII代码页编码，因此我应使用同样的编码来送入字符串。
+            // 如果明确要求使用 UTF-8 等其他编码送入字符的话，请使用 str_utf8_set() 函数。
+            return str_set(ptr, s, Encoding.Default, maxSize, setTerminal);
+        }
+
+        public static IntPtr str_utf8_set(IntPtr ptr, string s, int maxSize = -1, bool setTerminal = true)
+        {
+            return str_set(ptr, s, Encoding.UTF8, maxSize, setTerminal);
+        }
+
+        /// <summary>
+        /// 复制 s 到 ptr 指定的非托管空间。
+        /// </summary>
+        /// <param name="ptr">非托管空间指针</param>
+        /// <param name="s">待复制的字符串</param>
+        /// <param name="encoding">非托管空间的字符编码</param>
+        /// <param name="maxSize">最多复制多少个字节，不包含 '\0'</param>
+        /// <param name="setTerminal">是否设置结尾符'\0'</param>
+        /// <returns></returns>
+        public static IntPtr str_set(IntPtr ptr, string s, Encoding encoding, int maxSize = -1, bool setTerminal = true)
+        {
+            byte[] bytes = encoding.GetBytes(s);
+            if (maxSize == -1)
+                maxSize = bytes.Length;
+            else if (maxSize > bytes.Length)
+                maxSize = bytes.Length;
+            Marshal.Copy(bytes, 0, ptr, maxSize);
+            //set NULL terminal
+            if (setTerminal)
+                Marshal.Copy(NativeConst.ZERO_MATRIX_8X8, 0, NativeUtils.IntPtrAdd(ptr, maxSize), 1);
             return ptr;
         }
 
@@ -183,21 +248,46 @@ namespace BaiduPCS_NET.Native
         }
 
         /// <summary>
-        /// 转换非托管空间的 C 语言格式的以 '\0' 结尾的字符串为 .NET 空间的 String 对象
+        /// 转换非托管空间的 C 语言格式的以 '\0' 结尾的字符串为 .NET 空间的 String 对象。
+        /// 使用系统默认编码解码，如果检测到 UTF-8 的 BOM，则使用 UTF-8 解码。
         /// </summary>
         /// <param name="p">指向待转换的非托管空间的字符串开始位置的指针</param>
-        /// <returns></returns>
+        /// <returns>返回字符串</returns>
         public static string str(IntPtr p)
+        {
+            return str(p, Encoding.Default);
+        }
+
+        /// <summary>
+        /// 转换非托管空间的 C 语言格式的以 '\0' 结尾的字符串为 .NET 空间的 String 对象。
+        /// 使用使用 UTF-8 解码。
+        /// </summary>
+        /// <param name="p">指向待转换的非托管空间的字符串开始位置的指针</param>
+        /// <returns>返回字符串</returns>
+        public static string utf8_str(IntPtr p)
+        {
+            //非托管空间中返回的字符是 UTF-8 编码的，因此我们应该使用此函数
+            return str(p, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 转换非托管空间的 C 语言格式的以 '\0' 结尾的字符串为 .NET 空间的 String 对象。
+        /// 使用 encoding 指定的编码解码，如果检测到 UTF-8 的 BOM，则使用 UTF-8 解码。
+        /// </summary>
+        /// <param name="p">指向待转换的非托管空间的字符串开始位置的指针</param>
+        /// <param name="encoding">编码类型</param>
+        /// <returns>返回字符串</returns>
+        public static string str(IntPtr p, Encoding encoding)
         {
             if (p == IntPtr.Zero)
                 return string.Empty;
             int len = NativeMethods.pcs_strlen(p);
             byte[] bytes = new byte[len];
             Marshal.Copy(p, bytes, 0, len);
-            if (bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
                 return Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
             else
-                return Encoding.UTF8.GetString(bytes);
+                return encoding.GetString(bytes);
         }
 
         /// <summary>

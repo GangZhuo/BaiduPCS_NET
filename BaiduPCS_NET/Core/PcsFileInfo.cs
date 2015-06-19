@@ -29,8 +29,8 @@ namespace BaiduPCS_NET
         public PcsFileInfo(NativePcsFileInfo fi)
         {
             this.fs_id = fi.fs_id;
-            this.path = NativeUtils.str(fi.path);
-            this.server_filename = NativeUtils.str(fi.server_filename);
+            this.path = NativeUtils.utf8_str(fi.path);
+            this.server_filename = NativeUtils.utf8_str(fi.server_filename);
             this.server_ctime = fi.server_ctime;
             this.server_mtime = fi.server_mtime;
             this.local_ctime = fi.local_ctime;
@@ -40,8 +40,8 @@ namespace BaiduPCS_NET
             this.isdir = fi.isdir;
             this.dir_empty = fi.dir_empty;
             this.empty = fi.empty;
-            this.md5 = NativeUtils.str(fi.md5);
-            this.dlink = NativeUtils.str(fi.dlink);
+            this.md5 = NativeUtils.utf8_str(fi.md5);
+            this.dlink = NativeUtils.utf8_str(fi.dlink);
             this.block_list = null;
             if (fi.block_list != IntPtr.Zero)
             {
@@ -51,7 +51,7 @@ namespace BaiduPCS_NET
                     IntPtr p = Marshal.ReadIntPtr(fi.block_list, i * Marshal.SizeOf(typeof(IntPtr)));
                     if (p != IntPtr.Zero)
                     {
-                        list.Add(NativeUtils.str(p));
+                        list.Add(NativeUtils.utf8_str(p));
                     }
                     else
                     {

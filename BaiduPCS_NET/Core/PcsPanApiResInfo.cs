@@ -13,7 +13,7 @@ namespace BaiduPCS_NET
 
         public PcsPanApiResInfo(NativePcsPanApiResInfo fi)
         {
-            this.path = NativeUtils.str(fi.path);
+            this.path = NativeUtils.utf8_str(fi.path);
             this.error = fi.error;
         }
     }
