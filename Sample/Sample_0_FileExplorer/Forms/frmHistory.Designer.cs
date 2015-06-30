@@ -44,11 +44,13 @@
             this.btnPlay = new System.Windows.Forms.ToolStripButton();
             this.btnPause = new System.Windows.Forms.ToolStripButton();
             this.btnClean = new System.Windows.Forms.ToolStripButton();
+            this.lblSpeed = new System.Windows.Forms.ToolStripStatusLabel();
             this.lvItems = new FileExplorer.ProgressListview();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -58,8 +60,10 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblStatus,
+            this.lblSpeed,
+            this.toolStripStatusLabel1,
             this.lblStatusST});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 452);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 492);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(636, 22);
             this.statusStrip1.TabIndex = 3;
@@ -70,15 +74,17 @@
             this.lblStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.lblStatus.Size = new System.Drawing.Size(609, 17);
+            this.lblStatus.Size = new System.Drawing.Size(305, 17);
             this.lblStatus.Spring = true;
             this.lblStatus.Text = " ";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblStatusST
             // 
+            this.lblStatusST.AutoToolTip = true;
+            this.lblStatusST.LinkVisited = true;
             this.lblStatusST.Name = "lblStatusST";
-            this.lblStatusST.Size = new System.Drawing.Size(12, 17);
+            this.lblStatusST.Size = new System.Drawing.Size(10, 17);
             this.lblStatusST.Text = " ";
             // 
             // timer1
@@ -102,34 +108,34 @@
             this.cancelToolStripMenuItem,
             this.deleteToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(123, 92);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(117, 92);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // resumeToolStripMenuItem
             // 
             this.resumeToolStripMenuItem.Name = "resumeToolStripMenuItem";
-            this.resumeToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.resumeToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.resumeToolStripMenuItem.Text = "Resume";
             this.resumeToolStripMenuItem.Click += new System.EventHandler(this.resumeToolStripMenuItem_Click);
             // 
             // pauseToolStripMenuItem
             // 
             this.pauseToolStripMenuItem.Name = "pauseToolStripMenuItem";
-            this.pauseToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.pauseToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.pauseToolStripMenuItem.Text = "Pause";
             this.pauseToolStripMenuItem.Click += new System.EventHandler(this.pauseToolStripMenuItem_Click);
             // 
             // cancelToolStripMenuItem
             // 
             this.cancelToolStripMenuItem.Name = "cancelToolStripMenuItem";
-            this.cancelToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.cancelToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.cancelToolStripMenuItem.Text = "Cancel";
             this.cancelToolStripMenuItem.Click += new System.EventHandler(this.cancelToolStripMenuItem_Click);
             // 
             // deleteToolStripMenuItem
             // 
             this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.deleteToolStripMenuItem.Text = "Delete";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
             // 
@@ -143,7 +149,7 @@
             this.btnClean});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(636, 32);
+            this.toolStrip1.Size = new System.Drawing.Size(636, 35);
             this.toolStrip1.TabIndex = 1;
             // 
             // btnPlay
@@ -180,6 +186,12 @@
             this.btnClean.Text = "Clear all success items";
             this.btnClean.Click += new System.EventHandler(this.btnClean_Click);
             // 
+            // lblSpeed
+            // 
+            this.lblSpeed.Name = "lblSpeed";
+            this.lblSpeed.Size = new System.Drawing.Size(10, 17);
+            this.lblSpeed.Text = " ";
+            // 
             // lvItems
             // 
             this.lvItems.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -191,11 +203,11 @@
             this.lvItems.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvItems.FullRowSelect = true;
             this.lvItems.LargeImageList = this.imageList1;
-            this.lvItems.Location = new System.Drawing.Point(0, 32);
+            this.lvItems.Location = new System.Drawing.Point(0, 35);
             this.lvItems.Name = "lvItems";
             this.lvItems.OwnerDraw = true;
             this.lvItems.ShowItemToolTips = true;
-            this.lvItems.Size = new System.Drawing.Size(636, 420);
+            this.lvItems.Size = new System.Drawing.Size(636, 457);
             this.lvItems.SmallImageList = this.imageList1;
             this.lvItems.TabIndex = 2;
             this.lvItems.UseCompatibleStateImageBehavior = false;
@@ -221,12 +233,19 @@
             this.columnHeader3.Text = "Status";
             this.columnHeader3.Width = 120;
             // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(285, 17);
+            this.toolStripStatusLabel1.Spring = true;
+            this.toolStripStatusLabel1.Text = " ";
+            // 
             // frmHistory
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(636, 474);
+            this.ClientSize = new System.Drawing.Size(636, 514);
             this.Controls.Add(this.lvItems);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -264,5 +283,7 @@
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.ToolStripStatusLabel lblStatusST;
         private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ToolStripStatusLabel lblSpeed;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     }
 }

@@ -21,6 +21,9 @@ namespace FileExplorer
         private long pendingCount = 0;
         private long successCount = 0;
 
+        private long speed = 0;
+        private long orgDoneSize = 0;
+
         private object locker = new object();
 
         public frmHistory(DUWorker worker)
@@ -219,16 +222,33 @@ namespace FileExplorer
                         item.SubItems[2].Text = GetSizeText(e.op);
                 }
             }
+
+            //重置速度计算
+            lock(locker)
+            {
+                speed = 0;
+                orgDoneSize = 0;
+            }
         }
 
         private void worker_OnProgress(object sender, DUWorkerEventArgs e)
         {
-            if(e.op.status == OperationStatus.Processing)
+            if (e.op.status == OperationStatus.Processing)
             {
                 lock (locker)
                 {
                     if (!updatedOp.Contains(e.op))
                         updatedOp.Add(e.op, e.op);
+                    if (orgDoneSize == 0 || e.op.doneSize < orgDoneSize)
+                    {
+                        orgDoneSize = e.op.doneSize;
+                        speed = 0;
+                    }
+                    else
+                    {
+                        speed += e.op.doneSize - orgDoneSize;
+                        orgDoneSize = e.op.doneSize;
+                    }
                 }
             }
         }
@@ -355,7 +375,8 @@ namespace FileExplorer
                         {
                             if (lvItems.InvokeRequired)
                             {
-                                lvItems.Invoke(new AnonymousFunction(delegate() {
+                                lvItems.Invoke(new AnonymousFunction(delegate()
+                                {
                                     lvItems.BeginUpdate();
                                     foreach (OperationInfo op in updatedOp.Keys)
                                     {
@@ -377,9 +398,22 @@ namespace FileExplorer
                         }
                     }
                 }
+                if (btnPause.Enabled)
+                {
+                    lock (locker)
+                    {
+                        string speedstr = Utils.HumanReadableSize(speed) + "/s";
+                        lblSpeed.Text = speedstr;
+                        //重置速度计算
+                        speed = 0;
+                    }
+                }
+                else
+                {
+                    lblSpeed.Text = string.Empty;
+                }
             }
             catch { }
-
         }
 
         private void RefreshControls()
@@ -387,14 +421,14 @@ namespace FileExplorer
             btnPlay.Enabled = worker.IsPause;
             btnPause.Enabled = !btnPlay.Enabled;
             btnClean.Enabled = lvItems.Items.Count > 0;
-            lblStatus.Text = btnPause.Enabled ? "The download/upload worker running..."
-                : "The download/upload worker stopped. Set auto start up on settings window.";
+            lblStatus.Text = btnPause.Enabled ? "Running..." : "Stopped";
             RefreshST();
         }
 
         private void RefreshST()
         {
-            lblStatusST.Text = lvItems.Items.Count.ToString() + " items, "
+            lblStatusST.Text = lvItems.Items.Count.ToString() + " items, " + Interlocked.Read(ref successCount).ToString() + " succeed";
+            lblStatusST.ToolTipText = lvItems.Items.Count.ToString() + " items, "
                 + Interlocked.Read(ref pendingCount).ToString() + " pending, "
                 + Interlocked.Read(ref successCount).ToString() + " succeed, "
                 + Interlocked.Read(ref failedCount).ToString() + " failed, "
