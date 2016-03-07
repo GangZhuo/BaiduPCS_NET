@@ -1290,13 +1290,14 @@ namespace BaiduPCS_NET
         /// <param name="path">目标文件，地址需写全，如/temp/file.txt</param>
         /// <param name="buffer">待上传的字节序</param>
         /// <param name="overwrite">指定是否覆盖原文件，传入PcsTrue则覆盖，传入PcsFalse，则自动重命名。</param>
+        /// <param name="maxspeed">最大上传速度，0 为不限制上传速度。</param>
         /// <returns>返回上传的文件的元数据 </returns>
-        public static PcsFileInfo pcs_upload_buffer(BaiduPCS pcs, string path, byte[] buffer, bool overwrite = false)
+        public static PcsFileInfo pcs_upload_buffer(BaiduPCS pcs, string path, byte[] buffer, bool overwrite = false, long maxspeed = 0)
         {
             IntPtr pathPtr = NativeUtils.utf8_str_ptr(path);
             IntPtr bufptr = Marshal.AllocHGlobal(buffer.Length);
             Marshal.Copy(buffer, 0, bufptr, buffer.Length);
-            IntPtr fiptr = NativeMethods.pcs_upload_buffer(pcs.Handle, pathPtr, overwrite ? NativeConst.True : NativeConst.False, bufptr, (uint)buffer.Length);
+            IntPtr fiptr = NativeMethods.pcs_upload_buffer(pcs.Handle, pathPtr, overwrite ? NativeConst.True : NativeConst.False, bufptr, (uint)buffer.Length, maxspeed);
             NativeUtils.free_str_ptr(pathPtr);
             Marshal.FreeHGlobal(bufptr);
             if (fiptr == IntPtr.Zero)
@@ -1312,12 +1313,13 @@ namespace BaiduPCS_NET
         /// </summary>
         /// <param name="pcs"></param>
         /// <param name="buffer">待上传的字节序</param>
+        /// <param name="maxspeed">最大上传速度，0 为不限制上传速度。</param>
         /// <returns>返回上传的分片文件的元数据 </returns>
-        public static PcsFileInfo pcs_upload_slice(BaiduPCS pcs, byte[] buffer)
+        public static PcsFileInfo pcs_upload_slice(BaiduPCS pcs, byte[] buffer, long maxspeed = 0)
         {
             IntPtr bufptr = Marshal.AllocHGlobal(buffer.Length);
             Marshal.Copy(buffer, 0, bufptr, buffer.Length);
-            IntPtr fiptr = NativeMethods.pcs_upload_slice(pcs.Handle, bufptr, (uint)buffer.Length);
+            IntPtr fiptr = NativeMethods.pcs_upload_slice(pcs.Handle, bufptr, (uint)buffer.Length, maxspeed);
             Marshal.FreeHGlobal(bufptr);
             if (fiptr == IntPtr.Zero)
                 return new PcsFileInfo();
@@ -1334,8 +1336,9 @@ namespace BaiduPCS_NET
         /// <param name="read_func">读取该分片文件的方法</param>
         /// <param name="userdata"></param>
         /// <param name="content_size">总共需要上传的大小</param>
+        /// <param name="maxspeed">最大上传速度，0 为不限制上传速度。</param>
         /// <returns>返回上传的分片文件的元数据 </returns>
-        public static PcsFileInfo pcs_upload_slicefile(BaiduPCS pcs, OnReadBlockFunction read_func, object userdata, uint content_size)
+        public static PcsFileInfo pcs_upload_slicefile(BaiduPCS pcs, OnReadBlockFunction read_func, object userdata, uint content_size, long maxspeed = 0)
         {
             UserState state = new UserState()
             {
@@ -1344,7 +1347,7 @@ namespace BaiduPCS_NET
             };
             string key = saveState(state);
             IntPtr keyPtr = NativeUtils.str_ptr(key);
-            IntPtr fiptr = NativeMethods.pcs_upload_slicefile(pcs.Handle, pcs._onReadBlock, keyPtr, content_size);
+            IntPtr fiptr = NativeMethods.pcs_upload_slicefile(pcs.Handle, pcs._onReadBlock, keyPtr, content_size, maxspeed);
             NativeUtils.free_str_ptr(keyPtr);
             removeState(key);
             if (fiptr == IntPtr.Zero)
@@ -1387,12 +1390,13 @@ namespace BaiduPCS_NET
         /// <param name="topath">网盘文件，地址需写全，如/temp/file.txt</param>
         /// <param name="local_filename">待上传的本地文件</param>
         /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <param name="maxspeed">最大上传速度，0 为不限制上传速度。</param>
         /// <returns>返回文件的元数据</returns>
-        public static PcsFileInfo pcs_upload(BaiduPCS pcs, string topath, string local_filename, bool overwrite = false)
+        public static PcsFileInfo pcs_upload(BaiduPCS pcs, string topath, string local_filename, bool overwrite = false, long maxspeed = 0)
         {
             IntPtr remotePtr = NativeUtils.utf8_str_ptr(topath);
             IntPtr localPtr = NativeUtils.str_ptr(local_filename);
-            IntPtr fiptr = NativeMethods.pcs_upload(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False, localPtr);
+            IntPtr fiptr = NativeMethods.pcs_upload(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False, localPtr, maxspeed);
             NativeUtils.free_str_ptr(remotePtr);
             NativeUtils.free_str_ptr(localPtr);
             if (fiptr == IntPtr.Zero)
@@ -1412,8 +1416,9 @@ namespace BaiduPCS_NET
         /// <param name="content_size">总共需要上传的大小</param>
         /// <param name="userdata"></param>
         /// <param name="overwrite">如果网盘文件已经存在，是否覆盖原文件。true - 覆盖；false - 自动重命名</param>
+        /// <param name="maxspeed">最大上传速度，0 为不限制上传速度。</param>
         /// <returns>返回文件的元数据</returns>
-        public static PcsFileInfo pcs_upload_s(BaiduPCS pcs, string to_path, OnReadBlockFunction read_func, uint content_size, object userdata, bool overwrite = false)
+        public static PcsFileInfo pcs_upload_s(BaiduPCS pcs, string to_path, OnReadBlockFunction read_func, uint content_size, object userdata, bool overwrite = false, long maxspeed = 0)
         {
             UserState state = new UserState()
             {
@@ -1424,7 +1429,7 @@ namespace BaiduPCS_NET
             string key = saveState(state);
             IntPtr keyPtr = NativeUtils.str_ptr(key);
             IntPtr fiptr = NativeMethods.pcs_upload_s(pcs.Handle, remotePtr, overwrite ? NativeConst.True : NativeConst.False,
-                pcs._onReadBlock, keyPtr, content_size);
+                pcs._onReadBlock, keyPtr, content_size, maxspeed);
             NativeUtils.free_str_ptr(remotePtr);
             NativeUtils.free_str_ptr(keyPtr);
             removeState(key);

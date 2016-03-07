@@ -74,22 +74,22 @@ namespace BaiduPCS_NET.Native
         public extern static long pcs_get_download_filesize(IntPtr handle, IntPtr path);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_upload_buffer(IntPtr handle, IntPtr path, byte overwrite, IntPtr buffer, uint buffer_size);
+        public extern static IntPtr pcs_upload_buffer(IntPtr handle, IntPtr path, byte overwrite, IntPtr buffer, uint buffer_size, long max_speed);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_upload_slice(IntPtr handle, IntPtr buffer, uint buffer_size);
+        public extern static IntPtr pcs_upload_slice(IntPtr handle, IntPtr buffer, uint buffer_size, long max_speed);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_upload_slicefile(IntPtr handle, NativePcsReadBlockFunction read_func, IntPtr userdata, uint content_size);
+        public extern static IntPtr pcs_upload_slicefile(IntPtr handle, NativePcsReadBlockFunction read_func, IntPtr userdata, uint content_size, long max_speed);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static IntPtr pcs_create_superfile(IntPtr handle, IntPtr path, byte overwrite, IntPtr block_list);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_upload(IntPtr handle, IntPtr path, byte overwrite, IntPtr local_filename);
+        public extern static IntPtr pcs_upload(IntPtr handle, IntPtr path, byte overwrite, IntPtr local_filename, long max_speed);
         
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static IntPtr pcs_upload_s(IntPtr handle, IntPtr to_path, byte overwrite, NativePcsReadBlockFunction read_func, IntPtr userdata, uint content_size);
+        public extern static IntPtr pcs_upload_s(IntPtr handle, IntPtr to_path, byte overwrite, NativePcsReadBlockFunction read_func, IntPtr userdata, uint content_size, long max_speed);
 
         [DllImport("BaiduPCS.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static long pcs_local_filesize(IntPtr handle, IntPtr path);
