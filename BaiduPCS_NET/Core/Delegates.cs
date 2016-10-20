@@ -14,6 +14,8 @@ namespace BaiduPCS_NET
     /// <returns>返回验证码是否正确输入。true - 表示正确输入；false - 表示未输入。当返回 false 时，将中断登录进程。</returns>
     public delegate bool GetCaptchaFunction(BaiduPCS sender, byte[] imgBytes, out string captcha, object userdata);
 
+    public delegate bool GetInputFunction(BaiduPCS sender, string tips, out string captcha, object userdata);
+
     /// <summary>
     /// 当从网络获取到数据后触发该回调。
     /// </summary>

@@ -60,6 +60,12 @@
     <Compile Include="DU\RapidUploader.cs" />
     <Compile Include="DU\StateFileNameDecideEventArgs.cs" />
     <Compile Include="DU\IProgressable.cs" />
+    <Compile Include="Forms\frmInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmInput.Designer.cs">
+      <DependentUpon>frmInput.cs</DependentUpon>
+    </Compile>
     <Compile Include="Worker\DUQueue.cs" />
     <Compile Include="Worker\DUWorker.cs" />
     <Compile Include="Worker\DUWorkerPersister.cs" />
@@ -136,6 +142,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmHistory.resx">
       <DependentUpon>frmHistory.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmInput.resx">
+      <DependentUpon>frmInput.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmLogin.resx">
       <DependentUpon>frmLogin.cs</DependentUpon>

@@ -26,6 +26,10 @@ namespace BaiduPCS_NET
         /// </summary>
         PCS_OPTION_CAPTCHA_FUNCTION_DATA,
 
+        PCS_OPTION_INPUT_FUNCTION,
+
+        PCS_OPTION_INPUT_FUNCTION_DATA,
+
         /// <summary>
         /// 值为PcsHttpWriteFunction类型的函数
         /// </summary>

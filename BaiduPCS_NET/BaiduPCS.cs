@@ -50,12 +50,36 @@ namespace BaiduPCS_NET
                 }
             }
         }
+        public event GetInputFunction GetInput
+        {
+            add
+            {
+                if (_OnGetInput == null)
+                {
+                    IntPtr v = Marshal.GetFunctionPointerForDelegate(_onGetInput);
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_INPUT_FUNCTION, v);
+                }
+                _OnGetInput += value;
+            }
+            remove
+            {
+                _OnGetInput -= value;
+                if (_OnGetInput == null)
+                {
+                    NativeMethods.pcs_setopt(Handle, (int)PcsOption.PCS_OPTION_INPUT_FUNCTION, IntPtr.Zero);
+                }
+            }
+        }
         /// <summary>
         /// 触发 OnGetCaptcha 方法时，传入该回调的 userdata
         /// </summary>
         public object GetCaptchaUserData { get; set; }
         private GetCaptchaFunction _OnGetCaptcha;
         private NativePcsGetCaptchaFunction _onGetCaptcha;
+
+        public object GetInputUserData { get; set; }
+        private GetInputFunction _OnGetInput;
+        private NativePcsInputFunction _onGetInput;
 
         /// <summary>
         /// 当从网络获取到数据后触发该回调。
@@ -191,6 +215,7 @@ namespace BaiduPCS_NET
             this.CookieFileName = cookieFileName;
 
             this._onGetCaptcha = new NativePcsGetCaptchaFunction(onGetCaptcha);
+            this._onGetInput += new NativePcsInputFunction(onGetInput);
             this._onHttpWrite = new NativePcsHttpWriteFunction(onHttpWrite);
             this._onHttpResponse = new NativePcsHttpResponseFunction(onHttpResponse);
             this._onHttpProgress = new NativePcsHttpProgressFunction(onHttpProgress);
@@ -225,6 +250,20 @@ namespace BaiduPCS_NET
                 Marshal.Copy(ptr, imgBytes, 0, (int)size);
                 string captchaStr;
                 if (this._OnGetCaptcha(this, imgBytes, out captchaStr, this.GetCaptchaUserData))
+                {
+                    NativeUtils.str_utf8_set(captcha, captchaStr, (int)captchaSize - 1, true);
+                    return NativeConst.True;
+                }
+            }
+            return NativeConst.False;
+        }
+
+        private byte onGetInput(IntPtr ptr, string tips, IntPtr captcha, uint captchaSize, IntPtr state)
+        {
+            if (this._OnGetInput != null)
+            {
+                string captchaStr;
+                if (this._OnGetInput(this, tips, out captchaStr, this.GetInputUserData))
                 {
                     NativeUtils.str_set(captcha, captchaStr, (int)captchaSize - 1, true);
                     return NativeConst.True;

@@ -16,6 +16,9 @@ namespace BaiduPCS_NET.Native
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte NativePcsGetCaptchaFunction(IntPtr ptr, uint size, IntPtr captcha, uint captchaSize, IntPtr state);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate byte NativePcsInputFunction(IntPtr ptr, string tips, IntPtr captcha, uint captchaSize, IntPtr state);
+
     /// <summary>
     /// 设定该回调后，Pcs每从网络获取到值，则调用该回调。例如下载时。
     /// </summary>

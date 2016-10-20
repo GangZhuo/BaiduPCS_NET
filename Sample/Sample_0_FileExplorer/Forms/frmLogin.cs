@@ -18,12 +18,20 @@ namespace FileExplorer
         {
             InitializeComponent();
             DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.pcs = pcs; 
+            this.pcs = pcs;
+            pcs.GetCaptcha += new GetCaptchaFunction(OnGetCaptcha);
+            pcs.GetInput += new GetInputFunction(onGetInput);
         }
 
         private void frmLogin_Load(object sender, EventArgs e)
         {
-            pcs.GetCaptcha += new GetCaptchaFunction(OnGetCaptcha);            
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            pcs.GetCaptcha -= new GetCaptchaFunction(OnGetCaptcha);
+            pcs.GetInput -= new GetInputFunction(onGetInput);
+            base.OnClosing(e);
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -66,6 +74,19 @@ namespace FileExplorer
             if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 captcha = frm.Captcha;
+                return true;
+            }
+            return false;
+        }
+
+        private bool onGetInput(BaiduPCS sender, string tips, out string captcha, object userdata)
+        {
+            captcha = null;
+            frmInput frm = new frmInput();
+            frm.TopMost = true;
+            if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                captcha = frm.Value;
                 return true;
             }
             return false;
