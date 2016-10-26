@@ -16,6 +16,12 @@ namespace FileExplorer
             get { return textBox1.Text.Trim(); }
         }
 
+        public string Tips
+        {
+            get { return label1.Text; }
+            set { label1.Text = value; }
+        }
+
         public frmInput()
         {
             InitializeComponent();

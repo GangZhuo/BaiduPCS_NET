@@ -83,6 +83,12 @@ namespace FileExplorer
         {
             captcha = null;
             frmInput frm = new frmInput();
+            if (tips != null && tips.StartsWith("Please input the sms password", StringComparison.InvariantCultureIgnoreCase))
+            {
+                tips = "Please input the sms password (If not receive a sms password, click cancel, and then login again).";
+                frm.Tips = tips;
+                frm.Text = "Please input the sms password";
+            }
             frm.TopMost = true;
             if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
