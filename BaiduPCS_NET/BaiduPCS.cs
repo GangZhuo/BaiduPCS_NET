@@ -258,12 +258,13 @@ namespace BaiduPCS_NET
             return NativeConst.False;
         }
 
-        private byte onGetInput(IntPtr ptr, string tips, IntPtr captcha, uint captchaSize, IntPtr state)
+        private byte onGetInput(IntPtr tips, IntPtr captcha, uint captchaSize, IntPtr state)
         {
             if (this._OnGetInput != null)
             {
+                string stips = NativeUtils.str(tips, Encoding.UTF8);
                 string captchaStr;
-                if (this._OnGetInput(this, tips, out captchaStr, this.GetInputUserData))
+                if (this._OnGetInput(this, stips, out captchaStr, this.GetInputUserData))
                 {
                     NativeUtils.str_set(captcha, captchaStr, (int)captchaSize - 1, true);
                     return NativeConst.True;
