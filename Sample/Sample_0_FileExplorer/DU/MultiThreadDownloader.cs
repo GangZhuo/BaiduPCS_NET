@@ -68,8 +68,9 @@ namespace FileExplorer
                 fireStateFileNameDecide(args);
                 SliceFileName = args.SliceFileName;
                 CreateOrRestoreSliceList(); // 创建或还原分片列表
+                CreateDirectory(to); //创建目录
                 CreateLocalFile(); // 如果需要则创建本地文件
-                bigfile = new BigFileHelper(to); //映射文件到内存
+                bigfile = new BigFileHelper(to, from.size); //映射文件到内存
                 foreach (Slice slice in SliceList)
                 {
                     if (slice.status != SliceStatus.Successed)
@@ -127,13 +128,8 @@ namespace FileExplorer
         {
             if (!File.Exists(to))
             {
-                CreateDirectory(to);
                 //预先创建一个大文件
-                using (FileStream fs = File.Create(to))
-                {
-                    long offset = fs.Seek(from.size - 1, SeekOrigin.Begin);
-                    fs.WriteByte((byte)0);
-                }
+                using (FileStream fs = File.Create(to)) { }
             }
         }
 
@@ -152,9 +148,20 @@ namespace FileExplorer
 
         private void Wait()
         {
+            int prev, running;
+
+            prev = (int)Interlocked.Read(ref runningThreadCount);
+            fireThreadChanged(new ThreadCountChangedEventArgs(prev, ThreadCount));
+
             while (true)
             {
-                if (Interlocked.Read(ref runningThreadCount) > 0)
+                running = (int)Interlocked.Read(ref runningThreadCount);
+                if (running != prev)
+                {
+                    prev = running;
+                    fireThreadChanged(new ThreadCountChangedEventArgs(running, ThreadCount));
+                }
+                if (running > 0)
                     Thread.Sleep(100);
                 else
                     break;
@@ -191,6 +198,7 @@ namespace FileExplorer
                 BaiduPCS pcs;
                 Slice slice;
                 PcsRes rc;
+                string errmsg;
                 pcs = this.pcs.clone();
                 pcs.Write += onWrite;
                 while (tid == Interlocked.Read(ref taskId))
@@ -200,15 +208,31 @@ namespace FileExplorer
                         break;
                     slice.tid = tid;
                     pcs.WriteUserData = slice;
-                    rc = pcs.download(from.path, 0, slice.start, slice.totalSize);
-                    if (rc == PcsRes.PCS_OK || slice.status == SliceStatus.Successed)
-                        slice.status = SliceStatus.Successed;
-                    else if (slice.status == SliceStatus.Cancelled)
-                        Cancel();
-                    else
+                    do
                     {
-                        slice.status = SliceStatus.Failed;
-                        lock (locker) Error = new Exception(pcs.getError());
+                        errmsg = null;
+                        if (slice.status == SliceStatus.Failed)
+                            slice.status = SliceStatus.Retrying;
+                        rc = pcs.download(from.path, 0, 
+                            slice.start + slice.doneSize,
+                            slice.totalSize - slice.doneSize);
+                        if (rc == PcsRes.PCS_OK || slice.status == SliceStatus.Successed)
+                            slice.status = SliceStatus.Successed;
+                        else if (slice.status == SliceStatus.Cancelled)
+                            Cancel();
+                        else
+                        {
+                            slice.status = SliceStatus.Failed;
+                            errmsg = pcs.getError();
+                        }
+                    } while (slice.status == SliceStatus.Failed &&
+                        AppSettings.RetryWhenDownloadFailed &&
+                        errmsg != null &&
+                        errmsg.Contains("Timeout"));
+
+                    if (slice.status != SliceStatus.Successed && slice.status != SliceStatus.Cancelled)
+                    {
+                        lock (locker) Error = new Exception(errmsg);
                         StopAllDownloadThreads();
                     }
                 }
@@ -263,7 +287,14 @@ namespace FileExplorer
                 size = slice.totalSize - slice.doneSize;
             if (size > 0)
             {
-                bigfile.Update(slice.start + slice.doneSize, data, 0, (int)size);
+                try
+                {
+                    bigfile.Update(slice.start + slice.doneSize, data, 0, (int)size);
+                }
+                catch(Exception ex)
+                {
+                    throw;
+                }
             }
             slice.doneSize += size;
             lock (locker) DoneSize += size;

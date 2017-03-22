@@ -26,6 +26,7 @@ namespace FileExplorer
         public event EventHandler<CompletedEventArgs> Completed;
         public event EventHandler<ProgressEventArgs> Progress;
         public event EventHandler<StateFileNameDecideEventArgs> StateFileNameDecide;
+        public event EventHandler<ThreadCountChangedEventArgs> ThreadChanged;
 
         public Uploader(BaiduPCS pcs, string from, string to)
         {
@@ -47,6 +48,7 @@ namespace FileExplorer
             {
                 BaiduPCS pcs = this.pcs.clone();
                 pcs.Progress += onProgress;
+                fireThreadChanged(new ThreadCountChangedEventArgs(1, 1));
                 Result = pcs.upload(to, from, IsOverWrite);
                 if (!Result.IsEmpty)
                 {
@@ -74,6 +76,7 @@ namespace FileExplorer
             }
             Uploading = false;
             fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireThreadChanged(new ThreadCountChangedEventArgs(0, 1));
         }
 
         public virtual void Cancel()
@@ -109,6 +112,12 @@ namespace FileExplorer
         {
             if (StateFileNameDecide != null)
                 StateFileNameDecide(this, args);
+        }
+
+        protected virtual void fireThreadChanged(ThreadCountChangedEventArgs args)
+        {
+            if (ThreadChanged != null)
+                ThreadChanged(this, args);
         }
     }
 }

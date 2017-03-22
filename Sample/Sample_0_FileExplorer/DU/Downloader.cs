@@ -20,6 +20,7 @@ namespace FileExplorer
         public event EventHandler<CompletedEventArgs> Completed;
         public event EventHandler<ProgressEventArgs> Progress;
         public event EventHandler<StateFileNameDecideEventArgs> StateFileNameDecide;
+        public event EventHandler<ThreadCountChangedEventArgs> ThreadChanged;
 
         public Downloader(BaiduPCS pcs, PcsFileInfo from, string to)
         {
@@ -45,6 +46,7 @@ namespace FileExplorer
                 CreateDirectory(to);
                 stream = new FileStream(to, FileMode.Create, FileAccess.Write);
                 pcs.WriteUserData = stream;
+                fireThreadChanged(new ThreadCountChangedEventArgs(1, 1));
                 PcsRes rc = pcs.download(from.path, 0, 0, 0);
                 if (rc == PcsRes.PCS_OK)
                 {
@@ -74,6 +76,7 @@ namespace FileExplorer
                 stream.Close();
             Downloading = false;
             fireCompleted(new CompletedEventArgs(Success, IsCancelled, Error));
+            fireThreadChanged(new ThreadCountChangedEventArgs(0, 1));
         }
 
         public virtual void Cancel()
@@ -124,6 +127,12 @@ namespace FileExplorer
         {
             if (StateFileNameDecide != null)
                 StateFileNameDecide(this, args);
+        }
+
+        protected virtual void fireThreadChanged(ThreadCountChangedEventArgs args)
+        {
+            if (ThreadChanged != null)
+                ThreadChanged(this, args);
         }
     }
 }

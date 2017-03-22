@@ -90,6 +90,33 @@ namespace FileExplorer
             }
         }
 
+        public static string LeftTime(long leftSize, long speed)
+        {
+            // 计算剩余时间
+            string s;
+            int second;
+            if (speed == 0)
+                return "";
+            second = (int)(leftSize / speed);
+            TimeSpan ts = new TimeSpan(0, 0, second);
+            s = "";
+            if (ts.TotalDays > 1)
+                s += ((int)ts.TotalDays).ToString() + "day(s) ";
+            if (ts.TotalHours > 1)
+                s += ((int)ts.TotalHours).ToString().PadLeft(2, '0') + ":";
+            else
+                s += "00:";
+            if (ts.TotalMinutes > 1)
+                s += ((int)ts.TotalMinutes).ToString().PadLeft(2, '0') + ":";
+            else
+                s += "00:";
+            if (ts.TotalSeconds > 1)
+                s += ((int)ts.TotalSeconds).ToString().PadLeft(2, '0');
+            else
+                s += "00";
+            return s;
+        }
+
         /// <summary>
         /// 获取 CPU 属性参数
         /// </summary>

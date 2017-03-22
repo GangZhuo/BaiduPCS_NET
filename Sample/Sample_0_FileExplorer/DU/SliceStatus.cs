@@ -15,6 +15,11 @@ namespace FileExplorer
         Running,
 
         /// <summary>
+        /// 重试中
+        /// </summary>
+        Retrying,
+
+        /// <summary>
         /// 失败
         /// </summary>
         Failed,

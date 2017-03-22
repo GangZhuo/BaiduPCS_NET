@@ -57,6 +57,16 @@ namespace FileExplorer
         /// </summary>
         public int retryTimes { get; set; }
 
+        /// <summary>
+        /// 正在运行的线程数量
+        /// </summary>
+        public int runningThreadCount { get; set; }
+
+        /// <summary>
+        /// 总的线程数量
+        /// </summary>
+        public int totalThreadCount { get; set; }
+
         public object Tag { get; set; }
 
         public override bool Equals(object obj)

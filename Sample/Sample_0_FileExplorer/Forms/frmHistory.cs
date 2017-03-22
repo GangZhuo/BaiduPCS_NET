@@ -23,6 +23,9 @@ namespace FileExplorer
 
         private long speed = 0;
         private long orgDoneSize = 0;
+        private long totalSize = 0;
+        private int runningThreadCount = 0;
+        private int totalThreadCount = 0;
 
         private object locker = new object();
 
@@ -40,6 +43,7 @@ namespace FileExplorer
 
             worker.OnProgress += worker_OnProgress;
             worker.OnCompleted += worker_OnCompleted;
+            worker.OnThreadChanged += Worker_OnThreadChanged;
 
             updatedOp = Hashtable.Synchronized(new Hashtable());
         }
@@ -60,6 +64,7 @@ namespace FileExplorer
 
             worker.OnProgress -= worker_OnProgress;
             worker.OnCompleted -= worker_OnCompleted;
+            worker.OnThreadChanged -= Worker_OnThreadChanged;
 
             base.OnClosing(e);
         }
@@ -243,13 +248,24 @@ namespace FileExplorer
                     {
                         orgDoneSize = e.op.doneSize;
                         speed = 0;
+                        totalSize = e.op.totalSize;
                     }
                     else
                     {
                         speed += e.op.doneSize - orgDoneSize;
                         orgDoneSize = e.op.doneSize;
+                        totalSize = e.op.totalSize;
                     }
                 }
+            }
+        }
+
+        private void Worker_OnThreadChanged(object sender, DUWorkerEventArgs e)
+        {
+            lock (locker)
+            {
+                runningThreadCount = e.op.runningThreadCount;
+                totalThreadCount = e.op.totalThreadCount;
             }
         }
 
@@ -403,7 +419,12 @@ namespace FileExplorer
                     lock (locker)
                     {
                         string speedstr = Utils.HumanReadableSize(speed) + "/s";
+
+                        if (speed > 0)
+                            speedstr += "  " + Utils.LeftTime(totalSize - orgDoneSize, speed);
+
                         lblSpeed.Text = speedstr;
+
                         //重置速度计算
                         speed = 0;
                     }
@@ -427,7 +448,9 @@ namespace FileExplorer
 
         private void RefreshST()
         {
-            lblStatusST.Text = lvItems.Items.Count.ToString() + " items, " + Interlocked.Read(ref successCount).ToString() + " succeed";
+            lblStatusST.Text = runningThreadCount.ToString() + "/" + totalThreadCount.ToString() + " threads, " +
+                lvItems.Items.Count.ToString() + " items, " +
+                Interlocked.Read(ref successCount).ToString() + " succeed";
             lblStatusST.ToolTipText = lvItems.Items.Count.ToString() + " items, "
                 + Interlocked.Read(ref pendingCount).ToString() + " pending, "
                 + Interlocked.Read(ref successCount).ToString() + " succeed, "

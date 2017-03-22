@@ -27,6 +27,7 @@ namespace FileExplorer
         public event EventHandler OnStop;
         public event EventHandler<DUWorkerEventArgs> OnProgress;
         public event EventHandler<DUWorkerEventArgs> OnCompleted;
+        public event EventHandler<DUWorkerEventArgs> OnThreadChanged;
 
         public bool IsStart { get { return Interlocked.Read(ref status) > 0; } }
 
@@ -200,6 +201,7 @@ namespace FileExplorer
                         u.Progress += du_onProgress;
                         u.Completed += du_onCompleted;
                         u.StateFileNameDecide += du_onStateFileNameDecide;
+                        u.ThreadChanged += du_onThreadChanged;
                         u.State = op;
                         u.Upload();
                     }
@@ -244,6 +246,7 @@ namespace FileExplorer
                         d.Completed += du_onCompleted;
                         d.Progress += du_onProgress;
                         d.StateFileNameDecide += du_onStateFileNameDecide;
+                        d.ThreadChanged += du_onThreadChanged;
                         d.State = op;
                         d.Download();
                     }
@@ -302,6 +305,15 @@ namespace FileExplorer
             }
         }
 
+        private void du_onThreadChanged(object sender, ThreadCountChangedEventArgs e)
+        {
+            IProgressable d = (IProgressable)sender;
+            OperationInfo op = (OperationInfo)d.State;
+            op.runningThreadCount = e.RunningThreadCount;
+            op.totalThreadCount = e.TotalThreadCount;
+            fireOnThreadChanged(op);
+        }
+
         private void fireOnStart()
         {
             if (OnStart != null)
@@ -324,6 +336,12 @@ namespace FileExplorer
         {
             if (OnCompleted != null)
                 OnCompleted(this, new DUWorkerEventArgs(op));
+        }
+
+        private void fireOnThreadChanged(OperationInfo op)
+        {
+            if (OnThreadChanged != null)
+                OnThreadChanged(this, new DUWorkerEventArgs(op));
         }
 
         private void queue_OnRemove(object sender, DUQueueEventArgs e)

@@ -169,9 +169,20 @@ namespace FileExplorer
 
         private void Wait()
         {
+            int prev, running;
+
+            prev = (int)Interlocked.Read(ref runningThreadCount);
+            fireThreadChanged(new ThreadCountChangedEventArgs(prev, ThreadCount));
+
             while (true)
             {
-                if (Interlocked.Read(ref runningThreadCount) > 0)
+                running = (int)Interlocked.Read(ref runningThreadCount);
+                if (running != prev)
+                {
+                    prev = running;
+                    fireThreadChanged(new ThreadCountChangedEventArgs(running, ThreadCount));
+                }
+                if (running > 0)
                     Thread.Sleep(100);
                 else
                     break;

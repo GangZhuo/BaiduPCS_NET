@@ -8,11 +8,13 @@ namespace FileExplorer
     {
         public string FileName { get; private set; }
         private MemoryMappedFile mmf;
+        private long fileSize;
 
-        public BigFileHelper(string filename)
+        public BigFileHelper(string filename, long filesize)
         {
             FileName = filename;
-            mmf = MemoryMappedFile.CreateFromFile(FileName, FileMode.Open, Utils.md5(FileName), 0, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
+            this.fileSize = filesize;
+            mmf = MemoryMappedFile.CreateFromFile(FileName, FileMode.Open, Utils.md5(FileName), filesize, MemoryMappedFileAccess.ReadWrite); //映射文件到内存
         }
 
         ~BigFileHelper()

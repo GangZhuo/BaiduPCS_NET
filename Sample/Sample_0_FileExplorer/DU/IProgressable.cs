@@ -8,5 +8,6 @@ namespace FileExplorer
         event EventHandler<StateFileNameDecideEventArgs> StateFileNameDecide;
         event EventHandler<ProgressEventArgs> Progress;
         event EventHandler<CompletedEventArgs> Completed;
+        event EventHandler<ThreadCountChangedEventArgs> ThreadChanged;
     }
 }
