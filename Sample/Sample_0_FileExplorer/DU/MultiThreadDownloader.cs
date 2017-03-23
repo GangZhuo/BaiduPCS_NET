@@ -210,9 +210,9 @@ namespace FileExplorer
                     pcs.WriteUserData = slice;
                     do
                     {
-                        errmsg = null;
                         if (slice.status == SliceStatus.Failed)
                             slice.status = SliceStatus.Retrying;
+                        errmsg = null;
                         rc = pcs.download(from.path, 0, 
                             slice.start + slice.doneSize,
                             slice.totalSize - slice.doneSize);
@@ -225,7 +225,8 @@ namespace FileExplorer
                             slice.status = SliceStatus.Failed;
                             errmsg = pcs.getError();
                         }
-                    } while (slice.status == SliceStatus.Failed &&
+                    } while (tid == Interlocked.Read(ref taskId) &&
+                        slice.status == SliceStatus.Failed &&
                         AppSettings.RetryWhenDownloadFailed &&
                         errmsg != null &&
                         errmsg.Contains("Timeout"));
