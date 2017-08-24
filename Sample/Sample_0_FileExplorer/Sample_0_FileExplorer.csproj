@@ -67,6 +67,7 @@
     <Compile Include="Forms\frmInput.Designer.cs">
       <DependentUpon>frmInput.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ListViewItemComparer.cs" />
     <Compile Include="Worker\DUQueue.cs" />
     <Compile Include="Worker\DUWorker.cs" />
     <Compile Include="Worker\DUWorkerPersister.cs" />

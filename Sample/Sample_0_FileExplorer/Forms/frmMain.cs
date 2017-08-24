@@ -32,6 +32,7 @@ namespace FileExplorer
 
             lvFileList.DoubleClick += lvFileList_DoubleClick;
             lvFileList.KeyDown += lvFileList_KeyDown;
+            lvFileList.ColumnClick += LvFileList_ColumnClick;
 
             txSearchKeyword.GotFocus += txSearchKeyword_GotFocus;
             txSearchKeyword.LostFocus += txSearchKeyword_LostFocus;
@@ -235,6 +236,30 @@ namespace FileExplorer
             {
                 Delete();
             }
+        }
+
+        private void LvFileList_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (lvFileList.ListViewItemSorter != null &&
+                ((ListViewItemComparer)lvFileList.ListViewItemSorter).Column == e.Column)
+            {
+                ((ListViewItemComparer)lvFileList.ListViewItemSorter).Descending = !((ListViewItemComparer)lvFileList.ListViewItemSorter).Descending;
+            }
+            else
+            {
+                ListViewItemComparer comparer = new ListViewItemComparer();
+                comparer.Column = e.Column;
+                switch (e.Column)
+                {
+                    case 0: comparer.By = ListViewItemComparer.ComparerBy.FileName; break;
+                    case 1: comparer.By = ListViewItemComparer.ComparerBy.FileSize; break;
+                    case 2: comparer.By = ListViewItemComparer.ComparerBy.FileType; break;
+                    case 3: comparer.By = ListViewItemComparer.ComparerBy.FileModifyTime; break;
+                    default: comparer.By = ListViewItemComparer.ComparerBy.None; break;
+                }
+                lvFileList.ListViewItemSorter = comparer;
+            }
+            lvFileList.Sort();
         }
 
         private void worker_OnCompleted(object sender, DUWorkerEventArgs e)
