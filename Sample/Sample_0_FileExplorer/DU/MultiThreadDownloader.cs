@@ -34,7 +34,7 @@ namespace FileExplorer
         private long taskId = 0; //本地下载任务的 ID
         private long runningThreadCount = 0; //正在运行的线程数
         private object locker = new object();
-        private object sliceFileLocker = new object();
+        private Cache cache = new Cache();
 
         public MultiThreadDownloader(BaiduPCS pcs, PcsFileInfo from, string to,
             string workfolder, int threadCount, int minSliceSize = MIN_SLICE_SIZE)
@@ -71,6 +71,11 @@ namespace FileExplorer
                 CreateDirectory(to); //创建目录
                 CreateLocalFile(); // 如果需要则创建本地文件
                 bigfile = new BigFileHelper(to, from.size); //映射文件到内存
+                lock(cache)
+                {
+                    cache.Reset();
+                    cache.FileHelper = bigfile;
+                }
                 foreach (Slice slice in SliceList)
                 {
                     if (slice.status != SliceStatus.Successed)
@@ -201,6 +206,8 @@ namespace FileExplorer
                 string errmsg;
                 pcs = this.pcs.clone();
                 pcs.Write += onWrite;
+                Random rnd = new Random(Environment.TickCount);
+                Thread.Sleep(rnd.Next(1, 10));
                 while (tid == Interlocked.Read(ref taskId))
                 {
                     slice = popSlice();
@@ -216,6 +223,16 @@ namespace FileExplorer
                         rc = pcs.download(from.path, 0, 
                             slice.start + slice.doneSize,
                             slice.totalSize - slice.doneSize);
+                        lock (cache)
+                        {
+                            if (cache.TotalSize > 0)
+                            {
+                                if (!cache.Flush())
+                                    throw new Exception("Failed to flush cache.");
+                                cache.Reset();
+                                SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+                            }
+                        }
                         if (rc == PcsRes.PCS_OK || slice.status == SliceStatus.Successed)
                             slice.status = SliceStatus.Successed;
                         else if (slice.status == SliceStatus.Cancelled)
@@ -288,13 +305,10 @@ namespace FileExplorer
                 size = slice.totalSize - slice.doneSize;
             if (size > 0)
             {
-                try
+                lock (cache)
                 {
-                    bigfile.Update(slice.start + slice.doneSize, data, 0, (int)size);
-                }
-                catch(Exception ex)
-                {
-                    throw;
+                    if (!cache.Add(slice.start + slice.doneSize, data, (int)size))
+                        throw new Exception("Failed to add to disk cache.");
                 }
             }
             slice.doneSize += size;
@@ -304,7 +318,16 @@ namespace FileExplorer
                 slice.status = SliceStatus.Successed;
                 size = 0;
             }
-            lock (sliceFileLocker) SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+            lock (cache)
+            {
+                if (cache.TotalSize >= AppSettings.MaxCacheSize * 1024)
+                {
+                    if (!cache.Flush())
+                        throw new Exception("Failed to flush cache.");
+                    cache.Reset();
+                    SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+                }
+            }
             long downloadedSize = 0;
             lock (locker) downloadedSize = DoneSize;
             ProgressEventArgs args = new ProgressEventArgs(downloadedSize, from.size);

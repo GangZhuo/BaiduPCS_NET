@@ -54,6 +54,11 @@ namespace FileExplorer
         /// </summary>
         public static bool OverWriteWhenUploadFile { get; set; }
 
+        /// <summary>
+        /// 磁盘缓存大小
+        /// </summary>
+        public static long MaxCacheSize { get; set; }
+
         public static bool Restore()
         {
             string filename = SettingsFileName;
@@ -114,6 +119,9 @@ namespace FileExplorer
                     case "OverWriteWhenUploadFile":
                         OverWriteWhenUploadFile = Convert.ToBoolean(value);
                         break;
+                    case "MaxCacheSize":
+                        MaxCacheSize = Convert.ToInt64(value);
+                        break;
 
                 }
             }
@@ -160,6 +168,7 @@ namespace FileExplorer
                 WriteItem(writer, "AutomaticUploadMaxThreadCount", AutomaticUploadMaxThreadCount.ToString());
                 WriteItem(writer, "RetryWhenUploadFailed", RetryWhenUploadFailed.ToString());
                 WriteItem(writer, "OverWriteWhenUploadFile", OverWriteWhenUploadFile.ToString());
+                WriteItem(writer, "MaxCacheSize", MaxCacheSize.ToString());
 
                 #endregion
 

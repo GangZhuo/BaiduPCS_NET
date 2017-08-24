@@ -48,6 +48,7 @@
     <Compile Include="Common\AnonymousFunction.cs" />
     <Compile Include="Common\MimeMapping.cs" />
     <Compile Include="DU\BigFileHelper.cs" />
+    <Compile Include="DU\Cache.cs" />
     <Compile Include="DU\IBigFileHelper.cs" />
     <Compile Include="DU\MultiThreadUploader.cs" />
     <Compile Include="DU\Slice.cs" />

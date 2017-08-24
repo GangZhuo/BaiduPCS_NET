@@ -448,7 +448,7 @@ namespace FileExplorer
 
         private void RefreshST()
         {
-            lblStatusST.Text = runningThreadCount.ToString() + "/" + totalThreadCount.ToString() + " threads, " +
+            lblStatusST.Text = runningThreadCount.ToString() + "/" + (totalThreadCount == 0 ? AppSettings.DownloadMaxThreadCount.ToString() : totalThreadCount.ToString()) + " threads, " +
                 lvItems.Items.Count.ToString() + " items, " +
                 Interlocked.Read(ref successCount).ToString() + " succeed";
             lblStatusST.ToolTipText = lvItems.Items.Count.ToString() + " items, "

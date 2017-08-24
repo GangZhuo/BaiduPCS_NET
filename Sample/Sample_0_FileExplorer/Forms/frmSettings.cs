@@ -28,6 +28,8 @@ namespace FileExplorer
             ckRetryWhenDownloadFail.Checked = AppSettings.RetryWhenDownloadFailed;
             if (AppSettings.MinDownloasSliceSize >= numMinDownloadSliceSize.Minimum && AppSettings.MinDownloasSliceSize <= numMinDownloadSliceSize.Maximum)
                 numMinDownloadSliceSize.Value = AppSettings.MinDownloasSliceSize;
+            if (AppSettings.MaxCacheSize >= numDiskCache.Minimum && AppSettings.MaxCacheSize <= numDiskCache.Maximum)
+                numDiskCache.Value = AppSettings.MaxCacheSize;
 
             if (AppSettings.UploadMaxThreadCount >= numUploadMaxThreadCount.Minimum && AppSettings.UploadMaxThreadCount <= numUploadMaxThreadCount.Maximum)
                 numUploadMaxThreadCount.Value = AppSettings.UploadMaxThreadCount;
@@ -49,7 +51,7 @@ namespace FileExplorer
             AppSettings.AutomaticUploadMaxThreadCount = ckAutomaticUploadMaxThreadCount.Checked;
             AppSettings.RetryWhenUploadFailed = ckRetryWhenUploadFail.Checked;
             AppSettings.OverWriteWhenUploadFile = ckOverwriteIfExists.Checked;
-
+            AppSettings.MaxCacheSize = (long)numDiskCache.Value;
             AppSettings.Save();
 
             DialogResult = System.Windows.Forms.DialogResult.OK;

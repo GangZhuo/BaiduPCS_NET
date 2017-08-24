@@ -407,6 +407,12 @@ namespace FileExplorer
                 AppSettings.AutomaticUploadMaxThreadCount = true;
                 AppSettings.RetryWhenUploadFailed = false;
                 AppSettings.UploadMaxThreadCount = 1;
+                AppSettings.MaxCacheSize = 1024;
+            }
+            else
+            {
+                if (AppSettings.MaxCacheSize == 0)
+                    AppSettings.MaxCacheSize = 1024;
             }
         }
 
