@@ -218,7 +218,10 @@ namespace FileExplorer
                     do
                     {
                         if (slice.status == SliceStatus.Failed)
+                        {
                             slice.status = SliceStatus.Retrying;
+                            Thread.Sleep(rnd.Next(1, 10));
+                        }
                         errmsg = null;
                         rc = pcs.download(from.path, 0, 
                             slice.start + slice.doneSize,
