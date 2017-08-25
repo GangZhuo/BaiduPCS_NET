@@ -247,9 +247,7 @@ namespace FileExplorer
                         }
                     } while (tid == Interlocked.Read(ref taskId) &&
                         slice.status == SliceStatus.Failed &&
-                        AppSettings.RetryWhenDownloadFailed &&
-                        errmsg != null &&
-                        errmsg.Contains("Timeout"));
+                        AppSettings.RetryWhenDownloadFailed);
 
                     if (slice.status != SliceStatus.Successed && slice.status != SliceStatus.Cancelled)
                     {
