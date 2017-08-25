@@ -19,7 +19,7 @@ namespace FileExplorer
             BlockList = new List<Block>();
         }
 
-        public bool Add(long position, byte[] data, int size)
+        public void Add(long position, byte[] data, int size)
         {
             Block block = new Block();
             block.Position = position;
@@ -27,24 +27,21 @@ namespace FileExplorer
             block.Size = size;
             BlockList.Add(block);
             TotalSize += size;
-            return true;
         }
 
-        public bool Flush()
+        public void Flush()
         {
             BlockList.Sort(new BlockComparer());
             foreach (Block block in BlockList)
             {
                 FileHelper.Update(block.Position, block.Data, 0, block.Size);
             }
-            return true;
         }
 
-        public bool Reset()
+        public void Reset()
         {
             TotalSize = 0;
             BlockList.Clear();
-            return true;
         }
 
         public class Block

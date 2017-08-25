@@ -33,5 +33,10 @@ namespace FileExplorer
         /// 取消
         /// </summary>
         Cancelled,
+
+        /// <summary>
+        /// 错误
+        /// </summary>
+        Error,
     }
 }

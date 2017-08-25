@@ -90,6 +90,7 @@ namespace FileExplorer
                 }
                 DownloadSliceList(); // 启动线程来下载分片
                 Wait(); // 等待所有线程退出
+                Flush();
                 CheckResult(); // 检查下载结果
             }
             catch (Exception ex)
@@ -113,6 +114,22 @@ namespace FileExplorer
         {
             lock (locker) IsCancelled = true;
             StopAllDownloadThreads();
+        }
+
+        private void Flush()
+        {
+            if (cache.TotalSize > 0)
+            {
+                lock (cache)
+                {
+                    if (cache.TotalSize > 0)
+                    {
+                        cache.Flush();
+                        cache.Reset();
+                        SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+                    }
+                }
+            }
         }
 
         private void CreateOrRestoreSliceList()
@@ -215,44 +232,69 @@ namespace FileExplorer
                         break;
                     slice.tid = tid;
                     pcs.WriteUserData = slice;
-                    do
+                    while (tid == Interlocked.Read(ref taskId) &&
+                        (slice.status == SliceStatus.Running || slice.status == SliceStatus.Retrying))
                     {
-                        if (slice.status == SliceStatus.Failed)
-                        {
-                            slice.status = SliceStatus.Retrying;
-                            Thread.Sleep(rnd.Next(1, 10));
-                        }
                         errmsg = null;
-                        rc = pcs.download(from.path, 0, 
+                        rc = pcs.download(from.path, 0,
                             slice.start + slice.doneSize,
                             slice.totalSize - slice.doneSize);
-                        lock (cache)
-                        {
-                            if (cache.TotalSize > 0)
-                            {
-                                if (!cache.Flush())
-                                    throw new Exception("Failed to flush cache.");
-                                cache.Reset();
-                                SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
-                            }
-                        }
-                        if (rc == PcsRes.PCS_OK || slice.status == SliceStatus.Successed)
+                        if (tid != Interlocked.Read(ref taskId))
+                            return;
+                        if (rc == PcsRes.PCS_OK)
                             slice.status = SliceStatus.Successed;
-                        else if (slice.status == SliceStatus.Cancelled)
-                            Cancel();
-                        else
+                        switch (slice.status)
                         {
-                            slice.status = SliceStatus.Failed;
-                            errmsg = pcs.getError();
+                            case SliceStatus.Successed:
+                                break;
+                            case SliceStatus.Cancelled:
+                                Cancel();
+                                break;
+                            case SliceStatus.Error:
+                                StopAllDownloadThreads();
+                                break;
+                            case SliceStatus.Retrying:
+                                Thread.Sleep(rnd.Next(1, 10));
+                                break;
+                            case SliceStatus.Pending:
+                            case SliceStatus.Running:
+                            case SliceStatus.Failed:
+                            default:
+                                if (IsCancelled)
+                                {
+                                    lock (locker)
+                                    {
+                                        if (IsCancelled)
+                                        {
+                                            slice.status = SliceStatus.Cancelled;
+                                            Cancel();
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (AppSettings.RetryWhenDownloadFailed)
+                                {
+                                    slice.status = SliceStatus.Retrying;
+                                    Thread.Sleep(rnd.Next(1, 10));
+                                }
+                                else
+                                {
+                                    slice.status = SliceStatus.Failed;
+                                    if (Error == null)
+                                    {
+                                        lock (locker)
+                                        {
+                                            if (Error == null)
+                                            {
+                                                errmsg = pcs.getError();
+                                                Error = new Exception(errmsg);
+                                            }
+                                        }
+                                    }
+                                    StopAllDownloadThreads();
+                                }
+                                break;
                         }
-                    } while (tid == Interlocked.Read(ref taskId) &&
-                        slice.status == SliceStatus.Failed &&
-                        AppSettings.RetryWhenDownloadFailed);
-
-                    if (slice.status != SliceStatus.Successed && slice.status != SliceStatus.Cancelled)
-                    {
-                        lock (locker) Error = new Exception(errmsg);
-                        StopAllDownloadThreads();
                     }
                 }
             }
@@ -261,7 +303,10 @@ namespace FileExplorer
                 lock (locker) Error = ex;
                 StopAllDownloadThreads();
             }
-            Interlocked.Decrement(ref runningThreadCount);
+            finally
+            {
+                Interlocked.Decrement(ref runningThreadCount);
+            }
         }
 
         private void StopAllDownloadThreads()
@@ -290,55 +335,61 @@ namespace FileExplorer
         private uint onWrite(BaiduPCS sender, byte[] data, uint contentlength, object userdata)
         {
             Slice slice = (Slice)userdata;
-            if (slice.tid != Interlocked.Read(ref taskId))//本次任务被取消
+            try
             {
-                lock (locker)
+                if (slice.tid != Interlocked.Read(ref taskId))//本次任务被取消
                 {
-                    if (IsCancelled)
-                        slice.status = SliceStatus.Cancelled;
-                    else
-                        slice.status = SliceStatus.Failed;
+                    lock (locker)
+                    {
+                        if (IsCancelled)
+                            slice.status = SliceStatus.Cancelled;
+                        else
+                            slice.status = SliceStatus.Failed;
+                    }
+                    return 0;
                 }
-                return 0;
-            }
-            long size = data.Length;
-            if (size > slice.totalSize - slice.doneSize)
-                size = slice.totalSize - slice.doneSize;
-            if (size > 0)
-            {
+                long size = data.Length;
+                if (size > slice.totalSize - slice.doneSize)
+                    size = slice.totalSize - slice.doneSize;
+                if (size > 0)
+                {
+                    lock (cache)
+                        cache.Add(slice.start + slice.doneSize, data, (int)size);
+                }
+                slice.doneSize += size;
+                lock (locker) DoneSize += size;
+                if (slice.doneSize == slice.totalSize) //分片已经下载完成
+                {
+                    slice.status = SliceStatus.Successed;
+                    size = 0;
+                }
                 lock (cache)
                 {
-                    if (!cache.Add(slice.start + slice.doneSize, data, (int)size))
-                        throw new Exception("Failed to add to disk cache.");
+                    if (cache.TotalSize >= AppSettings.MaxCacheSize * 1024)
+                    {
+                        cache.Flush();
+                        cache.Reset();
+                        SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+                    }
                 }
-            }
-            slice.doneSize += size;
-            lock (locker) DoneSize += size;
-            if (slice.doneSize == slice.totalSize) //分片已经下载完成
-            {
-                slice.status = SliceStatus.Successed;
-                size = 0;
-            }
-            lock (cache)
-            {
-                if (cache.TotalSize >= AppSettings.MaxCacheSize * 1024)
+                long downloadedSize = 0;
+                lock (locker) downloadedSize = DoneSize;
+                ProgressEventArgs args = new ProgressEventArgs(downloadedSize, from.size);
+                fireProgress(args);
+                if (args.Cancel)
                 {
-                    if (!cache.Flush())
-                        throw new Exception("Failed to flush cache.");
-                    cache.Reset();
-                    SliceHelper.SaveSliceList(SliceFileName, SliceList); // 保存最新的分片数据
+                    slice.status = SliceStatus.Cancelled;
+                    lock (locker) Error = new Exception("Cancelled");
+                    return 0;
                 }
+                return (uint)size;
             }
-            long downloadedSize = 0;
-            lock (locker) downloadedSize = DoneSize;
-            ProgressEventArgs args = new ProgressEventArgs(downloadedSize, from.size);
-            fireProgress(args);
-            if (args.Cancel)
+            catch(Exception ex)
             {
-                slice.status = SliceStatus.Cancelled;
-                return 0;
+                lock (locker) Error = ex;
+                slice.status = SliceStatus.Error;
             }
-            return (uint)size;
+            return 0;
         }
     }
 }

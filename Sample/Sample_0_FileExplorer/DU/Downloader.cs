@@ -88,20 +88,28 @@ namespace FileExplorer
         {
             if (IsCancelled)
                 return 0;
-            if(data.Length > 0)
+            try
             {
-                Stream stream = (Stream)userdata;
-                stream.Write(data, 0, data.Length);
+                if (data.Length > 0)
+                {
+                    Stream stream = (Stream)userdata;
+                    stream.Write(data, 0, data.Length);
+                }
+                DoneSize += data.Length;
+                ProgressEventArgs args = new ProgressEventArgs(DoneSize, from.size);
+                fireProgress(args);
+                if (args.Cancel)
+                {
+                    IsCancelled = true;
+                    return 0;
+                }
+                return (uint)data.Length;
             }
-            DoneSize += data.Length;
-            ProgressEventArgs args = new ProgressEventArgs(DoneSize, from.size);
-            fireProgress(args);
-            if (args.Cancel)
+            catch (Exception ex)
             {
-                IsCancelled = true;
-                return 0;
+                Error = ex;
             }
-            return (uint)data.Length;
+            return 0;
         }
 
         protected virtual void CreateDirectory(string filename)

@@ -174,29 +174,6 @@ namespace FileExplorer
         {
             Interlocked.Add(ref pendingCount, -1);
             Statistics(e.op, 1);
-            if (e.op.status == OperationStatus.Fail)
-            {
-                if (AppSettings.RetryWhenDownloadFailed && e.op.operation == Operation.Download)
-                {
-                    if (lvItems.InvokeRequired)
-                        lvItems.Invoke(new AnonymousFunction(delegate() {
-                            ChangeOpStatus(e.op, OperationStatus.Pending);
-                        }));
-                    else
-                        ChangeOpStatus(e.op, OperationStatus.Pending);
-                    return;
-                }
-                else if (AppSettings.RetryWhenUploadFailed && e.op.operation == Operation.Upload)
-                {
-                    if (lvItems.InvokeRequired)
-                        lvItems.Invoke(new AnonymousFunction(delegate() {
-                            ChangeOpStatus(e.op, OperationStatus.Pending);
-                        }));
-                    else
-                        ChangeOpStatus(e.op, OperationStatus.Pending);
-                    return;
-                }
-            }
             ProgressListview.ProgressSubItem progress = e.op.Tag as ProgressListview.ProgressSubItem;
             if (progress != null && progress.Owner != null)
             {
