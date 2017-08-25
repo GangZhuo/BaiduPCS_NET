@@ -426,7 +426,7 @@ namespace FileExplorer
 
                 AppSettings.AutomaticDownloadMaxThreadCount = true;
                 AppSettings.DownloadMaxThreadCount = 1;
-                AppSettings.RetryWhenDownloadFailed = false;
+                AppSettings.RetryWhenDownloadFailed = true;
                 AppSettings.MinDownloasSliceSize = MultiThreadDownloader.MIN_SLICE_SIZE / Utils.KB;
 
                 AppSettings.AutomaticUploadMaxThreadCount = true;
